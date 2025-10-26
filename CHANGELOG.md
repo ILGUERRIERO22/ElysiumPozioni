@@ -5,7 +5,27 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
 
 ---
 
-## [v1.3] — 2025-10-27
+## [v1.3.1] — 2025-10-26
+### 🛠 Gestione profili migliorata
+- Aggiunto il pulsante **"Rinomina profilo"**.
+- Ora è possibile rinominare un profilo di mercato direttamente dall'interfaccia, senza modificare a mano il file `profiles.json`.
+- Se il nuovo nome esiste già, viene chiesto se sovrascriverlo.
+- Dopo la rinomina:
+  - il profilo vecchio viene eliminato
+  - il profilo nuovo viene salvato
+  - la lista dei profili nella GUI si aggiorna automaticamente
+  - la selezione viene spostata sul nuovo nome.
+
+### 🔁 Version bump
+- `APP_VERSION` aggiornato a `1.3.1`.
+
+---
+
+### Nota
+Questa versione è pensata per la qualità della vita degli alchimisti che gestiscono listini multipli (prezzi di gilda, mercato nero, evento fiera, ecc.).
+
+
+## [v1.3] — 2025-10-26
 ### ✨ Nuove funzionalità
 - Aggiunto supporto ai **profili di mercato** multipli.
   - Ora puoi definire più profili di prezzi (es. "Standard", "Raro", "MercatoNotturno", "GildaHealer", ecc.).
@@ -47,7 +67,7 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
 - Pulsante “Rinomina profilo”.
 
 
-## [v1.2] — 2025-10-27
+## [v1.2] — 2025-10-26
 ### ✨ Nuove funzionalità
 - Aggiunti **nuovi calderoni**:
   - 🟤 **Terracotta** → Pozioni di cura T1 (1 catalyst = 2 pozioni, 1 carbonella = 2 pozioni)

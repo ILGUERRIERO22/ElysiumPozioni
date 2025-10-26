@@ -8,7 +8,7 @@ import os
 # =========================
 
 APP_NAME = "Elysium Pozioni"
-APP_VERSION = "1.3"
+APP_VERSION = "1.3.1"
 APP_AUTHOR = "ILGUERRIERO22"
 
 CONFIG_FILE = "config.json"      # salva ultimo stato usato
@@ -134,6 +134,110 @@ def save_profile():
     combo_profile["values"] = list(profiles.keys())
 
     messagebox.showinfo("Profilo salvato", f"Profilo '{name}' salvato.")
+
+def rename_profile():
+    """Rinomina il profilo attuale (chiave nel dict) in un nuovo nome scelto dall'utente."""
+    old_name = combo_profile.get().strip()
+    if not old_name:
+        messagebox.showerror("Errore", "Seleziona il profilo da rinominare prima.")
+        return
+
+    if old_name not in profiles:
+        messagebox.showerror("Errore", f"Il profilo '{old_name}' non esiste.")
+        return
+
+    # Chiediamo il nuovo nome con una piccola finestra popup
+    rename_win = tk.Toplevel(root)
+    rename_win.title("Rinomina profilo")
+    rename_win.configure(bg=BG_MAIN)
+    rename_win.resizable(False, False)
+
+    tk.Label(
+        rename_win,
+        text=f"Nuovo nome per '{old_name}':",
+        font=LABEL_FONT,
+        bg=BG_MAIN,
+        fg=FG_TEXT
+    ).pack(padx=10, pady=(10,4), anchor="w")
+
+    new_name_entry = tk.Entry(
+        rename_win,
+        width=20,
+        font=LABEL_FONT,
+        bg="#3a3a3a",
+        fg=FG_TEXT,
+        insertbackground=FG_TEXT,
+        relief="flat",
+    )
+    new_name_entry.pack(padx=10, pady=4)
+    new_name_entry.focus()
+
+    def conferma_rinomina():
+        new_name = new_name_entry.get().strip()
+        if not new_name:
+            messagebox.showerror("Errore", "Il nuovo nome non può essere vuoto.")
+            return
+
+        # se il nome è uguale, niente da fare
+        if new_name == old_name:
+            rename_win.destroy()
+            return
+
+        # se il nuovo nome già esiste, chiediamo conferma
+        if new_name in profiles:
+            sovrascrivi = messagebox.askyesno(
+                "Conferma",
+                f"Esiste già un profilo chiamato '{new_name}'. Sovrascriverlo?"
+            )
+            if not sovrascrivi:
+                return
+
+        # copia dati e cancella vecchio
+        profiles[new_name] = profiles[old_name]
+        del profiles[old_name]
+
+        # salva su disco
+        save_all_profiles(profiles)
+
+        # aggiorna combobox profili
+        combo_profile["values"] = list(profiles.keys())
+        combo_profile.set(new_name)
+
+        messagebox.showinfo("Fatto", f"Profilo rinominato in '{new_name}'.")
+        rename_win.destroy()
+
+    btn_frame = tk.Frame(rename_win, bg=BG_MAIN)
+    btn_frame.pack(padx=10, pady=(8,10), fill="x")
+
+    tk.Button(
+        btn_frame,
+        text="OK",
+        command=conferma_rinomina,
+        bg=ACCENT,
+        fg="white",
+        font=LABEL_FONT,
+        activebackground="#574dff",
+        activeforeground="white",
+        relief="flat",
+        padx=10,
+        pady=4,
+        cursor="hand2",
+    ).pack(side="left")
+
+    tk.Button(
+        btn_frame,
+        text="Annulla",
+        command=rename_win.destroy,
+        bg="#444",
+        fg=FG_TEXT,
+        font=LABEL_FONT,
+        activebackground="#555",
+        activeforeground=FG_TEXT,
+        relief="flat",
+        padx=10,
+        pady=4,
+        cursor="hand2",
+    ).pack(side="right")
 
 
 # =========================
@@ -419,7 +523,7 @@ def calcola():
 
 root = tk.Tk()
 root.title(f"{APP_NAME} ⚗️ v{APP_VERSION}")
-root.geometry("560x540")
+root.geometry("600x560")
 root.configure(bg=BG_MAIN)
 root.resizable(False, False)
 
@@ -504,15 +608,20 @@ tk.Label(
 # --- PANNELLO PROFILO PREZZI ---
 panel_prof, prof_inner = make_panel(inner_frame, "Profilo prezzi")
 
-tk.Label(prof_inner, text="Profilo prezzi:", font=LABEL_FONT, bg=BG_PANEL, fg=FG_TEXT)\
-    .grid(row=0, column=0, sticky="e", padx=4, pady=4)
+tk.Label(
+    prof_inner,
+    text="Profilo prezzi:",
+    font=LABEL_FONT,
+    bg=BG_PANEL,
+    fg=FG_TEXT
+).grid(row=0, column=0, sticky="e", padx=4, pady=4)
 
-# combobox EDITABILE: l'utente può digitare un nuovo nome profilo
+# combobox EDITABILE per poter scrivere un nuovo nome profilo
 combo_profile = ttk.Combobox(
     prof_inner,
-    width=14,
+    width=16,
     font=LABEL_FONT,
-)  # NON readonly: così puoi scrivere un nome nuovo
+)  # non readonly: l'utente può scrivere un nome nuovo
 combo_profile.grid(row=0, column=1, padx=4, pady=4, sticky="w")
 
 btn_load_prof = tk.Button(
@@ -547,7 +656,24 @@ btn_save_prof = tk.Button(
 )
 btn_save_prof.grid(row=0, column=3, padx=6, pady=4)
 
+btn_rename_prof = tk.Button(
+    prof_inner,
+    text="Rinomina profilo",
+    command=rename_profile,
+    bg="#444",
+    fg=FG_TEXT,
+    font=LABEL_FONT,
+    activebackground="#555",
+    activeforeground=FG_TEXT,
+    relief="flat",
+    padx=8,
+    pady=4,
+    cursor="hand2",
+)
+btn_rename_prof.grid(row=0, column=4, padx=6, pady=4)
+
 panel_prof.pack(padx=10, pady=6, fill="x")
+
 
 # --- PRODUZIONE ---
 panel_prod, prod_inner = make_panel(inner_frame, "Produzione")
