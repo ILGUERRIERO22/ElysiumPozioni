@@ -10,10 +10,11 @@
   <img src="https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white" alt="Python Version">
   <img src="https://img.shields.io/badge/Tkinter-GUI-green?logo=windowsterminal&logoColor=white" alt="Tkinter GUI">
   <img src="https://img.shields.io/badge/Status-Attivo-brightgreen?style=flat" alt="Status">
-  <img src="https://img.shields.io/badge/Version-v1.0.2-orange?style=flat-square" alt="Versione">
+  <img src="https://img.shields.io/github/v/release/ILGUERRIERO22/ElysiumPozioni?color=orange&label=versione&style=flat-square" alt="Versione GitHub">
   <img src="https://img.shields.io/badge/Licenza-MIT-yellow?style=flat" alt="Licenza">
   <img src="https://img.shields.io/badge/Made%20by-ILGUERRIERO22-purple?style=flat-square" alt="Autore">
 </p>
+
 
 
 # ⚗️ Elysium Pozioni
