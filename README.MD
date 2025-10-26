@@ -27,6 +27,13 @@ Un calcolatore di pozioni con interfaccia grafica (GUI) realizzato in **Python +
 
 ---
 
+## 📸 Anteprima (dark theme)
+
+<p align="center">
+  <img src="screen.png" alt="Anteprima Calcolatore Pozioni" width="720">
+</p>
+
+
 ## 🖥️ Requisiti
 
 - **Python 3.10** o superiore  
