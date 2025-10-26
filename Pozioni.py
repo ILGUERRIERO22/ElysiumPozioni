@@ -1,13 +1,16 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+import json
+import os
 
 # =========================
 #   COSTANTI TEMA / STILE
 # =========================
 
 APP_NAME = "Elysium Pozioni"
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.1"
 APP_AUTHOR = "ILGUERRIERO22"
+CONFIG_FILE = "config.json"
 
 BG_MAIN = "#1e1e1e"
 BG_PANEL = "#2a2a2a"
@@ -24,6 +27,80 @@ RESULT_FONT = ("Consolas", 11)
 
 
 # =========================
+#   FUNZIONI CONFIG
+# =========================
+
+def save_config():
+    """Salva i valori correnti dei campi in un file JSON."""
+    data = {
+        "num_pozioni": entry_pozioni.get(),
+        "tier": combo_tier.get(),
+        "calderone": combo_calderone.get(),
+        "prezzo_reagente": entry_reagente.get(),
+        "prezzo_core": entry_core.get(),
+        "prezzo_carbone": entry_carbone.get(),
+        "verdure_per_1b": entry_verdure_per_b.get(),
+        "vasetti_per_1b": entry_vasetti_per_b.get(),
+        "boccette_per_1b": entry_boccette_per_b.get(),
+    }
+
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        # Non bloccare l'uscita se fallisce, solo loggare in console
+        print("Errore salvataggio config:", e)
+
+
+def load_config():
+    """Carica i valori salvati (se esistono) e li mette nei campi GUI."""
+    if not os.path.exists(CONFIG_FILE):
+        return  # prima esecuzione: nessun config
+
+    try:
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception as e:
+        print("Errore lettura config:", e)
+        return
+
+    # Riempi i campi SOLO se esistono nel file
+    if "num_pozioni" in data:
+        entry_pozioni.delete(0, tk.END)
+        entry_pozioni.insert(0, data["num_pozioni"])
+
+    if "tier" in data and data["tier"] in ["T1", "T2", "T3"]:
+        combo_tier.set(data["tier"])
+
+    if "calderone" in data and data["calderone"] in ["Oro", "Ferro"]:
+        combo_calderone.set(data["calderone"])
+
+    if "prezzo_reagente" in data:
+        entry_reagente.delete(0, tk.END)
+        entry_reagente.insert(0, data["prezzo_reagente"])
+
+    if "prezzo_core" in data:
+        entry_core.delete(0, tk.END)
+        entry_core.insert(0, data["prezzo_core"])
+
+    if "prezzo_carbone" in data:
+        entry_carbone.delete(0, tk.END)
+        entry_carbone.insert(0, data["prezzo_carbone"])
+
+    if "verdure_per_1b" in data:
+        entry_verdure_per_b.delete(0, tk.END)
+        entry_verdure_per_b.insert(0, data["verdure_per_1b"])
+
+    if "vasetti_per_1b" in data:
+        entry_vasetti_per_b.delete(0, tk.END)
+        entry_vasetti_per_b.insert(0, data["vasetti_per_1b"])
+
+    if "boccette_per_1b" in data:
+        entry_boccette_per_b.delete(0, tk.END)
+        entry_boccette_per_b.insert(0, data["boccette_per_1b"])
+
+
+# =========================
 #   FUNZIONI DI UTILITÀ
 # =========================
 
@@ -33,7 +110,8 @@ def show_info():
         f"{APP_NAME} v{APP_VERSION}\n"
         f"Autore: {APP_AUTHOR}\n\n"
         "Calcolatore di costo pozioni per Elysium.\n"
-        "Supporta calderone d’Oro e di Ferro.\n\n"
+        "Supporta calderone d’Oro e di Ferro.\n"
+        "Salvataggio automatico delle impostazioni.\n\n"
         "Miao 😺"
     )
     messagebox.showinfo("Informazioni", msg)
@@ -43,8 +121,7 @@ def show_license():
     """Mostra popup con licenza MIT semplificata."""
     mit_text = (
         "Licenza MIT\n\n"
-        "Copyright (c) 2025 "
-        f"{APP_AUTHOR}\n\n"
+        f"Copyright (c) 2025 {APP_AUTHOR}\n\n"
         "È consentito usare, copiare, modificare e distribuire questo software "
         "senza restrizioni, anche per uso commerciale, purché venga mantenuta "
         "questa nota di copyright e la presente licenza.\n\n"
@@ -100,10 +177,11 @@ def calcola():
             #   2 carbonella per 1 pozione
             catalyst_necessari = num_pozioni * 1.0
             carbonella_tot = num_pozioni * 2.0
+
         else:
             raise ValueError("Tipo calderone non valido")
 
-        # Quanti reagenti servono per craftare tutti i catalyst richiesti
+        # Quanti reagenti per craftare tutti i catalyst richiesti
         reagenti_usati = catalyst_necessari / catalyst_per_reagente[tier]
 
         # Ogni reagente 'batch' usa 1 core e 1 resina
@@ -162,6 +240,7 @@ def calcola():
             f" • Boccette:     {costo_boccette:.2f} b",
             "",
             f"{APP_NAME} v{APP_VERSION} — {APP_AUTHOR}",
+            "Le impostazioni vengono salvate automaticamente.",
         ]
 
         text_result.config(state="normal")
@@ -179,13 +258,11 @@ def calcola():
 
 root = tk.Tk()
 root.title(f"{APP_NAME} ⚗️")
-
-# dimensione finestra principale (fissa, il contenuto scorre)
 root.geometry("540x500")
 root.configure(bg=BG_MAIN)
 root.resizable(False, False)
 
-# canvas scrollabile per tutto il contenuto
+# canvas scrollabile
 outer_canvas = tk.Canvas(root, bg=BG_MAIN, highlightthickness=0)
 outer_canvas.pack(side="left", fill="both", expand=True)
 
@@ -201,12 +278,12 @@ def on_configure(event):
     outer_canvas.configure(scrollregion=outer_canvas.bbox("all"))
 inner_frame.bind("<Configure>", on_configure)
 
-# scroll globale (canvas)
+# scroll globale
 def _on_mousewheel_canvas(event):
     outer_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 outer_canvas.bind_all("<MouseWheel>", _on_mousewheel_canvas)
 
-# scroll locale nella sezione Dettaglio
+# scroll locale dettaglio
 def _on_mousewheel_text(event):
     text_result.yview_scroll(int(-1 * (event.delta / 120)), "units")
     return "break"
@@ -469,9 +546,28 @@ text_result = tk.Text(
 text_result.pack(fill="both", expand=True)
 scrollbar.config(command=text_result.yview)
 
-# quando il mouse è sopra il dettaglio → scrolla solo lì
 text_result.bind("<Enter>", _bind_wheel_to_text)
-# quando esce → torna a scrollare tutta la finestra
 text_result.bind("<Leave>", _bind_wheel_to_canvas)
 
+
+# =========================
+#   HOOK DI CHIUSURA (SALVA AUTO)
+# =========================
+
+def on_close():
+    save_config()
+    root.destroy()
+
+root.protocol("WM_DELETE_WINDOW", on_close)
+
+# =========================
+#   CARICA CONFIG ALL'AVVIO
+# =========================
+
+# importantissimo: i widget devono esistere prima di riempirli
+load_config()
+
+# =========================
+#   LOOP FINALE
+# =========================
 root.mainloop()

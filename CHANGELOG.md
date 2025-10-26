@@ -5,6 +5,25 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
 
 ---
 
+## [v1.1] — 2025-10-26
+### ✨ Nuova funzionalità
+- Aggiunto **salvataggio automatico** delle impostazioni:
+  - Numero pozioni
+  - Tipo reagente
+  - Tipo di calderone
+  - Prezzi di reagente, core, carbone
+  - Quantità di verdure, vasetti e boccette per 1b
+- Alla chiusura dell'app, le impostazioni vengono salvate in `config.json`.
+- Al riavvio, i dati vengono caricati automaticamente.
+
+### 🧠 Miglioramenti
+- L'app ora ricorda le preferenze dell'utente anche tra sessioni diverse.
+- Popup informativo aggiornato con la versione 1.1.
+
+### 🔧 Interno
+- Aggiunto file `config.json` salvato nella directory del programma.
+
+
 ## [v1.0.2] — 2025-10-26
 ### ✨ Nuove funzionalità
 - Aggiunto **menu Info** con voci:

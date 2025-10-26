@@ -1,0 +1,11 @@
+{
+  "num_pozioni": "12",
+  "tier": "T1",
+  "calderone": "Oro",
+  "prezzo_reagente": "1.5",
+  "prezzo_core": "1.0",
+  "prezzo_carbone": "1.5",
+  "verdure_per_1b": "3",
+  "vasetti_per_1b": "15",
+  "boccette_per_1b": "14"
+}

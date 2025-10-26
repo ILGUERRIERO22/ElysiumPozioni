@@ -36,6 +36,8 @@ Un calcolatore di pozioni con interfaccia grafica (GUI) realizzato in **Python +
   - Prezzi unitari configurabili per reagenti, core, carbone, verdure, vasetti e boccette  
 - Interfaccia scura (dark theme) ottimizzata per la leggibilità  
 - Scroll intelligente: puoi scorrere la schermata o solo la sezione dei dettagli con la rotellina del mouse  
+- 💾 **Salvataggio automatico:** tutte le impostazioni vengono memorizzate in `config.json` e ricaricate all’avvio
+
 
 ---
 
