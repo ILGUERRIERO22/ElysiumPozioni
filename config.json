@@ -1,8 +1,8 @@
 {
   "num_pozioni": "12",
-  "tier": "T2",
-  "calderone": "Oro",
-  "prezzo_reagente": "1.5",
+  "tier": "T3",
+  "calderone": "Diamante",
+  "prezzo_reagente": "2.5",
   "prezzo_core": "1.0",
   "prezzo_carbone": "1.5",
   "verdure_per_1b": "3",

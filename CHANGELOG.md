@@ -5,6 +5,35 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
 
 ---
 
+## [v1.2] — 2025-10-27
+### ✨ Nuove funzionalità
+- Aggiunti **nuovi calderoni**:
+  - 🟤 **Terracotta** → Pozioni di cura T1 (1 catalyst = 2 pozioni, 1 carbonella = 2 pozioni)
+  - 🟠 **Rame** → Pozioni di cura T1 (1 catalyst = 3 pozioni, 1 carbonella = 3 pozioni)
+  - ⚙️ **Ferro** → Pozioni di cura T2 (1 catalyst = 1 pozione, 2 carbonella = 1 pozione)
+  - 🟡 **Oro** → Pozioni di cura T2 (2 catalyst = 3 pozioni, 2 carbonella = 3 pozioni)
+  - 💎 **Diamante** → Pozioni di cura T3 (3 catalyst = 2 pozioni, 3 carbonella = 2 pozioni)
+
+### 🧪 Miglioramenti
+- L’app ora **riconosce automaticamente** il tipo di pozione prodotta (T1/T2/T3) in base al calderone scelto.
+- Aggiunta in output l’**efficienza catalyst/pozioni** e **carbonella/pozioni**, per confrontare meglio i calderoni.
+- Mantiene tutte le funzionalità precedenti, inclusi:
+  - Tema scuro ottimizzato
+  - Salvataggio automatico (`config.json`)
+  - Menù "Info" e "Licenza"
+
+### 🧱 Interno
+- Refactoring completo della logica dei calderoni per migliorare leggibilità e precisione.
+- Aggiornata variabile `APP_VERSION` → `1.2`.
+
+---
+
+## 🪄 **Prossima versione (v1.3 – pianificata)**
+- 💾 Possibilità di salvare più profili di prezzo (es. “economico”, “medio”, “raro”)
+- 🧮 Ottimizzazione del costo automatico (suggerisce il calderone più efficiente)
+
+
+
 ## [v1.1] — 2025-10-26
 ### ✨ Nuova funzionalità
 - Aggiunto **salvataggio automatico** delle impostazioni:

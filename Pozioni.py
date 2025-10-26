@@ -8,7 +8,7 @@ import os
 # =========================
 
 APP_NAME = "Elysium Pozioni"
-APP_VERSION = "1.1"
+APP_VERSION = "1.2"
 APP_AUTHOR = "ILGUERRIERO22"
 CONFIG_FILE = "config.json"
 
@@ -48,14 +48,13 @@ def save_config():
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
     except Exception as e:
-        # Non bloccare l'uscita se fallisce, solo loggare in console
         print("Errore salvataggio config:", e)
 
 
 def load_config():
     """Carica i valori salvati (se esistono) e li mette nei campi GUI."""
     if not os.path.exists(CONFIG_FILE):
-        return  # prima esecuzione: nessun config
+        return
 
     try:
         with open(CONFIG_FILE, "r", encoding="utf-8") as f:
@@ -64,7 +63,6 @@ def load_config():
         print("Errore lettura config:", e)
         return
 
-    # Riempi i campi SOLO se esistono nel file
     if "num_pozioni" in data:
         entry_pozioni.delete(0, tk.END)
         entry_pozioni.insert(0, data["num_pozioni"])
@@ -72,7 +70,7 @@ def load_config():
     if "tier" in data and data["tier"] in ["T1", "T2", "T3"]:
         combo_tier.set(data["tier"])
 
-    if "calderone" in data and data["calderone"] in ["Oro", "Ferro"]:
+    if "calderone" in data and data["calderone"] in ["Terracotta", "Rame", "Ferro", "Oro", "Diamante"]:
         combo_calderone.set(data["calderone"])
 
     if "prezzo_reagente" in data:
@@ -110,7 +108,7 @@ def show_info():
         f"{APP_NAME} v{APP_VERSION}\n"
         f"Autore: {APP_AUTHOR}\n\n"
         "Calcolatore di costo pozioni per Elysium.\n"
-        "Supporta calderone d’Oro e di Ferro.\n"
+        "Supporta calderoni Terracotta / Rame / Ferro / Oro / Diamante.\n"
         "Salvataggio automatico delle impostazioni.\n\n"
         "Miao 😺"
     )
@@ -133,9 +131,9 @@ def show_license():
 def calcola():
     try:
         # --- INPUT DI BASE ---
-        num_pozioni = int(entry_pozioni.get())
-        tier = combo_tier.get()                   # T1 / T2 / T3
-        tipo_calderone = combo_calderone.get()    # Oro / Ferro
+        num_pozioni = float(entry_pozioni.get())
+        tier_reagente = combo_tier.get()              # T1 / T2 / T3
+        tipo_calderone = combo_calderone.get()        # Terracotta / Rame / Ferro / Oro / Diamante
 
         # --- PREZZI DIRETTI ---
         prezzo_reagente = float(entry_reagente.get())   # costo 1 reagente scelto
@@ -158,40 +156,97 @@ def calcola():
         # Carbonella: 1 carbone = 12 carbonella
         costo_carbonella_unit = prezzo_carbone / 12.0
 
-        # --- QUANTITÀ MATERIALI RICHIESTI IN BASE AL CALDERONE ---
+        # ======================================================
+        # LOGICA DEI CALDERONI (v1.2)
+        # ======================================================
+        # Ogni calderone definisce:
+        # - quante pozioni per catalyst
+        # - quante pozioni per carbonella
+        # - qual è il tier della pozione prodotta (T1/T2/T3)
+        #
+        # Da queste ricaviamo:
+        #   catalyst_necessari e carbonella_tot
+        #   efficienza Catalyst/poz e Carbonella/poz (per mostrare nel dettaglio)
+        #
+        # Nota:
+        # Ferro e Oro = T2 (pozioni di cura 2)
+        # Terracotta e Rame = T1
+        # Diamante = T3
 
-        # Rese reagente:
-        # T1 = 1 catalyst, T2 = 2 catalyst, T3 = 3 catalyst
-        catalyst_per_reagente = {"T1": 1.0, "T2": 2.0, "T3": 3.0}
+        if tipo_calderone == "Terracotta":
+            # 1 catalyst -> 2 pozioni T1
+            # 1 carbonella -> 2 pozioni
+            pozioni_per_catalyst = 2.0
+            pozioni_per_carbonella = 2.0
+            tier_pozione_prodotta = "T1"
 
-        if tipo_calderone == "Oro":
-            # Calderone d'Oro:
-            #   2 catalyst = 3 pozioni
-            #   2 carbonella per 3 pozioni
-            catalyst_necessari = (num_pozioni / 3.0) * 2.0
-            carbonella_tot = (num_pozioni / 3.0) * 2.0
+        elif tipo_calderone == "Rame":
+            # 1 catalyst -> 3 pozioni T1
+            # 1 carbonella -> 3 pozioni
+            pozioni_per_catalyst = 3.0
+            pozioni_per_carbonella = 3.0
+            tier_pozione_prodotta = "T1"
 
         elif tipo_calderone == "Ferro":
-            # Calderone di Ferro:
-            #   1 catalyst = 1 pozione
-            #   2 carbonella per 1 pozione
-            catalyst_necessari = num_pozioni * 1.0
-            carbonella_tot = num_pozioni * 2.0
+            # 1 catalyst -> 1 pozione T2
+            # 2 carbonella -> 1 pozione
+            pozioni_per_catalyst = 1.0
+            # carbonella caso ferro è diverso: è 2 per 1 pozione
+            pozioni_per_carbonella = 1.0 / 2.0  # cioè 0.5 pozioni per 1 carbonella
+            tier_pozione_prodotta = "T2"
+
+        elif tipo_calderone == "Oro":
+            # 2 catalyst -> 3 pozioni T2  => 1 catalyst -> 1.5 pozioni
+            # 2 carbonella -> 3 pozioni   => 1 carbonella -> 1.5 pozioni
+            pozioni_per_catalyst = 1.5
+            pozioni_per_carbonella = 1.5
+            tier_pozione_prodotta = "T2"
+
+        elif tipo_calderone == "Diamante":
+            # 3 catalyst -> 2 pozioni T3  => 1 catalyst -> 0.666...
+            # 3 carbonella -> 2 pozioni   => 1 carbonella -> 0.666...
+            pozioni_per_catalyst = (2.0 / 3.0)  # ~0.6667
+            pozioni_per_carbonella = (2.0 / 3.0)
+            tier_pozione_prodotta = "T3"
 
         else:
             raise ValueError("Tipo calderone non valido")
 
-        # Quanti reagenti per craftare tutti i catalyst richiesti
-        reagenti_usati = catalyst_necessari / catalyst_per_reagente[tier]
+        # catalyst necessari:
+        # se 1 catalyst produce pozioni_per_catalyst pozioni,
+        # per num_pozioni servono num_pozioni / pozioni_per_catalyst
+        catalyst_necessari = num_pozioni / pozioni_per_catalyst
+
+        # carbonella necessaria:
+        # se 1 carbonella produce pozioni_per_carbonella pozioni,
+        # per num_pozioni servono num_pozioni / pozioni_per_carbonella
+        carbonella_tot = num_pozioni / pozioni_per_carbonella
+
+        # Efficienze (per output leggibile)
+        catalyst_per_pozione = 1.0 / pozioni_per_catalyst
+        carbonella_per_pozione = 1.0 / pozioni_per_carbonella
+
+        # =========================
+        # REAGENTI / CORE / RESINE
+        # =========================
+        # Rese reagente:
+        # T1 = 1 catalyst
+        # T2 = 2 catalyst
+        # T3 = 3 catalyst
+        catalyst_per_reagente = {"T1": 1.0, "T2": 2.0, "T3": 3.0}
+
+        reagenti_usati = catalyst_necessari / catalyst_per_reagente[tier_reagente]
 
         # Ogni reagente 'batch' usa 1 core e 1 resina
         core_usati = reagenti_usati
         resine_usate = reagenti_usati
 
-        # Boccette: 1 per pozione (vale per tutti i calderoni)
+        # Boccette: 1 per pozione (sempre)
         boccette_tot = num_pozioni * 1.0
 
-        # --- COSTI PARZIALI ---
+        # =========================
+        # COSTI PARZIALI
+        # =========================
         costo_reagenti = reagenti_usati * prezzo_reagente
         costo_core = core_usati * prezzo_core
         costo_resine = resine_usate * costo_resina_unit
@@ -208,39 +263,48 @@ def calcola():
 
         costo_per_pozione = costo_totale / num_pozioni if num_pozioni != 0 else 0.0
 
-        # --- AGGIORNA PREVIEW SINTETICA ---
+        # =========================
+        # ANTEPRIMA COSTO RAPIDO
+        # =========================
         label_preview.config(
             text=f"Totale: {costo_totale:.2f} b    •    Per pozione: {costo_per_pozione:.2f} b",
             fg=FG_TEXT,
             bg=BG_MAIN,
         )
 
-        # --- TESTO DETTAGLIATO ---
+        # =========================
+        # OUTPUT DETTAGLIATO
+        # =========================
         output_lines = [
-            f"Calderone:          {tipo_calderone}",
-            f"Pozioni totali:     {num_pozioni}",
-            f"Tipo reagente:      {tier}",
+            f"Calderone:               {tipo_calderone}",
+            f"Pozione prodotta:        {tier_pozione_prodotta}",
+            f"Pozioni totali richieste:{num_pozioni:.2f}",
+            f"Tipo reagente usato:     {tier_reagente}",
             "",
-            f"COSTO TOTALE:       {costo_totale:.2f} b",
-            f"Costo per pozione:  {costo_per_pozione:.2f} b",
+            f"COSTO TOTALE:            {costo_totale:.2f} b",
+            f"Costo per pozione:       {costo_per_pozione:.2f} b",
+            "",
+            "Efficienza calderone:",
+            f" • Catalyst per pozione:   {catalyst_per_pozione:.4f}",
+            f" • Carbonella per pozione: {carbonella_per_pozione:.4f}",
             "",
             "Materiali richiesti:",
-            f" • Catalyst totali: {catalyst_necessari:.2f}",
-            f" • Reagenti usati:  {reagenti_usati:.2f}",
-            f" • Core frammenti:  {core_usati:.2f}",
-            f" • Resine:          {resine_usate:.2f}",
-            f" • Carbonella:      {carbonella_tot:.2f}",
-            f" • Boccette:        {boccette_tot:.2f}",
+            f" • Catalyst totali:        {catalyst_necessari:.2f}",
+            f" • Reagenti usati:         {reagenti_usati:.2f}",
+            f" • Core frammenti:         {core_usati:.2f}",
+            f" • Resine:                 {resine_usate:.2f}",
+            f" • Carbonella totale:      {carbonella_tot:.2f}",
+            f" • Boccette:               {boccette_tot:.2f}",
             "",
             "Costi parziali:",
-            f" • Reagenti:     {costo_reagenti:.2f} b",
-            f" • Core:         {costo_core:.2f} b",
-            f" • Resine:       {costo_resine:.2f} b",
-            f" • Carbonella:   {costo_carbonella:.2f} b",
-            f" • Boccette:     {costo_boccette:.2f} b",
+            f" • Reagenti:               {costo_reagenti:.2f} b",
+            f" • Core:                   {costo_core:.2f} b",
+            f" • Resine:                 {costo_resine:.2f} b",
+            f" • Carbonella:             {costo_carbonella:.2f} b",
+            f" • Boccette:               {costo_boccette:.2f} b",
             "",
             f"{APP_NAME} v{APP_VERSION} — {APP_AUTHOR}",
-            "Le impostazioni vengono salvate automaticamente.",
+            "Impostazioni salvate automaticamente.",
         ]
 
         text_result.config(state="normal")
@@ -257,7 +321,7 @@ def calcola():
 # =========================
 
 root = tk.Tk()
-root.title(f"{APP_NAME} ⚗️")
+root.title(f"{APP_NAME} ⚗️ v{APP_VERSION}")
 root.geometry("540x500")
 root.configure(bg=BG_MAIN)
 root.resizable(False, False)
@@ -283,7 +347,7 @@ def _on_mousewheel_canvas(event):
     outer_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 outer_canvas.bind_all("<MouseWheel>", _on_mousewheel_canvas)
 
-# scroll locale dettaglio
+# scroll locale sul box dettaglio
 def _on_mousewheel_text(event):
     text_result.yview_scroll(int(-1 * (event.delta / 120)), "units")
     return "break"
@@ -361,7 +425,7 @@ tk.Label(prod_inner, text="Tipo reagente:", font=LABEL_FONT, bg=BG_PANEL, fg=FG_
 combo_tier = ttk.Combobox(
     prod_inner,
     values=["T1", "T2", "T3"],
-    width=8,
+    width=10,
     state="readonly",
     font=LABEL_FONT,
 )
@@ -372,8 +436,8 @@ tk.Label(prod_inner, text="Calderone:", font=LABEL_FONT, bg=BG_PANEL, fg=FG_TEXT
     .grid(row=2, column=0, sticky="e", padx=4, pady=4)
 combo_calderone = ttk.Combobox(
     prod_inner,
-    values=["Oro", "Ferro"],
-    width=8,
+    values=["Terracotta", "Rame", "Ferro", "Oro", "Diamante"],
+    width=12,
     state="readonly",
     font=LABEL_FONT,
 )
@@ -560,14 +624,16 @@ def on_close():
 
 root.protocol("WM_DELETE_WINDOW", on_close)
 
+
 # =========================
 #   CARICA CONFIG ALL'AVVIO
 # =========================
 
-# importantissimo: i widget devono esistere prima di riempirli
 load_config()
+
 
 # =========================
 #   LOOP FINALE
 # =========================
+
 root.mainloop()
