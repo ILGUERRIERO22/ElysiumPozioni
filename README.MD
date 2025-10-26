@@ -1,7 +1,10 @@
 <p align="center">
-  <img src="banner.png" alt="Elysium Pozioni Banner" width="820">
+  <img src="logo.png?raw=true" alt="Logo Elysium Pozioni" width="150" style="border-radius:12px;">
 </p>
 
+<p align="center">
+  <img src="banner.png?raw=true" alt="Elysium Pozioni Banner" width="820">
+</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white" alt="Python Version">
@@ -20,7 +23,7 @@ Un calcolatore di pozioni con interfaccia grafica (GUI) realizzato in **Python +
 ## 🧪 Funzionalità principali
 
 - Calcola automaticamente:
-  - 💰 Costo totale e costo per singola pozione in bronzini
+  - 💰 Costo totale e costo per singola pozione  
   - ⚗️ Quantità di reagenti, core fragment, resine, carbonella e boccette richiesti  
 - Supporta due tipi di calderoni:
   - 🟡 **Calderone d’Oro** → 2 catalyst = 3 pozioni, 2 carbonella per 3 pozioni  
@@ -32,18 +35,11 @@ Un calcolatore di pozioni con interfaccia grafica (GUI) realizzato in **Python +
 
 ---
 
-## 📸 Anteprima (dark theme)
-
-<p align="center">
-  <img src="screen.png" alt="Anteprima Calcolatore Pozioni" width="720">
-</p>
-
-
 ## 🖥️ Requisiti
 
 - **Python 3.10** o superiore  
 - Libreria **Tkinter** (inclusa di default in Python)
 
-Puoi verificare la versione di Python installata eseguendo:
+Verifica la versione di Python installata con:
 ```bash
 python --version
