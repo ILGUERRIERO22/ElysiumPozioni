@@ -20,7 +20,7 @@ Un calcolatore di pozioni con interfaccia grafica (GUI) realizzato in **Python +
 ## 🧪 Funzionalità principali
 
 - Calcola automaticamente:
-  - 💰 Costo totale e costo per singola pozione  
+  - 💰 Costo totale e costo per singola pozione in bronzini
   - ⚗️ Quantità di reagenti, core fragment, resine, carbonella e boccette richiesti  
 - Supporta due tipi di calderoni:
   - 🟡 **Calderone d’Oro** → 2 catalyst = 3 pozioni, 2 carbonella per 3 pozioni  
