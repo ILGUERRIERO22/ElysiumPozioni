@@ -5,6 +5,48 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
 
 ---
 
+## [v1.3] — 2025-10-27
+### ✨ Nuove funzionalità
+- Aggiunto supporto ai **profili di mercato** multipli.
+  - Ora puoi definire più profili di prezzi (es. "Standard", "Raro", "MercatoNotturno", "GildaHealer", ecc.).
+  - Ogni profilo salva:
+    - prezzo reagente
+    - prezzo core fragment
+    - prezzo carbone
+    - quante verdure ottieni per 1b
+    - quanti vasetti ottieni per 1b
+    - quante boccette ottieni per 1b
+  - I profili vengono salvati in `profiles.json`.
+
+- Nuovo pannello `Profilo prezzi` con:
+  - campo selezione / inserimento nome profilo
+  - bottone **Carica profilo** → aggiorna tutti i prezzi nella GUI
+  - bottone **Salva profilo** → crea o aggiorna quel profilo sul disco
+
+### 💾 Persistenza migliorata
+- `profiles.json` viene creato automaticamente con profili base (`Standard`, `Raro`) se non esiste.
+- `config.json` ora memorizza anche l’ultimo profilo selezionato e lo ripristina al prossimo avvio.
+
+### 🧪 Funzioni esistenti mantenute
+- Calcolo completo dei costi e dei materiali.
+- Supporto a tutti i calderoni:
+  - Terracotta (T1), Rame (T1)
+  - Ferro (T2), Oro (T2)
+  - Diamante (T3)
+- Stima dei catalyst, core, resine, boccette, carbonella.
+- Efficienza catalyst/pozione e carbonella/pozione.
+- Tema scuro, scroll intelligente, breakdown dettagliato.
+
+### 🔁 Version bump
+- `APP_VERSION` aggiornata a `1.3`.
+- L’output “Dettaglio” ora indica anche il profilo prezzi attivo.
+
+---
+
+## 🚀 Prossimo step pianificato (v1.4)
+- Pulsante “Rinomina profilo”.
+
+
 ## [v1.2] — 2025-10-27
 ### ✨ Nuove funzionalità
 - Aggiunti **nuovi calderoni**:

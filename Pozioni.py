@@ -8,9 +8,11 @@ import os
 # =========================
 
 APP_NAME = "Elysium Pozioni"
-APP_VERSION = "1.2"
+APP_VERSION = "1.3"
 APP_AUTHOR = "ILGUERRIERO22"
-CONFIG_FILE = "config.json"
+
+CONFIG_FILE = "config.json"      # salva ultimo stato usato
+PROFILES_FILE = "profiles.json"  # salva profili di prezzo multipli
 
 BG_MAIN = "#1e1e1e"
 BG_PANEL = "#2a2a2a"
@@ -27,11 +29,119 @@ RESULT_FONT = ("Consolas", 11)
 
 
 # =========================
-#   FUNZIONI CONFIG
+#   GESTIONE PROFILI PREZZO
+# =========================
+
+def ensure_profiles_file():
+    """Crea profiles.json con profili base se non esiste ancora."""
+    if not os.path.exists(PROFILES_FILE):
+        default_profiles = {
+            "Standard": {
+                "prezzo_reagente": "1.5",
+                "prezzo_core": "1.0",
+                "prezzo_carbone": "1.5",
+                "verdure_per_1b": "3",
+                "vasetti_per_1b": "15",
+                "boccette_per_1b": "14"
+            },
+            "Raro": {
+                "prezzo_reagente": "2.5",
+                "prezzo_core": "1.5",
+                "prezzo_carbone": "2.0",
+                "verdure_per_1b": "2",
+                "vasetti_per_1b": "12",
+                "boccette_per_1b": "10"
+            }
+        }
+        with open(PROFILES_FILE, "w", encoding="utf-8") as f:
+            json.dump(default_profiles, f, indent=2, ensure_ascii=False)
+
+
+def load_all_profiles():
+    """Ritorna dizionario di tutti i profili salvati."""
+    ensure_profiles_file()
+    try:
+        with open(PROFILES_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        print("Errore lettura profiles.json:", e)
+        return {}
+
+
+def save_all_profiles(profiles_dict):
+    """Scrive tutti i profili sul file."""
+    try:
+        with open(PROFILES_FILE, "w", encoding="utf-8") as f:
+            json.dump(profiles_dict, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print("Errore scrittura profiles.json:", e)
+
+
+def apply_profile():
+    """Carica i prezzi dal profilo selezionato nella GUI."""
+    name = combo_profile.get().strip()
+    if not name:
+        messagebox.showerror("Errore", "Seleziona o scrivi un nome profilo.")
+        return
+
+    if name not in profiles:
+        messagebox.showerror("Errore", f"Profilo '{name}' non trovato.")
+        return
+
+    p = profiles[name]
+
+    entry_reagente.delete(0, tk.END)
+    entry_reagente.insert(0, p["prezzo_reagente"])
+
+    entry_core.delete(0, tk.END)
+    entry_core.insert(0, p["prezzo_core"])
+
+    entry_carbone.delete(0, tk.END)
+    entry_carbone.insert(0, p["prezzo_carbone"])
+
+    entry_verdure_per_b.delete(0, tk.END)
+    entry_verdure_per_b.insert(0, p["verdure_per_1b"])
+
+    entry_vasetti_per_b.delete(0, tk.END)
+    entry_vasetti_per_b.insert(0, p["vasetti_per_1b"])
+
+    entry_boccette_per_b.delete(0, tk.END)
+    entry_boccette_per_b.insert(0, p["boccette_per_1b"])
+
+    messagebox.showinfo("Profilo caricato", f"Profilo '{name}' applicato.")
+
+
+def save_profile():
+    """Salva/aggiorna il profilo con i valori attuali dei campi prezzo."""
+    name = combo_profile.get().strip()
+    if not name:
+        messagebox.showerror("Errore", "Inserisci un nome profilo da salvare.")
+        return
+
+    new_prof = {
+        "prezzo_reagente": entry_reagente.get(),
+        "prezzo_core": entry_core.get(),
+        "prezzo_carbone": entry_carbone.get(),
+        "verdure_per_1b": entry_verdure_per_b.get(),
+        "vasetti_per_1b": entry_vasetti_per_b.get(),
+        "boccette_per_1b": entry_boccette_per_b.get()
+    }
+
+    profiles[name] = new_prof
+    save_all_profiles(profiles)
+
+    # aggiorna lista valori nella combo profili
+    combo_profile["values"] = list(profiles.keys())
+
+    messagebox.showinfo("Profilo salvato", f"Profilo '{name}' salvato.")
+
+
+# =========================
+#   CONFIG SESSIONE (config.json)
 # =========================
 
 def save_config():
-    """Salva i valori correnti dei campi in un file JSON."""
+    """Salva lo stato corrente (ultimo uso) in config.json."""
     data = {
         "num_pozioni": entry_pozioni.get(),
         "tier": combo_tier.get(),
@@ -42,6 +152,7 @@ def save_config():
         "verdure_per_1b": entry_verdure_per_b.get(),
         "vasetti_per_1b": entry_vasetti_per_b.get(),
         "boccette_per_1b": entry_boccette_per_b.get(),
+        "last_profile": combo_profile.get()
     }
 
     try:
@@ -52,7 +163,7 @@ def save_config():
 
 
 def load_config():
-    """Carica i valori salvati (se esistono) e li mette nei campi GUI."""
+    """Carica l'ultimo stato usato (se esiste) da config.json nella GUI."""
     if not os.path.exists(CONFIG_FILE):
         return
 
@@ -97,6 +208,9 @@ def load_config():
         entry_boccette_per_b.delete(0, tk.END)
         entry_boccette_per_b.insert(0, data["boccette_per_1b"])
 
+    if "last_profile" in data and data["last_profile"] in profiles:
+        combo_profile.set(data["last_profile"])
+
 
 # =========================
 #   FUNZIONI DI UTILITÀ
@@ -109,7 +223,7 @@ def show_info():
         f"Autore: {APP_AUTHOR}\n\n"
         "Calcolatore di costo pozioni per Elysium.\n"
         "Supporta calderoni Terracotta / Rame / Ferro / Oro / Diamante.\n"
-        "Salvataggio automatico delle impostazioni.\n\n"
+        "Salvataggio automatico e profili di mercato multipli.\n\n"
         "Miao 😺"
     )
     messagebox.showinfo("Informazioni", msg)
@@ -157,21 +271,8 @@ def calcola():
         costo_carbonella_unit = prezzo_carbone / 12.0
 
         # ======================================================
-        # LOGICA DEI CALDERONI (v1.2)
+        # LOGICA CALDERONI (ereditata da v1.2)
         # ======================================================
-        # Ogni calderone definisce:
-        # - quante pozioni per catalyst
-        # - quante pozioni per carbonella
-        # - qual è il tier della pozione prodotta (T1/T2/T3)
-        #
-        # Da queste ricaviamo:
-        #   catalyst_necessari e carbonella_tot
-        #   efficienza Catalyst/poz e Carbonella/poz (per mostrare nel dettaglio)
-        #
-        # Nota:
-        # Ferro e Oro = T2 (pozioni di cura 2)
-        # Terracotta e Rame = T1
-        # Diamante = T3
 
         if tipo_calderone == "Terracotta":
             # 1 catalyst -> 2 pozioni T1
@@ -191,38 +292,33 @@ def calcola():
             # 1 catalyst -> 1 pozione T2
             # 2 carbonella -> 1 pozione
             pozioni_per_catalyst = 1.0
-            # carbonella caso ferro è diverso: è 2 per 1 pozione
-            pozioni_per_carbonella = 1.0 / 2.0  # cioè 0.5 pozioni per 1 carbonella
+            pozioni_per_carbonella = 1.0 / 2.0
             tier_pozione_prodotta = "T2"
 
         elif tipo_calderone == "Oro":
-            # 2 catalyst -> 3 pozioni T2  => 1 catalyst -> 1.5 pozioni
-            # 2 carbonella -> 3 pozioni   => 1 carbonella -> 1.5 pozioni
+            # 2 catalyst -> 3 pozioni T2 => 1 catalyst -> 1.5 pozioni
+            # 2 carbonella -> 3 pozioni => 1 carbonella -> 1.5 pozioni
             pozioni_per_catalyst = 1.5
             pozioni_per_carbonella = 1.5
             tier_pozione_prodotta = "T2"
 
         elif tipo_calderone == "Diamante":
-            # 3 catalyst -> 2 pozioni T3  => 1 catalyst -> 0.666...
-            # 3 carbonella -> 2 pozioni   => 1 carbonella -> 0.666...
-            pozioni_per_catalyst = (2.0 / 3.0)  # ~0.6667
+            # 3 catalyst -> 2 pozioni T3 => 1 catalyst -> 0.666...
+            # 3 carbonella -> 2 pozioni => 1 carbonella -> 0.666...
+            pozioni_per_catalyst = (2.0 / 3.0)
             pozioni_per_carbonella = (2.0 / 3.0)
             tier_pozione_prodotta = "T3"
 
         else:
             raise ValueError("Tipo calderone non valido")
 
-        # catalyst necessari:
-        # se 1 catalyst produce pozioni_per_catalyst pozioni,
-        # per num_pozioni servono num_pozioni / pozioni_per_catalyst
+        # catalyst necessari = pozioni richieste / pozioni prodotte per catalyst
         catalyst_necessari = num_pozioni / pozioni_per_catalyst
 
-        # carbonella necessaria:
-        # se 1 carbonella produce pozioni_per_carbonella pozioni,
-        # per num_pozioni servono num_pozioni / pozioni_per_carbonella
+        # carbonella necessaria = pozioni richieste / pozioni prodotte per carbonella
         carbonella_tot = num_pozioni / pozioni_per_carbonella
 
-        # Efficienze (per output leggibile)
+        # Efficienze per output leggibile
         catalyst_per_pozione = 1.0 / pozioni_per_catalyst
         carbonella_per_pozione = 1.0 / pozioni_per_carbonella
 
@@ -237,18 +333,18 @@ def calcola():
 
         reagenti_usati = catalyst_necessari / catalyst_per_reagente[tier_reagente]
 
-        # Ogni reagente 'batch' usa 1 core e 1 resina
+        # Ogni reagente batch usa 1 core e 1 resina
         core_usati = reagenti_usati
         resine_usate = reagenti_usati
 
-        # Boccette: 1 per pozione (sempre)
+        # Boccette: 1 per pozione
         boccette_tot = num_pozioni * 1.0
 
         # =========================
         # COSTI PARZIALI
         # =========================
-        costo_reagenti = reagenti_usati * prezzo_reagente
-        costo_core = core_usati * prezzo_core
+        costo_reagenti = reagenti_usati * float(entry_reagente.get())
+        costo_core = core_usati * float(entry_core.get())
         costo_resine = resine_usate * costo_resina_unit
         costo_carbonella = carbonella_tot * costo_carbonella_unit
         costo_boccette = boccette_tot * costo_boccetta_unit
@@ -276,6 +372,7 @@ def calcola():
         # OUTPUT DETTAGLIATO
         # =========================
         output_lines = [
+            f"Profilo prezzi attivo:   {combo_profile.get().strip() or '(non salvato)'}",
             f"Calderone:               {tipo_calderone}",
             f"Pozione prodotta:        {tier_pozione_prodotta}",
             f"Pozioni totali richieste:{num_pozioni:.2f}",
@@ -304,7 +401,7 @@ def calcola():
             f" • Boccette:               {costo_boccette:.2f} b",
             "",
             f"{APP_NAME} v{APP_VERSION} — {APP_AUTHOR}",
-            "Impostazioni salvate automaticamente.",
+            "Impostazioni e profili salvati automaticamente.",
         ]
 
         text_result.config(state="normal")
@@ -322,7 +419,7 @@ def calcola():
 
 root = tk.Tk()
 root.title(f"{APP_NAME} ⚗️ v{APP_VERSION}")
-root.geometry("540x500")
+root.geometry("560x540")
 root.configure(bg=BG_MAIN)
 root.resizable(False, False)
 
@@ -347,7 +444,7 @@ def _on_mousewheel_canvas(event):
     outer_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 outer_canvas.bind_all("<MouseWheel>", _on_mousewheel_canvas)
 
-# scroll locale sul box dettaglio
+# scroll solo nel box dettaglio
 def _on_mousewheel_text(event):
     text_result.yview_scroll(int(-1 * (event.delta / 120)), "units")
     return "break"
@@ -403,6 +500,54 @@ tk.Label(
     fg=FG_TEXT,
     bg=BG_MAIN,
 ).pack(pady=8)
+
+# --- PANNELLO PROFILO PREZZI ---
+panel_prof, prof_inner = make_panel(inner_frame, "Profilo prezzi")
+
+tk.Label(prof_inner, text="Profilo prezzi:", font=LABEL_FONT, bg=BG_PANEL, fg=FG_TEXT)\
+    .grid(row=0, column=0, sticky="e", padx=4, pady=4)
+
+# combobox EDITABILE: l'utente può digitare un nuovo nome profilo
+combo_profile = ttk.Combobox(
+    prof_inner,
+    width=14,
+    font=LABEL_FONT,
+)  # NON readonly: così puoi scrivere un nome nuovo
+combo_profile.grid(row=0, column=1, padx=4, pady=4, sticky="w")
+
+btn_load_prof = tk.Button(
+    prof_inner,
+    text="Carica profilo",
+    command=apply_profile,
+    bg="#444",
+    fg=FG_TEXT,
+    font=LABEL_FONT,
+    activebackground="#555",
+    activeforeground=FG_TEXT,
+    relief="flat",
+    padx=8,
+    pady=4,
+    cursor="hand2",
+)
+btn_load_prof.grid(row=0, column=2, padx=6, pady=4)
+
+btn_save_prof = tk.Button(
+    prof_inner,
+    text="Salva profilo",
+    command=save_profile,
+    bg=ACCENT,
+    fg="white",
+    font=LABEL_FONT,
+    activebackground="#574dff",
+    activeforeground="white",
+    relief="flat",
+    padx=8,
+    pady=4,
+    cursor="hand2",
+)
+btn_save_prof.grid(row=0, column=3, padx=6, pady=4)
+
+panel_prof.pack(padx=10, pady=6, fill="x")
 
 # --- PRODUZIONE ---
 panel_prod, prod_inner = make_panel(inner_frame, "Produzione")
@@ -612,6 +757,16 @@ scrollbar.config(command=text_result.yview)
 
 text_result.bind("<Enter>", _bind_wheel_to_text)
 text_result.bind("<Leave>", _bind_wheel_to_canvas)
+
+
+# =========================
+#   INIZIALIZZAZIONE PROFILI
+# =========================
+
+profiles = load_all_profiles()
+combo_profile["values"] = list(profiles.keys())
+if combo_profile["values"]:
+    combo_profile.set(combo_profile["values"][0])  # pre-seleziona qualcosa di esistente
 
 
 # =========================
