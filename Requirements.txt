@@ -1,0 +1,7 @@
+# Dipendenze per Elysium Pozioni
+# Tkinter è incluso nella maggior parte delle installazioni Python.
+# Se non presente, installarlo con:
+#   sudo apt install python3-tk   (Linux)
+#   brew install python-tk        (macOS)
+
+tk
