@@ -1,4 +1,9 @@
 <p align="center">
+  <img src="banner.png" alt="Elysium Pozioni Banner" width="820">
+</p>
+
+
+<p align="center">
   <img src="https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white" alt="Python Version">
   <img src="https://img.shields.io/badge/Tkinter-GUI-green?logo=windowsterminal&logoColor=white" alt="Tkinter GUI">
   <img src="https://img.shields.io/badge/Status-Attivo-brightgreen?style=flat" alt="Status">
