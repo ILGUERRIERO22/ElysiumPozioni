@@ -5,6 +5,43 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
 
 ---
 
+## [v1.4] — 2025-10-26
+### 💰 Analisi profitto
+- Aggiunto campo "Prezzo di vendita per pozione (b)".
+- Ora il calcolatore mostra automaticamente:
+  - Margine per pozione (prezzo vendita - costo produzione)
+  - Margine totale sul lotto richiesto
+  - Ricarico percentuale (% di profitto rispetto al costo)
+- L’anteprima rapida in alto ora, se inserisci un prezzo di vendita, mostra anche il Margine/poz oltre al Costo/poz.
+
+### 🧠 Qualità di vita
+- L’ultimo prezzo di vendita inserito viene salvato in `config.json` e ripristinato al riavvio.
+- Tutta la gestione profili rimane disponibile direttamente da interfaccia:
+  - Salva profilo (crea/aggiorna)
+  - Carica profilo
+  - Rinomina profilo
+  - Elimina profilo (con conferma)
+
+### ⚗️ Produzione
+- Restano supportati tutti i calderoni:
+  - Terracotta (T1)
+  - Rame (T1)
+  - Ferro (T2)
+  - Oro (T2)
+  - Diamante (T3)
+- Per ogni calderone continui a vedere:
+  - catalyst necessari
+  - carbonella totale
+  - core fragment e resine
+  - boccette richieste
+  - efficienza catalyst/pozione e carbonella/pozione
+  - costo totale e costo per pozione
+
+### 🔁 Version bump
+- `APP_VERSION` aggiornato a `1.4`.
+- Interfaccia estesa con pannello "Vendita" dedicato al prezzo di vendita.
+
+
 ## [v1.3.2] — 2025-10-26
 ### 🧼 Gestione profili completa
 - Aggiunto il pulsante **"Elimina profilo"** nel pannello "Profilo prezzi".

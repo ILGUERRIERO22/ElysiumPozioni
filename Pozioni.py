@@ -8,7 +8,7 @@ import os
 # =========================
 
 APP_NAME = "Elysium Pozioni"
-APP_VERSION = "1.3.2"
+APP_VERSION = "1.4"
 APP_AUTHOR = "ILGUERRIERO22"
 
 CONFIG_FILE = "config.json"      # salva ultimo stato usato
@@ -20,6 +20,8 @@ BG_RESULT = "#111111"
 FG_TEXT = "#eaeaea"
 FG_SUBTLE = "#9e9e9e"
 ACCENT = "#6a5dfd"
+DANGER_BG = "#742e2e"
+DANGER_BG_ACTIVE = "#993737"
 
 TITLE_FONT = ("Segoe UI", 15, "bold")
 SECTION_FONT = ("Segoe UI", 11, "bold")
@@ -135,8 +137,9 @@ def save_profile():
 
     messagebox.showinfo("Profilo salvato", f"Profilo '{name}' salvato.")
 
+
 def rename_profile():
-    """Rinomina il profilo attuale (chiave nel dict) in un nuovo nome scelto dall'utente."""
+    """Rinomina il profilo attuale in un nuovo nome scelto dall'utente."""
     old_name = combo_profile.get().strip()
     if not old_name:
         messagebox.showerror("Errore", "Seleziona il profilo da rinominare prima.")
@@ -146,7 +149,7 @@ def rename_profile():
         messagebox.showerror("Errore", f"Il profilo '{old_name}' non esiste.")
         return
 
-    # Chiediamo il nuovo nome con una piccola finestra popup
+    # Finestra popup per chiedere nuovo nome
     rename_win = tk.Toplevel(root)
     rename_win.title("Rinomina profilo")
     rename_win.configure(bg=BG_MAIN)
@@ -178,12 +181,12 @@ def rename_profile():
             messagebox.showerror("Errore", "Il nuovo nome non può essere vuoto.")
             return
 
-        # se il nome è uguale, niente da fare
+        # se uguale non serve fare nulla
         if new_name == old_name:
             rename_win.destroy()
             return
 
-        # se il nuovo nome già esiste, chiediamo conferma
+        # se il nuovo nome esiste già, chiediamo conferma
         if new_name in profiles:
             sovrascrivi = messagebox.askyesno(
                 "Conferma",
@@ -239,6 +242,7 @@ def rename_profile():
         cursor="hand2",
     ).pack(side="right")
 
+
 def delete_profile():
     """Elimina definitivamente il profilo selezionato dalla lista e da profiles.json."""
     name = combo_profile.get().strip()
@@ -250,7 +254,6 @@ def delete_profile():
         messagebox.showerror("Errore", f"Il profilo '{name}' non esiste.")
         return
 
-    # Chiedi conferma: questa azione è distruttiva
     conferma = messagebox.askyesno(
         "Conferma eliminazione",
         f"Sei sicuro di voler eliminare il profilo '{name}'?\n"
@@ -259,13 +262,13 @@ def delete_profile():
     if not conferma:
         return
 
-    # Elimina dal dizionario in memoria
+    # rimuovi dalla memoria
     del profiles[name]
 
-    # Salva nuovo stato su disco
+    # salva su disco
     save_all_profiles(profiles)
 
-    # Aggiorna combobox
+    # aggiorna combobox
     nuovi_nomi = list(profiles.keys())
     combo_profile["values"] = nuovi_nomi
 
@@ -293,6 +296,7 @@ def save_config():
         "verdure_per_1b": entry_verdure_per_b.get(),
         "vasetti_per_1b": entry_vasetti_per_b.get(),
         "boccette_per_1b": entry_boccette_per_b.get(),
+        "prezzo_vendita": entry_prezzo_vendita.get(),
         "last_profile": combo_profile.get()
     }
 
@@ -349,6 +353,10 @@ def load_config():
         entry_boccette_per_b.delete(0, tk.END)
         entry_boccette_per_b.insert(0, data["boccette_per_1b"])
 
+    if "prezzo_vendita" in data:
+        entry_prezzo_vendita.delete(0, tk.END)
+        entry_prezzo_vendita.insert(0, data["prezzo_vendita"])
+
     if "last_profile" in data and data["last_profile"] in profiles:
         combo_profile.set(data["last_profile"])
 
@@ -362,9 +370,10 @@ def show_info():
     msg = (
         f"{APP_NAME} v{APP_VERSION}\n"
         f"Autore: {APP_AUTHOR}\n\n"
-        "Calcolatore di costo pozioni per Elysium.\n"
+        "Calcolatore di costo e profitto pozioni per Elysium.\n"
         "Supporta calderoni Terracotta / Rame / Ferro / Oro / Diamante.\n"
-        "Salvataggio automatico e profili di mercato multipli.\n\n"
+        "Profili di mercato multipli, rinomina/elimina profili,\n"
+        "salvataggio automatico e analisi margine.\n\n"
         "Miao 😺"
     )
     messagebox.showinfo("Informazioni", msg)
@@ -400,7 +409,7 @@ def calcola():
         vasetti_per_1b = float(entry_vasetti_per_b.get())    # es 15 => 1b ogni 15 vasetti
         boccette_per_1b = float(entry_boccette_per_b.get())  # es 14 => 1b ogni 14 boccette
 
-        # --- COSTI UNITARI CALCOLATI ---
+        # --- COSTO UNITARIO ---
         costo_verdura_unit = 1.0 / verdure_per_1b        # b per 1 verdura
         costo_vasetto_unit = 1.0 / vasetti_per_1b        # b per 1 vasetto
         costo_boccetta_unit = 1.0 / boccette_per_1b      # b per 1 boccetta
@@ -412,7 +421,7 @@ def calcola():
         costo_carbonella_unit = prezzo_carbone / 12.0
 
         # ======================================================
-        # LOGICA CALDERONI (ereditata da v1.2)
+        # LOGICA CALDERONI
         # ======================================================
 
         if tipo_calderone == "Terracotta":
@@ -437,15 +446,15 @@ def calcola():
             tier_pozione_prodotta = "T2"
 
         elif tipo_calderone == "Oro":
-            # 2 catalyst -> 3 pozioni T2 => 1 catalyst -> 1.5 pozioni
-            # 2 carbonella -> 3 pozioni => 1 carbonella -> 1.5 pozioni
+            # 2 catalyst -> 3 pozioni T2  => 1 catalyst -> 1.5 pozioni
+            # 2 carbonella -> 3 pozioni   => 1 carbonella -> 1.5 pozioni
             pozioni_per_catalyst = 1.5
             pozioni_per_carbonella = 1.5
             tier_pozione_prodotta = "T2"
 
         elif tipo_calderone == "Diamante":
-            # 3 catalyst -> 2 pozioni T3 => 1 catalyst -> 0.666...
-            # 3 carbonella -> 2 pozioni => 1 carbonella -> 0.666...
+            # 3 catalyst -> 2 pozioni T3  => 1 catalyst -> 0.666...
+            # 3 carbonella -> 2 pozioni   => 1 carbonella -> 0.666...
             pozioni_per_catalyst = (2.0 / 3.0)
             pozioni_per_carbonella = (2.0 / 3.0)
             tier_pozione_prodotta = "T3"
@@ -453,13 +462,12 @@ def calcola():
         else:
             raise ValueError("Tipo calderone non valido")
 
-        # catalyst necessari = pozioni richieste / pozioni prodotte per catalyst
+        # catalyst necessari:
         catalyst_necessari = num_pozioni / pozioni_per_catalyst
-
-        # carbonella necessaria = pozioni richieste / pozioni prodotte per carbonella
+        # carbonella necessaria:
         carbonella_tot = num_pozioni / pozioni_per_carbonella
 
-        # Efficienze per output leggibile
+        # efficienze per output leggibile
         catalyst_per_pozione = 1.0 / pozioni_per_catalyst
         carbonella_per_pozione = 1.0 / pozioni_per_carbonella
 
@@ -484,8 +492,8 @@ def calcola():
         # =========================
         # COSTI PARZIALI
         # =========================
-        costo_reagenti = reagenti_usati * float(entry_reagente.get())
-        costo_core = core_usati * float(entry_core.get())
+        costo_reagenti = reagenti_usati * prezzo_reagente
+        costo_core = core_usati * prezzo_core
         costo_resine = resine_usate * costo_resina_unit
         costo_carbonella = carbonella_tot * costo_carbonella_unit
         costo_boccette = boccette_tot * costo_boccetta_unit
@@ -501,10 +509,43 @@ def calcola():
         costo_per_pozione = costo_totale / num_pozioni if num_pozioni != 0 else 0.0
 
         # =========================
-        # ANTEPRIMA COSTO RAPIDO
+        # PROFITTO / MARGINE (1.4)
         # =========================
+        # prezzo di vendita per pozione, opzionale
+        try:
+            prezzo_vendita = float(entry_prezzo_vendita.get())
+        except ValueError:
+            prezzo_vendita = None
+
+        if prezzo_vendita is not None:
+            margine_per_pozione = prezzo_vendita - costo_per_pozione
+            margine_totale = margine_per_pozione * num_pozioni
+            if costo_per_pozione > 0:
+                margine_percentuale = (margine_per_pozione / costo_per_pozione) * 100.0
+            else:
+                margine_percentuale = 0.0
+        else:
+            margine_per_pozione = None
+            margine_totale = None
+            margine_percentuale = None
+
+        # =========================
+        # ANTEPRIMA COSTO RAPIDO (label_preview)
+        # =========================
+        if prezzo_vendita is not None:
+            preview_text = (
+                f"Totale: {costo_totale:.2f} b    •    "
+                f"Costo/poz: {costo_per_pozione:.2f} b    •    "
+                f"Margine/poz: {margine_per_pozione:.2f} b"
+            )
+        else:
+            preview_text = (
+                f"Totale: {costo_totale:.2f} b    •    "
+                f"Per pozione: {costo_per_pozione:.2f} b"
+            )
+
         label_preview.config(
-            text=f"Totale: {costo_totale:.2f} b    •    Per pozione: {costo_per_pozione:.2f} b",
+            text=preview_text,
             fg=FG_TEXT,
             bg=BG_MAIN,
         )
@@ -513,36 +554,50 @@ def calcola():
         # OUTPUT DETTAGLIATO
         # =========================
         output_lines = [
-            f"Profilo prezzi attivo:   {combo_profile.get().strip() or '(non salvato)'}",
-            f"Calderone:               {tipo_calderone}",
-            f"Pozione prodotta:        {tier_pozione_prodotta}",
-            f"Pozioni totali richieste:{num_pozioni:.2f}",
-            f"Tipo reagente usato:     {tier_reagente}",
+            f"Profilo prezzi attivo:    {combo_profile.get().strip() or '(non salvato)'}",
+            f"Calderone:                {tipo_calderone}",
+            f"Pozione prodotta:         {tier_pozione_prodotta}",
+            f"Pozioni totali richieste: {num_pozioni:.2f}",
+            f"Tipo reagente usato:      {tier_reagente}",
             "",
-            f"COSTO TOTALE:            {costo_totale:.2f} b",
-            f"Costo per pozione:       {costo_per_pozione:.2f} b",
+            f"COSTO TOTALE:             {costo_totale:.2f} b",
+            f"Costo per pozione:        {costo_per_pozione:.2f} b",
+        ]
+
+        # se è stato inserito un prezzo di vendita, aggiungiamo sezione profitto
+        if prezzo_vendita is not None:
+            output_lines += [
+                "",
+                "Profitto stimato:",
+                f" • Prezzo di vendita/poz:   {prezzo_vendita:.2f} b",
+                f" • Margine per pozione:     {margine_per_pozione:.2f} b",
+                f" • Margine totale lotto:    {margine_totale:.2f} b",
+                f" • Ricarico %:              {margine_percentuale:.1f} %",
+            ]
+
+        output_lines += [
             "",
             "Efficienza calderone:",
-            f" • Catalyst per pozione:   {catalyst_per_pozione:.4f}",
-            f" • Carbonella per pozione: {carbonella_per_pozione:.4f}",
+            f" • Catalyst per pozione:    {catalyst_per_pozione:.4f}",
+            f" • Carbonella per pozione:  {carbonella_per_pozione:.4f}",
             "",
             "Materiali richiesti:",
-            f" • Catalyst totali:        {catalyst_necessari:.2f}",
-            f" • Reagenti usati:         {reagenti_usati:.2f}",
-            f" • Core frammenti:         {core_usati:.2f}",
-            f" • Resine:                 {resine_usate:.2f}",
-            f" • Carbonella totale:      {carbonella_tot:.2f}",
-            f" • Boccette:               {boccette_tot:.2f}",
+            f" • Catalyst totali:         {catalyst_necessari:.2f}",
+            f" • Reagenti usati:          {reagenti_usati:.2f}",
+            f" • Core frammenti:          {core_usati:.2f}",
+            f" • Resine:                  {resine_usate:.2f}",
+            f" • Carbonella totale:       {carbonella_tot:.2f}",
+            f" • Boccette:                {boccette_tot:.2f}",
             "",
             "Costi parziali:",
-            f" • Reagenti:               {costo_reagenti:.2f} b",
-            f" • Core:                   {costo_core:.2f} b",
-            f" • Resine:                 {costo_resine:.2f} b",
-            f" • Carbonella:             {costo_carbonella:.2f} b",
-            f" • Boccette:               {costo_boccette:.2f} b",
+            f" • Reagenti:                {costo_reagenti:.2f} b",
+            f" • Core:                    {costo_core:.2f} b",
+            f" • Resine:                  {costo_resine:.2f} b",
+            f" • Carbonella:              {costo_carbonella:.2f} b",
+            f" • Boccette:                {costo_boccette:.2f} b",
             "",
             f"{APP_NAME} v{APP_VERSION} — {APP_AUTHOR}",
-            "Impostazioni e profili salvati automaticamente.",
+            "Profili multipli, salvataggio automatico e analisi margine.",
         ]
 
         text_result.config(state="normal")
@@ -560,7 +615,7 @@ def calcola():
 
 root = tk.Tk()
 root.title(f"{APP_NAME} ⚗️ v{APP_VERSION}")
-root.geometry("760x580")
+root.geometry("760x620")
 root.configure(bg=BG_MAIN)
 root.resizable(False, False)
 
@@ -713,10 +768,10 @@ btn_delete_prof = tk.Button(
     prof_inner,
     text="Elimina profilo",
     command=delete_profile,
-    bg="#742e2e",
+    bg=DANGER_BG,
     fg="white",
     font=LABEL_FONT,
-    activebackground="#993737",
+    activebackground=DANGER_BG_ACTIVE,
     activeforeground="white",
     relief="flat",
     padx=8,
@@ -726,7 +781,6 @@ btn_delete_prof = tk.Button(
 btn_delete_prof.grid(row=0, column=5, padx=4, pady=4)
 
 panel_prof.pack(padx=10, pady=6, fill="x")
-
 
 # --- PRODUZIONE ---
 panel_prod, prod_inner = make_panel(inner_frame, "Produzione")
@@ -872,6 +926,31 @@ entry_boccette_per_b.grid(row=2, column=1, pady=3)
 
 panel_bundle.pack(padx=10, pady=6, fill="x")
 
+# --- VENDITA / PROFITTO (1.4) ---
+panel_sale, sale_inner = make_panel(inner_frame, "Vendita")
+
+tk.Label(
+    sale_inner,
+    text="Prezzo di vendita per pozione (b):",
+    font=LABEL_FONT,
+    bg=BG_PANEL,
+    fg=FG_TEXT
+).grid(row=0, column=0, sticky="e", padx=4, pady=4)
+
+entry_prezzo_vendita = tk.Entry(
+    sale_inner,
+    width=10,
+    font=LABEL_FONT,
+    bg="#3a3a3a",
+    fg=FG_TEXT,
+    insertbackground=FG_TEXT,
+    relief="flat",
+)
+entry_prezzo_vendita.insert(0, "")  # vuoto di default
+entry_prezzo_vendita.grid(row=0, column=1, pady=4)
+
+panel_sale.pack(padx=10, pady=6, fill="x")
+
 # --- BOTTONE CALCOLA ---
 tk.Button(
     inner_frame,
@@ -919,7 +998,7 @@ scrollbar.pack(side="right", fill="y")
 
 text_result = tk.Text(
     inner_result,
-    height=12,
+    height=14,
     font=RESULT_FONT,
     state="disabled",
     wrap="word",
@@ -945,7 +1024,7 @@ text_result.bind("<Leave>", _bind_wheel_to_canvas)
 profiles = load_all_profiles()
 combo_profile["values"] = list(profiles.keys())
 if combo_profile["values"]:
-    combo_profile.set(combo_profile["values"][0])  # pre-seleziona qualcosa di esistente
+    combo_profile.set(combo_profile["values"][0])  # pre-seleziona un profilo esistente
 
 
 # =========================
