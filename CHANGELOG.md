@@ -5,6 +5,28 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
 
 ---
 
+## [v1.3.2] — 2025-10-26
+### 🧼 Gestione profili completa
+- Aggiunto il pulsante **"Elimina profilo"** nel pannello "Profilo prezzi".
+- Ora è possibile cancellare un profilo di mercato direttamente dall'interfaccia.
+- Prima di eliminare un profilo viene mostrata una conferma di sicurezza.
+- Dopo l'eliminazione:
+  - il profilo sparisce dal file `profiles.json`
+  - la lista dei profili nella combo viene aggiornata
+  - se esistono altri profili, viene selezionato automaticamente il primo disponibile
+
+### ♻️ Flusso profili adesso è completo
+- Crea profilo
+- Salva profilo
+- Carica profilo
+- Rinomina profilo
+- Elimina profilo ✅
+
+### 🔁 Version bump
+- `APP_VERSION` aggiornato a `1.3.2`.
+- Finestra principale leggermente più larga per accomodare tutti i pulsanti del pannello profili.
+
+
 ## [v1.3.1] — 2025-10-26
 ### 🛠 Gestione profili migliorata
 - Aggiunto il pulsante **"Rinomina profilo"**.

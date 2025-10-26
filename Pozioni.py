@@ -8,7 +8,7 @@ import os
 # =========================
 
 APP_NAME = "Elysium Pozioni"
-APP_VERSION = "1.3.1"
+APP_VERSION = "1.3.2"
 APP_AUTHOR = "ILGUERRIERO22"
 
 CONFIG_FILE = "config.json"      # salva ultimo stato usato
@@ -238,6 +238,43 @@ def rename_profile():
         pady=4,
         cursor="hand2",
     ).pack(side="right")
+
+def delete_profile():
+    """Elimina definitivamente il profilo selezionato dalla lista e da profiles.json."""
+    name = combo_profile.get().strip()
+    if not name:
+        messagebox.showerror("Errore", "Seleziona il profilo da eliminare.")
+        return
+
+    if name not in profiles:
+        messagebox.showerror("Errore", f"Il profilo '{name}' non esiste.")
+        return
+
+    # Chiedi conferma: questa azione è distruttiva
+    conferma = messagebox.askyesno(
+        "Conferma eliminazione",
+        f"Sei sicuro di voler eliminare il profilo '{name}'?\n"
+        "Questa azione non può essere annullata."
+    )
+    if not conferma:
+        return
+
+    # Elimina dal dizionario in memoria
+    del profiles[name]
+
+    # Salva nuovo stato su disco
+    save_all_profiles(profiles)
+
+    # Aggiorna combobox
+    nuovi_nomi = list(profiles.keys())
+    combo_profile["values"] = nuovi_nomi
+
+    if nuovi_nomi:
+        combo_profile.set(nuovi_nomi[0])
+    else:
+        combo_profile.set("")
+
+    messagebox.showinfo("Profilo eliminato", f"Profilo '{name}' rimosso.")
 
 
 # =========================
@@ -523,7 +560,7 @@ def calcola():
 
 root = tk.Tk()
 root.title(f"{APP_NAME} ⚗️ v{APP_VERSION}")
-root.geometry("600x560")
+root.geometry("760x580")
 root.configure(bg=BG_MAIN)
 root.resizable(False, False)
 
@@ -616,12 +653,12 @@ tk.Label(
     fg=FG_TEXT
 ).grid(row=0, column=0, sticky="e", padx=4, pady=4)
 
-# combobox EDITABILE per poter scrivere un nuovo nome profilo
+# combobox EDITABILE per poter scrivere / rinominare / creare nomi nuovi
 combo_profile = ttk.Combobox(
     prof_inner,
     width=16,
     font=LABEL_FONT,
-)  # non readonly: l'utente può scrivere un nome nuovo
+)  # non readonly apposta
 combo_profile.grid(row=0, column=1, padx=4, pady=4, sticky="w")
 
 btn_load_prof = tk.Button(
@@ -638,7 +675,7 @@ btn_load_prof = tk.Button(
     pady=4,
     cursor="hand2",
 )
-btn_load_prof.grid(row=0, column=2, padx=6, pady=4)
+btn_load_prof.grid(row=0, column=2, padx=4, pady=4)
 
 btn_save_prof = tk.Button(
     prof_inner,
@@ -654,7 +691,7 @@ btn_save_prof = tk.Button(
     pady=4,
     cursor="hand2",
 )
-btn_save_prof.grid(row=0, column=3, padx=6, pady=4)
+btn_save_prof.grid(row=0, column=3, padx=4, pady=4)
 
 btn_rename_prof = tk.Button(
     prof_inner,
@@ -670,7 +707,23 @@ btn_rename_prof = tk.Button(
     pady=4,
     cursor="hand2",
 )
-btn_rename_prof.grid(row=0, column=4, padx=6, pady=4)
+btn_rename_prof.grid(row=0, column=4, padx=4, pady=4)
+
+btn_delete_prof = tk.Button(
+    prof_inner,
+    text="Elimina profilo",
+    command=delete_profile,
+    bg="#742e2e",
+    fg="white",
+    font=LABEL_FONT,
+    activebackground="#993737",
+    activeforeground="white",
+    relief="flat",
+    padx=8,
+    pady=4,
+    cursor="hand2",
+)
+btn_delete_prof.grid(row=0, column=5, padx=4, pady=4)
 
 panel_prof.pack(padx=10, pady=6, fill="x")
 
