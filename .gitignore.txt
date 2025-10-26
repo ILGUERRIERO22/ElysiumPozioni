@@ -1,0 +1,60 @@
+# ==========================
+# 🐍 Elysium Pozioni - Git Ignore
+# Ignora file temporanei, cache e configurazioni locali
+# ==========================
+
+# --- Python cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Ambiente virtuale ---
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+*.env
+*.venv
+
+# --- File di log / output temporanei ---
+*.log
+*.tmp
+*.bak
+*.swp
+*.DS_Store
+
+# --- Impostazioni editor ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# --- Dati di sistema ---
+Thumbs.db
+desktop.ini
+
+# --- Compilati / distribuzione ---
+build/
+dist/
+*.egg-info/
+*.spec
+
+# --- Backup file ---
+*.old
+*.orig
+
+# --- Python test cache ---
+.coverage
+.tox/
+.nox/
+pytest_cache/
+htmlcov/
+.coverage.*
+
+# --- Notebook / export ---
+.ipynb_checkpoints
+
+# --- Altro ---
+# File temporanei generati a runtime
+temp/
