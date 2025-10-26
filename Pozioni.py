@@ -1,7 +1,14 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-# --- TEMA SCURO / STILE ---
+# =========================
+#   COSTANTI TEMA / STILE
+# =========================
+
+APP_NAME = "Elysium Pozioni"
+APP_VERSION = "1.0.1"
+APP_AUTHOR = "ILGUERRIERO22"
+
 BG_MAIN = "#1e1e1e"
 BG_PANEL = "#2a2a2a"
 BG_RESULT = "#111111"
@@ -16,12 +23,42 @@ BUTTON_FONT = ("Segoe UI", 11, "bold")
 RESULT_FONT = ("Consolas", 11)
 
 
+# =========================
+#   FUNZIONI DI UTILITÀ
+# =========================
+
+def show_info():
+    """Mostra popup con crediti / versione."""
+    msg = (
+        f"{APP_NAME} v{APP_VERSION}\n"
+        f"Autore: {APP_AUTHOR}\n\n"
+        "Calcolatore di costo pozioni per Elysium.\n"
+        "Supporta calderone d’Oro e di Ferro.\n\n"
+        "Miao 😺"
+    )
+    messagebox.showinfo("Informazioni", msg)
+
+
+def show_license():
+    """Mostra popup con licenza MIT semplificata."""
+    mit_text = (
+        "Licenza MIT\n\n"
+        "Copyright (c) 2025 "
+        f"{APP_AUTHOR}\n\n"
+        "È consentito usare, copiare, modificare e distribuire questo software "
+        "senza restrizioni, anche per uso commerciale, purché venga mantenuta "
+        "questa nota di copyright e la presente licenza.\n\n"
+        "IL SOFTWARE VIENE FORNITO \"COSÌ COM'È\", SENZA ALCUNA GARANZIA."
+    )
+    messagebox.showinfo("Licenza", mit_text)
+
+
 def calcola():
     try:
         # --- INPUT DI BASE ---
         num_pozioni = int(entry_pozioni.get())
-        tier = combo_tier.get()            # T1 / T2 / T3
-        tipo_calderone = combo_calderone.get()  # Oro / Ferro
+        tier = combo_tier.get()                   # T1 / T2 / T3
+        tipo_calderone = combo_calderone.get()    # Oro / Ferro
 
         # --- PREZZI DIRETTI ---
         prezzo_reagente = float(entry_reagente.get())   # costo 1 reagente scelto
@@ -33,50 +70,47 @@ def calcola():
         vasetti_per_1b = float(entry_vasetti_per_b.get())    # es 15 => 1b ogni 15 vasetti
         boccette_per_1b = float(entry_boccette_per_b.get())  # es 14 => 1b ogni 14 boccette
 
-        # --- COSTI UNITARI ---
+        # --- COSTI UNITARI CALCOLATI ---
         costo_verdura_unit = 1.0 / verdure_per_1b        # b per 1 verdura
         costo_vasetto_unit = 1.0 / vasetti_per_1b        # b per 1 vasetto
         costo_boccetta_unit = 1.0 / boccette_per_1b      # b per 1 boccetta
 
         # Resina: 2 verdure + 1 vasetto -> 2 resine
-        # => costo singola resina
         costo_resina_unit = (2.0 * costo_verdura_unit + costo_vasetto_unit) / 2.0
 
-        # Carbonella:
-        # 1 carbone = 12 carbonella
+        # Carbonella: 1 carbone = 12 carbonella
         costo_carbonella_unit = prezzo_carbone / 12.0
 
-        # --- QUANTITÀ MATERIALI IN BASE AL CALDERONE ---
+        # --- QUANTITÀ MATERIALI RICHIESTI IN BASE AL CALDERONE ---
 
         # Rese reagente:
         # T1 = 1 catalyst, T2 = 2 catalyst, T3 = 3 catalyst
         catalyst_per_reagente = {"T1": 1.0, "T2": 2.0, "T3": 3.0}
 
         if tipo_calderone == "Oro":
-            # Oro:
-            # 2 catalyst = 3 pozioni  => catalyst_per_pozione = 2/3
-            # carbonella: 2 carbonella per 3 pozioni => 2/3 a pozione
+            # Calderone d'Oro:
+            #   2 catalyst = 3 pozioni
+            #   2 carbonella per 3 pozioni
             catalyst_necessari = (num_pozioni / 3.0) * 2.0
             carbonella_tot = (num_pozioni / 3.0) * 2.0
 
         elif tipo_calderone == "Ferro":
-            # Ferro:
-            # 1 catalyst = 1 pozione
-            # carbonella: 2 carbonella per 1 pozione
+            # Calderone di Ferro:
+            #   1 catalyst = 1 pozione
+            #   2 carbonella per 1 pozione
             catalyst_necessari = num_pozioni * 1.0
             carbonella_tot = num_pozioni * 2.0
-
         else:
             raise ValueError("Tipo calderone non valido")
 
-        # Quanti reagenti servono per fare tutti i catalyst richiesti
+        # Quanti reagenti servono per craftare tutti i catalyst richiesti
         reagenti_usati = catalyst_necessari / catalyst_per_reagente[tier]
 
-        # Ogni reagente 'batch' usa 1 core + 1 resina
+        # Ogni reagente 'batch' usa 1 core e 1 resina
         core_usati = reagenti_usati
         resine_usate = reagenti_usati
 
-        # Boccette: sempre 1 per pozione (vale sia Oro che Ferro)
+        # Boccette: 1 per pozione (vale per tutti i calderoni)
         boccette_tot = num_pozioni * 1.0
 
         # --- COSTI PARZIALI ---
@@ -96,14 +130,14 @@ def calcola():
 
         costo_per_pozione = costo_totale / num_pozioni if num_pozioni != 0 else 0.0
 
-        # --- AGGIORNA PREVIEW IN ALTO ---
+        # --- AGGIORNA PREVIEW SINTETICA ---
         label_preview.config(
             text=f"Totale: {costo_totale:.2f} b    •    Per pozione: {costo_per_pozione:.2f} b",
             fg=FG_TEXT,
             bg=BG_MAIN,
         )
 
-        # --- TESTO DETTAGLIATO NEL BOX SCROLLABILE ---
+        # --- TESTO DETTAGLIATO ---
         output_lines = [
             f"Calderone:          {tipo_calderone}",
             f"Pozioni totali:     {num_pozioni}",
@@ -112,12 +146,13 @@ def calcola():
             f"COSTO TOTALE:       {costo_totale:.2f} b",
             f"Costo per pozione:  {costo_per_pozione:.2f} b",
             "",
-            f"Catalyst necessari: {catalyst_necessari:.2f}",
-            f"Reagenti usati:     {reagenti_usati:.2f}",
-            f"Core frammenti:     {core_usati:.2f}",
-            f"Resine:             {resine_usate:.2f}",
-            f"Carbonella:         {carbonella_tot:.2f}",
-            f"Boccette:           {boccette_tot:.2f}",
+            "Materiali richiesti:",
+            f" • Catalyst totali: {catalyst_necessari:.2f}",
+            f" • Reagenti usati:  {reagenti_usati:.2f}",
+            f" • Core frammenti:  {core_usati:.2f}",
+            f" • Resine:          {resine_usate:.2f}",
+            f" • Carbonella:      {carbonella_tot:.2f}",
+            f" • Boccette:        {boccette_tot:.2f}",
             "",
             "Costi parziali:",
             f" • Reagenti:     {costo_reagenti:.2f} b",
@@ -125,6 +160,8 @@ def calcola():
             f" • Resine:       {costo_resine:.2f} b",
             f" • Carbonella:   {costo_carbonella:.2f} b",
             f" • Boccette:     {costo_boccette:.2f} b",
+            "",
+            f"{APP_NAME} v{APP_VERSION} — {APP_AUTHOR}",
         ]
 
         text_result.config(state="normal")
@@ -136,18 +173,19 @@ def calcola():
         messagebox.showerror("Errore", "Controlla i campi: inserisci numeri validi!")
 
 
-
 # =========================
-# GUI con scroll "intelligente"
+#   GUI + SCROLL INTELLIGENTE
 # =========================
 
 root = tk.Tk()
-root.title("Pozioni Alchemiche 😼")
+root.title(f"{APP_NAME} ⚗️")
+
+# dimensione finestra principale (fissa, il contenuto scorre)
 root.geometry("540x500")
 root.configure(bg=BG_MAIN)
 root.resizable(False, False)
 
-# canvas scrollabile per tutto
+# canvas scrollabile per tutto il contenuto
 outer_canvas = tk.Canvas(root, bg=BG_MAIN, highlightthickness=0)
 outer_canvas.pack(side="left", fill="both", expand=True)
 
@@ -163,15 +201,15 @@ def on_configure(event):
     outer_canvas.configure(scrollregion=outer_canvas.bbox("all"))
 inner_frame.bind("<Configure>", on_configure)
 
-# scroll globale di default
+# scroll globale (canvas)
 def _on_mousewheel_canvas(event):
     outer_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 outer_canvas.bind_all("<MouseWheel>", _on_mousewheel_canvas)
 
-# scroll locale dentro il box dettaglio
+# scroll locale nella sezione Dettaglio
 def _on_mousewheel_text(event):
     text_result.yview_scroll(int(-1 * (event.delta / 120)), "units")
-    return "break"  # blocca propagazione
+    return "break"
 
 def _bind_wheel_to_text(event):
     outer_canvas.unbind_all("<MouseWheel>")
@@ -182,7 +220,6 @@ def _bind_wheel_to_canvas(event):
     outer_canvas.bind_all("<MouseWheel>", _on_mousewheel_canvas)
 
 
-# helper pannelli
 def make_panel(parent, title):
     frame = tk.Frame(parent, bg=BG_PANEL, bd=0)
     header = tk.Label(
@@ -199,16 +236,34 @@ def make_panel(parent, title):
     return frame, inner
 
 
-# --- TITOLO ---
+# =========================
+#   MENU "INFO"
+# =========================
+
+menubar = tk.Menu(root, tearoff=0)
+
+menu_info = tk.Menu(menubar, tearoff=0, bg="white", fg="black")
+menu_info.add_command(label="Informazioni / Crediti", command=show_info)
+menu_info.add_command(label="Licenza", command=show_license)
+menubar.add_cascade(label="Info", menu=menu_info)
+
+root.config(menu=menubar)
+
+
+# =========================
+#   SEZIONI UI
+# =========================
+
+# TITOLO
 tk.Label(
     inner_frame,
-    text="Calcolatore Pozioni",
+    text=f"{APP_NAME}",
     font=TITLE_FONT,
     fg=FG_TEXT,
     bg=BG_MAIN,
 ).pack(pady=8)
 
-# --- PANNELLO PRODUZIONE ---
+# --- PRODUZIONE ---
 panel_prod, prod_inner = make_panel(inner_frame, "Produzione")
 
 tk.Label(prod_inner, text="Numero pozioni:", font=LABEL_FONT, bg=BG_PANEL, fg=FG_TEXT)\
@@ -250,7 +305,7 @@ combo_calderone.grid(row=2, column=1, pady=4)
 
 panel_prod.pack(padx=10, pady=6, fill="x")
 
-# --- PANNELLO PREZZI DIRETTI ---
+# --- PREZZI DIRETTI ---
 panel_price_direct, price_direct_inner = make_panel(inner_frame, "Prezzi diretti (in b)")
 
 tk.Label(price_direct_inner, text="Reagente (1x):", font=LABEL_FONT, bg=BG_PANEL, fg=FG_TEXT)\
@@ -305,7 +360,7 @@ tk.Label(
 
 panel_price_direct.pack(padx=10, pady=6, fill="x")
 
-# --- PANNELLO QUANTE UNITÀ PER 1 b ---
+# --- QUANTE UNITÀ OTTIENI CON 1 b ---
 panel_bundle, bundle_inner = make_panel(inner_frame, "Quante unità ottieni con 1 b")
 
 tk.Label(bundle_inner, text="Verdure per 1 b:", font=LABEL_FONT, bg=BG_PANEL, fg=FG_TEXT)\
@@ -368,7 +423,7 @@ tk.Button(
     pady=6,
 ).pack(pady=(10, 6))
 
-# --- PREVIEW COSTI VELOCI ---
+# --- PREVIEW COSTI RAPIDI ---
 label_preview = tk.Label(
     inner_frame,
     text="Totale: -    •    Per pozione: -",
@@ -414,9 +469,9 @@ text_result = tk.Text(
 text_result.pack(fill="both", expand=True)
 scrollbar.config(command=text_result.yview)
 
-# quando il mouse entra nel dettaglio → scrolla dentro
+# quando il mouse è sopra il dettaglio → scrolla solo lì
 text_result.bind("<Enter>", _bind_wheel_to_text)
-# quando esce → torna a scrollare tutta la schermata
+# quando esce → torna a scrollare tutta la finestra
 text_result.bind("<Leave>", _bind_wheel_to_canvas)
 
 root.mainloop()
