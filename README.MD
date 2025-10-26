@@ -4,6 +4,15 @@ Un calcolatore di pozioni con interfaccia grafica (GUI) realizzato in **Python +
 
 ---
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white" alt="Python Version">
+  <img src="https://img.shields.io/badge/Tkinter-GUI-green?logo=windowsterminal&logoColor=white" alt="Tkinter GUI">
+  <img src="https://img.shields.io/badge/Status-Attivo-brightgreen?style=flat" alt="Status">
+  <img src="https://img.shields.io/badge/Licenza-MIT-yellow?style=flat" alt="Licenza">
+  <img src="https://img.shields.io/badge/Made%20by-ILGUERRIERO22-purple?style=flat-square" alt="Autore">
+</p>
+
+
 ## 🧪 Funzionalità principali
 
 - Calcola automaticamente:
