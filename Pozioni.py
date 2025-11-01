@@ -7,12 +7,47 @@ import os
 #   COSTANTI TEMA / STILE
 # =========================
 
+import sys
+import shutil
+
+# ---- PATCH AVVIO: forza working dir su %APPDATA%\ElysiumPozioni ----
+import os, sys, shutil
+
 APP_NAME = "Elysium Pozioni"
-APP_VERSION = "1.4"
+APP_DIRNAME = "ElysiumPozioni"
+APP_VERSION = "1.4.1"
 APP_AUTHOR = "ILGUERRIERO22"
 
-CONFIG_FILE = "config.json"      # salva ultimo stato usato
-PROFILES_FILE = "profiles.json"  # salva profili di prezzo multipli
+def _get_data_dir():
+    base = os.getenv("APPDATA") or os.path.expanduser("~")
+    path = os.path.join(base, APP_DIRNAME)
+    os.makedirs(path, exist_ok=True)
+    return path
+
+DATA_DIR = _get_data_dir()
+
+# sposta qui eventuali file legacy se trovati nella dir corrente
+for legacy_name in ("config.json", "profiles.json"):
+    legacy_src = os.path.join(os.getcwd(), legacy_name)
+    legacy_dst = os.path.join(DATA_DIR, legacy_name)
+    try:
+        if os.path.exists(legacy_src) and not os.path.exists(legacy_dst):
+            shutil.move(legacy_src, legacy_dst)
+    except Exception as e:
+        print("Migrazione legacy fallita:", e)
+
+# CAMBIO WORKING DIR: da qui in poi tutti i path relativi scriveranno in %APPDATA%\ElysiumPozioni
+try:
+    os.chdir(DATA_DIR)
+except Exception as e:
+    print("Impossibile cambiare working dir:", e)
+
+# definisci i file come relativi (ora puntano a %APPDATA%\ElysiumPozioni)
+CONFIG_FILE   = "config.json"
+PROFILES_FILE = "profiles.json"
+# ---- FINE PATCH AVVIO ----
+
+
 
 BG_MAIN = "#1e1e1e"
 BG_PANEL = "#2a2a2a"
