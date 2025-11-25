@@ -24,6 +24,8 @@ from calcolo_rune import (
 )
 from calcolo_elisir import calcola_elisir as core_calcola_elisir
 from calcolo_rune import calcola_rune_diretto
+from calcolo_velocita import calcola_pozione_velocita as core_calcola_velocita
+
 
 
 import json
@@ -169,6 +171,7 @@ class ElysiumPozioniApp:
         self.tab_extinguish = tk.Frame(self.notebook, bg=BG_MAIN)
         self.tab_rune = tk.Frame(self.notebook, bg=BG_MAIN)
         self.tab_elisir = tk.Frame(self.notebook, bg=BG_MAIN)
+        self.tab_velocita = tk.Frame(self.notebook, bg=BG_MAIN)
 
         self.notebook.add(self.tab_pozioni, text="Pozioni di cura")
         self.notebook.add(self.tab_antidoti, text="Antidoti")
@@ -176,7 +179,10 @@ class ElysiumPozioniApp:
         self.notebook.add(self.tab_extinguish, text="Extinguish")
         self.notebook.add(self.tab_rune, text="Rune")
         self.notebook.add(self.tab_elisir, text="Elisir")
+        self.notebook.add(self.tab_velocita, text="Velocità")
         self.notebook.pack(fill="both", expand=True, padx=0, pady=0)
+        
+
 
     def make_panel(self, parent, title):
         frame = tk.Frame(parent, bg=BG_PANEL, bd=0)
@@ -618,6 +624,8 @@ class ElysiumPozioniApp:
         self._build_tab_extinguish()
         self._build_tab_elisir()
         self._build_tab_rune()
+        self._build_tab_velocita()
+
 
 
 
@@ -665,6 +673,15 @@ class ElysiumPozioniApp:
             "elisir_price_au": self.entry_price_au.get() if hasattr(self, "entry_price_au") else "",
             "elisir_price_dia": self.entry_price_dia.get() if hasattr(self, "entry_price_dia") else "",
             "elisir_prezzo_vendita": self.entry_el_prezzo.get() if hasattr(self, "entry_el_prezzo") else "",
+
+            #velocità
+            "vel_num": self.entry_vel_num.get() if hasattr(self, "entry_vel_num") else "",
+            "vel_tipo": self.combo_vel_tipo.get() if hasattr(self, "combo_vel_tipo") else "",
+            "vel_lapis": self.entry_vel_lapis.get() if hasattr(self, "entry_vel_lapis") else "",
+            "vel_zucchero": self.entry_vel_zucchero.get() if hasattr(self, "entry_vel_zucchero") else "",
+            "vel_blaze": self.entry_vel_blaze.get() if hasattr(self, "entry_vel_blaze") else "",
+            "vel_prezzo_vendita": self.entry_vel_prezzo.get() if hasattr(self, "entry_vel_prezzo") else "",
+
 
             # --- Rune ---
             "rune_tipo": self.combo_rune_tipo.get() if hasattr(self, "combo_rune_tipo") else "",
@@ -789,6 +806,26 @@ class ElysiumPozioniApp:
                     e = self.entry_rune_pepite[met]
                     e.delete(0, tk.END)
                     e.insert(0, val)
+
+        # --- Velocità ---
+        if "vel_num" in data and hasattr(self, "entry_vel_num"):
+            self.entry_vel_num.delete(0, tk.END)
+            self.entry_vel_num.insert(0, data["vel_num"])
+
+        if "vel_tipo" in data and hasattr(self, "combo_vel_tipo"):
+            self.combo_vel_tipo.set(data["vel_tipo"])
+
+        for key, widget_name in [
+            ("vel_lapis", "entry_vel_lapis"),
+            ("vel_zucchero", "entry_vel_zucchero"),
+            ("vel_blaze", "entry_vel_blaze"),
+            ("vel_prezzo_vendita", "entry_vel_prezzo"),
+        ]:
+            if key in data and hasattr(self, widget_name):
+                w = getattr(self, widget_name)
+                w.delete(0, tk.END)
+                w.insert(0, data[key])
+
 
         # aggiorna il brim label e la resina, giusto per stare sicuri
         try:
@@ -2090,6 +2127,266 @@ class ElysiumPozioniApp:
             messagebox.showerror(
                 "Errore",
                 f"Si è verificato un errore durante il calcolo delle rune:\n{e}",
+            )
+
+    def _build_tab_velocita(self):
+        tk.Label(
+            self.tab_velocita,
+            text="Pozioni di Velocità",
+            font=TITLE_FONT,
+            fg=FG_TEXT,
+            bg=BG_MAIN,
+        ).pack(pady=8)
+
+        # --- PRODUZIONE ---
+        panel_prod, inner_prod = self.make_panel(self.tab_velocita, "Produzione")
+
+        tk.Label(
+            inner_prod,
+            text="Numero pozioni:",
+            font=LABEL_FONT,
+            bg=BG_PANEL,
+            fg=FG_TEXT,
+        ).grid(row=0, column=0, sticky="e", padx=4, pady=4)
+
+        self.entry_vel_num = tk.Entry(
+            inner_prod,
+            width=10,
+            font=LABEL_FONT,
+            bg="#3a3a3a",
+            fg=FG_TEXT,
+            insertbackground=FG_TEXT,
+            relief="flat",
+        )
+        self.entry_vel_num.grid(row=0, column=1, pady=4)
+
+        tk.Label(
+            inner_prod,
+            text="Tipo pozione:",
+            font=LABEL_FONT,
+            bg=BG_PANEL,
+            fg=FG_TEXT,
+        ).grid(row=1, column=0, sticky="e", padx=4, pady=4)
+
+        self.combo_vel_tipo = ttk.Combobox(
+            inner_prod,
+            values=["Velocità I", "Velocità II"],
+            width=14,
+            state="readonly",
+            font=LABEL_FONT,
+        )
+        self.combo_vel_tipo.current(0)
+        self.combo_vel_tipo.grid(row=1, column=1, pady=4, sticky="w")
+
+        panel_prod.pack(padx=10, pady=6, fill="x")
+
+        # --- PREZZI INGREDIENTI ---
+        panel_price, inner_price = self.make_panel(
+            self.tab_velocita, "Prezzi ingredienti (in b)"
+        )
+
+        tk.Label(
+            inner_price,
+            text="Lapis (1x):",
+            font=LABEL_FONT,
+            bg=BG_PANEL,
+            fg=FG_TEXT,
+        ).grid(row=0, column=0, sticky="e", padx=4, pady=3)
+
+        self.entry_vel_lapis = tk.Entry(
+            inner_price,
+            width=10,
+            font=LABEL_FONT,
+            bg="#3a3a3a",
+            fg=FG_TEXT,
+            insertbackground=FG_TEXT,
+            relief="flat",
+        )
+        self.entry_vel_lapis.insert(0, "1.0")
+        self.entry_vel_lapis.grid(row=0, column=1, pady=3)
+
+        tk.Label(
+            inner_price,
+            text="Zucchero (1x):",
+            font=LABEL_FONT,
+            bg=BG_PANEL,
+            fg=FG_TEXT,
+        ).grid(row=1, column=0, sticky="e", padx=4, pady=3)
+
+        self.entry_vel_zucchero = tk.Entry(
+            inner_price,
+            width=10,
+            font=LABEL_FONT,
+            bg="#3a3a3a",
+            fg=FG_TEXT,
+            insertbackground=FG_TEXT,
+            relief="flat",
+        )
+        self.entry_vel_zucchero.insert(0, "1.0")
+        self.entry_vel_zucchero.grid(row=1, column=1, pady=3)
+
+        tk.Label(
+            inner_price,
+            text="Blaze (1x):",
+            font=LABEL_FONT,
+            bg=BG_PANEL,
+            fg=FG_TEXT,
+        ).grid(row=2, column=0, sticky="e", padx=4, pady=3)
+
+        self.entry_vel_blaze = tk.Entry(
+            inner_price,
+            width=10,
+            font=LABEL_FONT,
+            bg="#3a3a3a",
+            fg=FG_TEXT,
+            insertbackground=FG_TEXT,
+            relief="flat",
+        )
+        self.entry_vel_blaze.insert(0, "1.0")
+        self.entry_vel_blaze.grid(row=2, column=1, pady=3)
+
+        tk.Label(
+            inner_price,
+            text="(Core, carbone e boccette usano i prezzi della tab Pozioni)",
+            font=("Segoe UI", 8),
+            bg=BG_PANEL,
+            fg=FG_SUBTLE,
+        ).grid(row=3, column=0, columnspan=2, sticky="w", padx=4, pady=(4, 0))
+
+        panel_price.pack(padx=10, pady=6, fill="x")
+
+        # --- VENDITA ---
+        panel_sale, inner_sale = self.make_panel(self.tab_velocita, "Vendita / Profitto")
+
+        tk.Label(
+            inner_sale,
+            text="Prezzo vendita (b / pozione):",
+            font=LABEL_FONT,
+            bg=BG_PANEL,
+            fg=FG_TEXT,
+        ).grid(row=0, column=0, sticky="e", padx=4, pady=4)
+
+        self.entry_vel_prezzo = tk.Entry(
+            inner_sale,
+            width=10,
+            font=LABEL_FONT,
+            bg="#3a3a3a",
+            fg=FG_TEXT,
+            insertbackground=FG_TEXT,
+            relief="flat",
+        )
+        self.entry_vel_prezzo.grid(row=0, column=1, pady=4, sticky="w")
+
+        panel_sale.pack(padx=10, pady=6, fill="x")
+
+        # --- BOTTONE ---
+        tk.Button(
+            self.tab_velocita,
+            text="CALCOLA VELOCITÀ",
+            command=self.do_calcola_velocita,
+            bg=ACCENT,
+            fg="white",
+            font=BUTTON_FONT,
+            activebackground="#574dff",
+            activeforeground="white",
+            relief="flat",
+            cursor="hand2",
+            padx=12,
+            pady=6,
+        ).pack(pady=(10, 6))
+
+        # --- PREVIEW ---
+        self.label_vel_preview = tk.Label(
+            self.tab_velocita,
+            text="Totale: -    •    Per pozione: -",
+            font=("Segoe UI", 11, "bold"),
+            bg=BG_MAIN,
+            fg=FG_TEXT,
+        )
+        self.label_vel_preview.pack(pady=(0, 10))
+
+        # --- DETTAGLIO ---
+        panel_result = tk.Frame(self.tab_velocita, bg=BG_PANEL)
+        panel_result.pack(padx=10, pady=(0, 10), fill="both", expand=True)
+
+        tk.Label(
+            panel_result,
+            text="Dettaglio",
+            font=SECTION_FONT,
+            bg=BG_PANEL,
+            fg=FG_TEXT,
+            anchor="w",
+        ).pack(fill="x", padx=10, pady=(8, 4))
+
+        inner_result = tk.Frame(panel_result, bg=BG_PANEL)
+        inner_result.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+
+        scrollbar = tk.Scrollbar(inner_result)
+        scrollbar.pack(side="right", fill="y")
+
+        self.text_vel_result = tk.Text(
+            inner_result,
+            height=14,
+            font=RESULT_FONT,
+            state="disabled",
+            wrap="word",
+            yscrollcommand=scrollbar.set,
+            bg=BG_RESULT,
+            fg=FG_TEXT,
+            insertbackground=FG_TEXT,
+            relief="flat",
+            padx=10,
+            pady=10,
+        )
+        self.text_vel_result.pack(fill="both", expand=True)
+        scrollbar.config(command=self.text_vel_result.yview)
+
+    def do_calcola_velocita(self):
+        try:
+            num = float(self.entry_vel_num.get())
+            tipo = self.combo_vel_tipo.get()
+
+            prezzo_lapis    = float(self.entry_vel_lapis.get())
+            prezzo_zucchero = float(self.entry_vel_zucchero.get())
+            prezzo_blaze    = float(self.entry_vel_blaze.get())
+
+            # prezzi condivisi dalla tab Pozioni
+            prezzo_core      = float(self.entry_core.get())
+            prezzo_carbone   = float(self.entry_carbone.get())
+            boccette_per_1b  = float(self.entry_boccette_per_b.get())
+
+            try:
+                prezzo_vendita = float(self.entry_vel_prezzo.get())
+            except ValueError:
+                prezzo_vendita = None
+
+            result = core_calcola_velocita(
+                num=num,
+                tipo=tipo,
+                prezzo_lapis=prezzo_lapis,
+                prezzo_zucchero=prezzo_zucchero,
+                prezzo_blaze=prezzo_blaze,
+                prezzo_core=prezzo_core,
+                prezzo_carbone=prezzo_carbone,
+                boccette_per_1b=boccette_per_1b,
+                prezzo_vendita=prezzo_vendita,
+            )
+
+            self.label_vel_preview.config(
+                text=result["preview_text"],
+                fg=FG_TEXT,
+                bg=BG_MAIN,
+            )
+
+            self.text_vel_result.config(state="normal")
+            self.text_vel_result.delete("1.0", tk.END)
+            self.text_vel_result.insert("1.0", "\n".join(result["output_lines"]))
+            self.text_vel_result.config(state="disabled")
+
+        except ValueError:
+            messagebox.showerror(
+                "Errore",
+                "Controlla i campi Velocità: inserisci numeri validi.",
             )
 
 
