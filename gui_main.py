@@ -407,17 +407,98 @@ class ElysiumPozioniApp:
         self.tab_elisir = tk.Frame(self.notebook, bg=BG_MAIN)
         self.tab_velocita = tk.Frame(self.notebook, bg=BG_MAIN)
         
-        # Aggiungi tabs con icone
-        self.notebook.add(self.tab_pozioni, text="🧪 Pozioni di cura")
-        self.notebook.add(self.tab_antidoti, text="💊 Antidoti")
-        self.notebook.add(self.tab_revivify, text="✨ Revivify")
-        self.notebook.add(self.tab_extinguish, text="🔥 Extinguish")
-        self.notebook.add(self.tab_danno, text="⚔️ Danno")
-        self.notebook.add(self.tab_rune, text="🔮 Rune")
-        self.notebook.add(self.tab_elisir, text="💎 Elisir")
-        self.notebook.add(self.tab_velocita, text="⚡ Velocità")
+        # Aggiungi tabs con solo icone
+        self.notebook.add(self.tab_pozioni, text="🧪")
+        self.notebook.add(self.tab_antidoti, text="💊")
+        self.notebook.add(self.tab_revivify, text="✨")
+        self.notebook.add(self.tab_extinguish, text="🔥")
+        self.notebook.add(self.tab_danno, text="⚔️")
+        self.notebook.add(self.tab_rune, text="🔮")
+        self.notebook.add(self.tab_elisir, text="💎")
+        self.notebook.add(self.tab_velocita, text="⚡")
         
         self.notebook.pack(fill="both", expand=True, padx=5, pady=5)
+        
+        # Setup tooltip per le tab
+        self._setup_tab_tooltips()
+
+    def _setup_tab_tooltips(self):
+        """Configura i tooltip per le tab del notebook"""
+        self.tab_names = {
+            0: "Pozioni di cura",
+            1: "Antidoti", 
+            2: "Revivify",
+            3: "Extinguish",
+            4: "Danno",
+            5: "Rune",
+            6: "Elisir",
+            7: "Velocità"
+        }
+        
+        self.tooltip_window = None
+        self.current_tab_hover = None
+        
+        # Bind eventi al notebook
+        self.notebook.bind("<Motion>", self._on_tab_motion)
+        self.notebook.bind("<Leave>", self._on_tab_leave)
+    
+    def _on_tab_motion(self, event):
+        """Gestisce il movimento del mouse sulle tab"""
+        try:
+            # Identifica quale tab è sotto il mouse
+            elem = self.notebook.identify(event.x, event.y)
+            if elem == "label":
+                # Ottieni l'indice del tab
+                tab_index = self.notebook.index(f"@{event.x},{event.y}")
+                
+                if tab_index != self.current_tab_hover:
+                    self.current_tab_hover = tab_index
+                    self._show_tooltip(event, tab_index)
+            else:
+                self._hide_tooltip()
+        except:
+            self._hide_tooltip()
+    
+    def _on_tab_leave(self, event):
+        """Nascondi tooltip quando il mouse esce dal notebook"""
+        self._hide_tooltip()
+        self.current_tab_hover = None
+    
+    def _show_tooltip(self, event, tab_index):
+        """Mostra il tooltip per il tab specificato"""
+        self._hide_tooltip()
+        
+        if tab_index in self.tab_names:
+            text = self.tab_names[tab_index]
+            x = event.x_root + 10
+            y = event.y_root + 10
+            
+            self.tooltip_window = tk.Toplevel(self.root)
+            self.tooltip_window.wm_overrideredirect(True)
+            self.tooltip_window.wm_geometry(f"+{x}+{y}")
+            self.tooltip_window.attributes("-topmost", True)
+            
+            label = tk.Label(
+                self.tooltip_window,
+                text=text,
+                background="#1f2937",
+                foreground="#f3f4f6",
+                relief="solid",
+                borderwidth=1,
+                font=("Segoe UI", 9),
+                padx=10,
+                pady=5
+            )
+            label.pack()
+    
+    def _hide_tooltip(self):
+        """Nascondi il tooltip corrente"""
+        if self.tooltip_window:
+            try:
+                self.tooltip_window.destroy()
+            except:
+                pass
+            self.tooltip_window = None
 
     def make_panel(self, parent, title, icon=""):
         """Crea un pannello card con stile moderno"""
