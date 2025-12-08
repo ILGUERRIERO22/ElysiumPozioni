@@ -35,6 +35,7 @@ from calcolo_elisir import calcola_elisir as core_calcola_elisir
 from calcolo_rune import calcola_rune_diretto
 from calcolo_velocita import calcola_pozione_velocita as core_calcola_velocita
 from calcolo_danno import calcola_pozione_danno as core_calcola_danno
+from calcolo_multi_prodotto import calcola_multi_prodotto as core_multi_prod, get_tipi_prodotti_disponibili
 
 
 # =========================
@@ -406,6 +407,7 @@ class ElysiumPozioniApp:
         self.tab_rune = tk.Frame(self.notebook, bg=BG_MAIN)
         self.tab_elisir = tk.Frame(self.notebook, bg=BG_MAIN)
         self.tab_velocita = tk.Frame(self.notebook, bg=BG_MAIN)
+        self.tab_multi = tk.Frame(self.notebook, bg=BG_MAIN)
         
         # Aggiungi tabs con solo icone
         self.notebook.add(self.tab_pozioni, text="🧪")
@@ -416,6 +418,7 @@ class ElysiumPozioniApp:
         self.notebook.add(self.tab_rune, text="🔮")
         self.notebook.add(self.tab_elisir, text="💎")
         self.notebook.add(self.tab_velocita, text="⚡")
+        self.notebook.add(self.tab_multi, text="🧮")
         
         self.notebook.pack(fill="both", expand=True, padx=5, pady=5)
         
@@ -432,7 +435,8 @@ class ElysiumPozioniApp:
             4: "Danno",
             5: "Rune",
             6: "Elisir",
-            7: "Velocità"
+            7: "Velocità",
+            8: "Multi-Prodotto"
         }
         
         self.tooltip_window = None
@@ -715,6 +719,7 @@ class ElysiumPozioniApp:
         self._build_tab_elisir()
         self._build_tab_rune()
         self._build_tab_velocita()
+        self._build_tab_multi()
 
     def _build_tab_pozioni(self):
         """Tab Pozioni di cura - principale"""
@@ -1571,6 +1576,274 @@ class ElysiumPozioniApp:
         
         # === RISULTATI ===
         self.make_result_area(container, "label_vel_preview", "text_vel_result")
+
+# CODICE_TAB_MULTI.txt
+# Questo è il codice da inserire dopo _build_tab_velocita()
+
+    def _build_tab_multi(self):
+        """Tab Calcolatrice Multi-Prodotto"""
+        container = tk.Frame(self.tab_multi, bg=BG_MAIN)
+        container.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Info header
+        info_frame = tk.Frame(container, bg=BG_CARD, padx=15, pady=10)
+        info_frame.pack(fill="x", pady=(0, 10))
+        tk.Label(
+            info_frame,
+            text="🧮 Calcolatrice Multi-Prodotto",
+            font=SECTION_FONT,
+            bg=BG_CARD,
+            fg=ACCENT_LIGHT,
+        ).pack(anchor="w")
+        tk.Label(
+            info_frame,
+            text="Calcola materiali aggregati per produzioni multiple",
+            font=SMALL_FONT,
+            bg=BG_CARD,
+            fg=FG_SUBTLE,
+        ).pack(anchor="w", pady=(4, 0))
+        
+        # === AGGIUNGI PRODOTTO ===
+        panel_add, add_inner = self.make_panel(container, "Aggiungi Prodotto", "➕")
+        
+        tk.Label(
+            add_inner,
+            text="Tipo prodotto:",
+            font=LABEL_FONT,
+            bg=BG_CARD,
+            fg=FG_TEXT,
+        ).grid(row=0, column=0, sticky="e", padx=(0, 8), pady=4)
+        
+        tipi_prodotti = get_tipi_prodotti_disponibili()
+        self.combo_multi_tipo = ttk.Combobox(
+            add_inner,
+            values=[nome for _, nome in tipi_prodotti],
+            width=30,
+            state="readonly",
+            font=LABEL_FONT,
+        )
+        self.combo_multi_tipo.current(0)
+        self.combo_multi_tipo.grid(row=0, column=1, pady=4, sticky="w", columnspan=2)
+        
+        self.entry_multi_qty = self.make_labeled_entry(
+            add_inner, "Quantità:", "10", row=1
+        )
+        
+        self.entry_multi_prezzo = self.make_labeled_entry(
+            add_inner, "Prezzo vendita (opz):", "", row=2
+        )
+        
+        btn_aggiungi = self.make_action_button(
+            add_inner, "Aggiungi alla lista", self.do_aggiungi_multi_prodotto, "primary", "➕"
+        )
+        btn_aggiungi.grid(row=3, column=0, columnspan=3, pady=8)
+        
+        panel_add.pack(padx=0, pady=(0, 8), fill="x")
+        
+        # === LISTA PRODUZIONE ===
+        panel_lista, lista_inner = self.make_panel(container, "Lista Produzione", "📦")
+        
+        # Frame scrollabile per lista
+        list_container = tk.Frame(lista_inner, bg=BG_CARD)
+        list_container.pack(fill="both", expand=True)
+        
+        scrollbar_list = ttk.Scrollbar(list_container, style="Vertical.TScrollbar")
+        scrollbar_list.pack(side="right", fill="y")
+        
+        self.multi_lista_text = tk.Text(
+            list_container,
+            height=8,
+            font=LABEL_FONT,
+            state="disabled",
+            wrap="word",
+            yscrollcommand=scrollbar_list.set,
+            bg=BG_RESULT,
+            fg=FG_TEXT,
+            relief="flat",
+            padx=10,
+            pady=8,
+        )
+        self.multi_lista_text.pack(fill="both", expand=True)
+        scrollbar_list.config(command=self.multi_lista_text.yview)
+        
+        # Bottoni azioni
+        btn_frame = tk.Frame(lista_inner, bg=BG_CARD)
+        btn_frame.pack(pady=8)
+        
+        self.make_action_button(
+            btn_frame, "Svuota Tutto", self.do_svuota_multi_lista, "danger", "🗑️"
+        ).pack(side="left", padx=4)
+        
+        self.make_action_button(
+            btn_frame, "CALCOLA TOTALE", self.do_calcola_multi, "success", "🧮"
+        ).config(font=("Segoe UI", 11, "bold"), padx=20, pady=8)
+        self.make_action_button(
+            btn_frame, "CALCOLA TOTALE", self.do_calcola_multi, "success", "🧮"
+        ).pack(side="left", padx=4)
+        
+        panel_lista.pack(padx=0, pady=(0, 8), fill="both", expand=True)
+        
+        # === RISULTATI ===
+        self.make_result_area(container, "label_multi_preview", "text_multi_result")
+        
+        # Inizializza lista prodotti
+        self.multi_prodotti_lista = []
+
+    def do_aggiungi_multi_prodotto(self):
+        """Aggiungi prodotto alla lista"""
+        try:
+            tipo_nome = self.combo_multi_tipo.get()
+            qty = float(self.entry_multi_qty.get())
+            
+            if qty <= 0:
+                messagebox.showerror("Errore", "La quantità deve essere maggiore di 0")
+                return
+            
+            # Trova tipo codice dal nome
+            tipi = get_tipi_prodotti_disponibili()
+            tipo_code = None
+            for code, nome in tipi:
+                if nome == tipo_nome:
+                    tipo_code = code
+                    break
+            
+            if not tipo_code:
+                messagebox.showerror("Errore", "Tipo prodotto non valido")
+                return
+            
+            # Prezzo vendita opzionale
+            try:
+                prezzo = float(self.entry_multi_prezzo.get())
+            except:
+                prezzo = None
+            
+            # Aggiungi alla lista
+            prodotto = {
+                'tipo': tipo_code,
+                'nome': tipo_nome,
+                'quantita': qty,
+                'prezzo_vendita': prezzo
+            }
+            self.multi_prodotti_lista.append(prodotto)
+            
+            # Aggiorna visualizzazione
+            self._aggiorna_lista_multi()
+            
+            # Reset campi
+            self.entry_multi_qty.delete(0, tk.END)
+            self.entry_multi_qty.insert(0, "10")
+            self.entry_multi_prezzo.delete(0, tk.END)
+            
+        except ValueError:
+            messagebox.showerror("Errore", "Inserisci valori numerici validi")
+    
+    def do_svuota_multi_lista(self):
+        """Svuota la lista prodotti"""
+        if self.multi_prodotti_lista and messagebox.askyesno(
+            "Conferma", "Vuoi svuotare tutta la lista?"
+        ):
+            self.multi_prodotti_lista = []
+            self._aggiorna_lista_multi()
+            # Pulisci risultati
+            self.label_multi_preview.config(text="💰 Aggiungi prodotti e calcola")
+            self.text_multi_result.config(state="normal")
+            self.text_multi_result.delete("1.0", tk.END)
+            self.text_multi_result.config(state="disabled")
+    
+    def _aggiorna_lista_multi(self):
+        """Aggiorna la visualizzazione della lista"""
+        self.multi_lista_text.config(state="normal")
+        self.multi_lista_text.delete("1.0", tk.END)
+        
+        if not self.multi_prodotti_lista:
+            self.multi_lista_text.insert("1.0", "Lista vuota. Aggiungi prodotti sopra.")
+        else:
+            for i, prod in enumerate(self.multi_prodotti_lista, 1):
+                prezzo_str = f" (vendita: {prod['prezzo_vendita']}b)" if prod['prezzo_vendita'] else ""
+                line = f"{i}. {prod['quantita']:.0f}x {prod['nome']}{prezzo_str}\n"
+                self.multi_lista_text.insert(tk.END, line)
+        
+        self.multi_lista_text.config(state="disabled")
+    
+    def do_calcola_multi(self):
+        """Calcola materiali aggregati e costi"""
+        if not self.multi_prodotti_lista:
+            messagebox.showwarning("Attenzione", "Lista vuota! Aggiungi prodotti prima di calcolare.")
+            return
+        
+        try:
+            # Prepara prezzi base
+            prezzi_base = {
+                'core': float(self.entry_core.get()),
+                'carbone': float(self.entry_carbone.get()),
+                'boccette_per_1b': float(self.entry_boccette_per_b.get()),
+                'spidereye': float(self.entry_spidereye.get()),
+                'withering_dust': float(self.entry_withering_dust.get()),
+                'brim': float(self.entry_brim.get()),
+                'rotten': float(self.entry_rotten.get()),
+                'revival': float(self.entry_revival.get()),
+                'verdure_per_1b': float(self.entry_verdure_per_b.get()),
+                'vasetti_per_1b': float(self.entry_vasetti_per_b.get()),
+                'quartz': float(self.entry_ext_quartz.get()),
+                'lapis': float(self.entry_vel_lapis.get()),
+                'zucchero': float(self.entry_vel_zucchero.get()),
+                'blaze': float(self.entry_vel_blaze.get()),
+            }
+            
+            # Calcola
+            risultato = core_multi_prod(self.multi_prodotti_lista, prezzi_base)
+            
+            # Mostra preview
+            preview = f"Totale: {risultato['costo_totale']:.2f}b"
+            if risultato['profitto_netto']:
+                preview += f"    •    Profitto: {risultato['profitto_netto']:.2f}b"
+            self.label_multi_preview.config(text=f"💰 {preview}")
+            
+            # Mostra dettaglio
+            output_lines = []
+            output_lines.append("=" * 60)
+            output_lines.append("CALCOLATRICE MULTI-PRODOTTO")
+            output_lines.append("=" * 60)
+            output_lines.append("")
+            
+            # Materiali aggregati
+            output_lines.append("MATERIALI NECESSARI (AGGREGATI):")
+            output_lines.append("-" * 60)
+            for mat, qty in sorted(risultato['materiali_aggregati'].items()):
+                costo = risultato['costi_materiali'][mat]
+                output_lines.append(f"  • {mat:25s} {qty:8.2f} unità  ({costo:8.2f}b)")
+            
+            output_lines.append("")
+            output_lines.append("=" * 60)
+            output_lines.append("RIEPILOGO FINANZIARIO")
+            output_lines.append("=" * 60)
+            output_lines.append(f"Costo totale materiali: {risultato['costo_totale']:10.2f}b")
+            if risultato['ricavo_totale']:
+                output_lines.append(f"Ricavo totale vendita:  {risultato['ricavo_totale']:10.2f}b")
+                output_lines.append(f"Profitto netto:         {risultato['profitto_netto']:10.2f}b")
+                margine = (risultato['profitto_netto'] / risultato['costo_totale']) * 100
+                output_lines.append(f"Margine di profitto:    {margine:10.1f}%")
+            
+            output_lines.append("")
+            output_lines.append("=" * 60)
+            output_lines.append("DETTAGLIO PER PRODOTTO")
+            output_lines.append("=" * 60)
+            for det in risultato['dettaglio_prodotti']:
+                output_lines.append("")
+                output_lines.append(f"{det['nome']} (x{det['quantita']:.0f})")
+                output_lines.append(f"  Costo: {det['costo']:.2f}b (unitario: {det['costo_unitario']:.2f}b)")
+                if det['prezzo_vendita']:
+                    output_lines.append(f"  Ricavo: {det['ricavo']:.2f}b")
+                    output_lines.append(f"  Profitto: {det['profitto']:.2f}b")
+            
+            self.text_multi_result.config(state="normal")
+            self.text_multi_result.delete("1.0", tk.END)
+            self.text_multi_result.insert("1.0", "\n".join(output_lines))
+            self.text_multi_result.config(state="disabled")
+            
+        except ValueError as e:
+            messagebox.showerror("Errore", f"Controlla i prezzi nelle altre tab: {e}")
+
 
     # =========================
     #   FUNZIONI HELPER
