@@ -1798,8 +1798,8 @@ class ElysiumPozioniApp:
                 'membrana': float(self.entry_membrana.get() if hasattr(self, 'entry_membrana') else 0),
                 'slime': float(self.entry_slime.get() if hasattr(self, 'entry_slime') else 0),
                 'lost_soul': float(self.entry_lost_soul.get() if hasattr(self, 'entry_lost_soul') else 0),
-                # Argento per rune
-                'silver': float(self.entry_silver.get() if hasattr(self, 'entry_silver') else 0),
+                # Argento per rune (stesso prezzo del diamante)
+                'silver': float(self.entry_price_dia.get() if hasattr(self, 'entry_price_dia') else 0),
             }
             
             # Calcola

@@ -433,6 +433,8 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc, costo_
             ('Argento', 'silver', 47)
         ]
 
+        # Calcola tutte le opzioni e trova la più economica
+        opzioni = []
         for nome_metallo, key_prezzo, resa in rese_maghi:
             pepite_necessarie = qty / resa
             pepite_int_basso = int(pepite_necessarie)
@@ -440,19 +442,38 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc, costo_
             rune_ottenute_basso = pepite_int_basso * resa
             rune_ottenute_alto = pepite_int_alto * resa
 
-            # Mostra le opzioni per ogni metallo
+            prezzo_pepita = prezzi.get(key_prezzo, 0.0) / 9.0
+            costo_basso = pepite_int_basso * prezzo_pepita
+            costo_alto = pepite_int_alto * prezzo_pepita
+
+            # Aggiungi entrambe le opzioni (basso e alto)
             if abs(pepite_necessarie - pepite_int_basso) > 0.001:
-                materiali[f'{nome_metallo}: {pepite_int_basso} pep'] = rune_ottenute_basso
-                materiali[f'{nome_metallo}: {pepite_int_alto} pep'] = rune_ottenute_alto
-                # Costo per le due opzioni
-                prezzo_pepita = prezzi.get(key_prezzo, 0.0) / 9.0
-                costi[f'{nome_metallo}: {pepite_int_basso} pep'] = pepite_int_basso * prezzo_pepita
-                costi[f'{nome_metallo}: {pepite_int_alto} pep'] = pepite_int_alto * prezzo_pepita
+                opzioni.append({
+                    'metallo': nome_metallo,
+                    'pepite': pepite_int_basso,
+                    'rune': rune_ottenute_basso,
+                    'costo': costo_basso
+                })
+                opzioni.append({
+                    'metallo': nome_metallo,
+                    'pepite': pepite_int_alto,
+                    'rune': rune_ottenute_alto,
+                    'costo': costo_alto
+                })
             else:
-                # Numero esatto di pepite
-                materiali[f'{nome_metallo}'] = pepite_necessarie
-                prezzo_pepita = prezzi.get(key_prezzo, 0.0) / 9.0
-                costi[f'{nome_metallo}'] = pepite_necessarie * prezzo_pepita
+                opzioni.append({
+                    'metallo': nome_metallo,
+                    'pepite': pepite_necessarie,
+                    'rune': qty,
+                    'costo': pepite_necessarie * prezzo_pepita
+                })
+
+        # Trova l'opzione più economica
+        if opzioni:
+            opzione_migliore = min(opzioni, key=lambda x: x['costo'])
+            materiali[f"💰 Opzione migliore: {opzione_migliore['metallo']}"] = opzione_migliore['pepite']
+            materiali[f"Rune ottenibili"] = opzione_migliore['rune']
+            costi[f"💰 Opzione migliore: {opzione_migliore['metallo']}"] = opzione_migliore['costo']
 
     elif tipo == 'rune_bardi':
         rese_bardi = [
@@ -463,6 +484,8 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc, costo_
             ('Argento', 'silver', 47)
         ]
 
+        # Calcola tutte le opzioni e trova la più economica
+        opzioni = []
         for nome_metallo, key_prezzo, resa in rese_bardi:
             pepite_necessarie = qty / resa
             pepite_int_basso = int(pepite_necessarie)
@@ -470,19 +493,38 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc, costo_
             rune_ottenute_basso = pepite_int_basso * resa
             rune_ottenute_alto = pepite_int_alto * resa
 
-            # Mostra le opzioni per ogni metallo
+            prezzo_pepita = prezzi.get(key_prezzo, 0.0) / 9.0
+            costo_basso = pepite_int_basso * prezzo_pepita
+            costo_alto = pepite_int_alto * prezzo_pepita
+
+            # Aggiungi entrambe le opzioni (basso e alto)
             if abs(pepite_necessarie - pepite_int_basso) > 0.001:
-                materiali[f'{nome_metallo}: {pepite_int_basso} pep'] = rune_ottenute_basso
-                materiali[f'{nome_metallo}: {pepite_int_alto} pep'] = rune_ottenute_alto
-                # Costo per le due opzioni
-                prezzo_pepita = prezzi.get(key_prezzo, 0.0) / 9.0
-                costi[f'{nome_metallo}: {pepite_int_basso} pep'] = pepite_int_basso * prezzo_pepita
-                costi[f'{nome_metallo}: {pepite_int_alto} pep'] = pepite_int_alto * prezzo_pepita
+                opzioni.append({
+                    'metallo': nome_metallo,
+                    'pepite': pepite_int_basso,
+                    'rune': rune_ottenute_basso,
+                    'costo': costo_basso
+                })
+                opzioni.append({
+                    'metallo': nome_metallo,
+                    'pepite': pepite_int_alto,
+                    'rune': rune_ottenute_alto,
+                    'costo': costo_alto
+                })
             else:
-                # Numero esatto di pepite
-                materiali[f'{nome_metallo}'] = pepite_necessarie
-                prezzo_pepita = prezzi.get(key_prezzo, 0.0) / 9.0
-                costi[f'{nome_metallo}'] = pepite_necessarie * prezzo_pepita
+                opzioni.append({
+                    'metallo': nome_metallo,
+                    'pepite': pepite_necessarie,
+                    'rune': qty,
+                    'costo': pepite_necessarie * prezzo_pepita
+                })
+
+        # Trova l'opzione più economica
+        if opzioni:
+            opzione_migliore = min(opzioni, key=lambda x: x['costo'])
+            materiali[f"💰 Opzione migliore: {opzione_migliore['metallo']}"] = opzione_migliore['pepite']
+            materiali[f"Rune ottenibili"] = opzione_migliore['rune']
+            costi[f"💰 Opzione migliore: {opzione_migliore['metallo']}"] = opzione_migliore['costo']
 
     return materiali, costi
 
