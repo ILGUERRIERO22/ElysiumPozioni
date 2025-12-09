@@ -7,10 +7,6 @@ Nessuna dipendenza da Tkinter o GUI.
 Può essere usato sia dal programma principale che da eventuali test.
 """
 
-APP_NAME = "Elysium Pozioni"
-APP_VERSION = "2.1.0"
-APP_AUTHOR = "ILGUERRIERO22"
-
 
 def calcola_pozioni(
     num_pozioni: float,
@@ -24,9 +20,6 @@ def calcola_pozioni(
     boccette_per_1b: float,
     prezzo_vendita: float | None = None,
     profilo_attivo: str | None = None,
-    app_name: str = APP_NAME,
-    app_version: str = APP_VERSION,
-    app_author: str = APP_AUTHOR,
 ) -> dict:
     """
     Esegue tutti i calcoli che prima stavano in calcola() dentro la GUI.
@@ -211,9 +204,6 @@ def calcola_pozioni(
         f" • Resine:                  {costo_resine:.2f} b",
         f" • Carbonella:              {costo_carbonella:.2f} b",
         f" • Boccette:                {costo_boccette:.2f} b",
-        "",
-        f"{app_name} v{app_version} — {app_author}",
-        "Profili multipli, salvataggio automatico e analisi margine.",
     ]
 
     return {
