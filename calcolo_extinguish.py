@@ -1,13 +1,14 @@
 # calcolo_extinguish.py
+from typing import Optional, Dict, Any
 
 def calcola_extinguish(
-    num,
-    prezzo_core,
-    prezzo_carbone,
-    boccette_per_1b,
-    prezzo_quartz,
-    prezzo_vendita=None,
-):
+    num: int,
+    prezzo_core: float,
+    prezzo_carbone: float,
+    boccette_per_1b: int,
+    prezzo_quartz: float,
+    prezzo_vendita: Optional[float] = None,
+) -> Dict[str, Any]:
     """
     Calderone in RAME:
 

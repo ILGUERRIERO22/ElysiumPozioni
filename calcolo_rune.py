@@ -1,4 +1,5 @@
 # calcolo_rune.py
+from typing import Dict, List, Any
 
 """
 Calcolo delle rune ottenibili a partire da un certo numero di pepite
@@ -10,7 +11,7 @@ Tutte le rese sono espresse in "rune per 1 pepita".
 """
 
 # Resa in rune per 1 pepita, per tipo di rune
-RESA_PEPITA_NET = {
+RESA_PEPITA_NET: Dict[str, Dict[str, int]] = {
     "Maghi": {
         "Tin":      0,   # N/D -> lo trattiamo come 0
         "Rame":    11,
@@ -27,10 +28,10 @@ RESA_PEPITA_NET = {
     },
 }
 
-METALLI_ORDINE = ["Tin", "Rame", "Ferro", "Oro", "Argento"]
+METALLI_ORDINE: List[str] = ["Tin", "Rame", "Ferro", "Oro", "Argento"]
 
 
-def calcola_rune_diretto(tipo_rune, q_pepite):
+def calcola_rune_diretto(tipo_rune: str, q_pepite: Dict[str, float]) -> Dict[str, Any]:
     """
     Calcola quante rune si ottengono in totale (e i dettagli per metallo)
     in base al tipo di rune ("Maghi" o "Bardi") e a un dizionario
@@ -102,7 +103,7 @@ def calcola_rune_diretto(tipo_rune, q_pepite):
     }
 
 
-def calcola_rune_inverso(tipo_rune, num_rune_desiderate):
+def calcola_rune_inverso(tipo_rune: str, num_rune_desiderate: int) -> Dict[str, Any]:
     """
     Per compatibilità con l'import nella GUI.
     Al momento NON implementa ancora il calcolo inverso

@@ -1,16 +1,17 @@
 # calcolo_danno.py
 # Versione 2.0 - Supporto Danno I e Danno II (Avvizzimento)
+from typing import Optional, Dict, Any
 
 def calcola_pozione_danno(
-    num,
-    tipo,  # "Danno I" o "Danno II"
-    prezzo_spidereye,
-    prezzo_withering_dust,
-    prezzo_core,
-    prezzo_carbone,
-    boccette_per_1b,
-    prezzo_vendita=None,
-):
+    num: int,
+    tipo: str,  # "Danno I" o "Danno II"
+    prezzo_spidereye: float,
+    prezzo_withering_dust: float,
+    prezzo_core: float,
+    prezzo_carbone: float,
+    boccette_per_1b: int,
+    prezzo_vendita: Optional[float] = None,
+) -> Dict[str, Any]:
     """
     Pozioni di Danno:
     

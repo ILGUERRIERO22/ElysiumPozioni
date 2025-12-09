@@ -1,25 +1,26 @@
 # calcolo_elisir.py
+from typing import Optional, Dict, Any
 
 def calcola_elisir(
-    num,
-    tipo,                   # "Minor mending", "Inferior mending", "Lesser mending", "Medium mending", "Greater mending"
-    prezzo_core,
-    prezzo_carbone,
-    boccette_per_1b,
-    vasetti_per_1b,
-    verdure_per_1b,
-    prezzo_brim,
-    prezzo_spidereye,
-    prezzo_membrana,
-    prezzo_slime,
-    prezzo_lost_soul,
-    price_tin,
-    price_cu,
-    price_fe,
-    price_au,
-    price_dia,
-    prezzo_vendita=None,
-):
+    num: int,
+    tipo: str,                   # "Minor mending", "Inferior mending", "Lesser mending", "Medium mending", "Greater mending"
+    prezzo_core: float,
+    prezzo_carbone: float,
+    boccette_per_1b: int,
+    vasetti_per_1b: int,
+    verdure_per_1b: int,
+    prezzo_brim: float,
+    prezzo_spidereye: float,
+    prezzo_membrana: float,
+    prezzo_slime: float,
+    prezzo_lost_soul: float,
+    price_tin: float,
+    price_cu: float,
+    price_fe: float,
+    price_au: float,
+    price_dia: float,
+    prezzo_vendita: Optional[float] = None,
+) -> Dict[str, Any]:
     """
     Calcolo costo elisir di cura.
 

@@ -1,13 +1,14 @@
 # calcolo_revivify.py
+from typing import Optional, Dict, Any, List
 
 def calcola_revivify(
-    num,
-    prezzo_core,
-    prezzo_carbone,
-    boccette_per_1b,
-    prezzo_revival,
-    prezzo_vendita=None,
-):
+    num: int,
+    prezzo_core: float,
+    prezzo_carbone: float,
+    boccette_per_1b: int,
+    prezzo_revival: float,
+    prezzo_vendita: Optional[float] = None,
+) -> Dict[str, Any]:
     """
     Calderone in RAME:
       1 Revival star + 1 Core fragment + 1 Carbonella + 1 Boccetta = 1 Revivify

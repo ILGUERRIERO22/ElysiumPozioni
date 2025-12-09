@@ -1,17 +1,18 @@
 # calcolo_antidoti.py
+from typing import Optional, Dict, Any
 
 def calcola_antidoti(
-    num,
-    tipo,                 # "Terracotta" o "Ferro"
-    prezzo_carbone,
-    boccette_per_1b,
-    vasetti_per_1b,
-    verdure_per_1b,
-    prezzo_brim,
-    prezzo_rotten,
-    prezzo_revival,
-    prezzo_vendita=None,
-):
+    num: int,
+    tipo: str,                 # "Terracotta" o "Ferro"
+    prezzo_carbone: float,
+    boccette_per_1b: int,
+    vasetti_per_1b: int,
+    verdure_per_1b: int,
+    prezzo_brim: float,
+    prezzo_rotten: float,
+    prezzo_revival: float,
+    prezzo_vendita: Optional[float] = None,
+) -> Dict[str, Any]:
     """
     Antidoti (ricette corrette):
 

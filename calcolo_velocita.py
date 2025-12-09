@@ -1,16 +1,17 @@
 # calcolo_velocita.py
+from typing import Optional, Dict, Any
 
 def calcola_pozione_velocita(
-    num,
-    tipo,              # "Velocità I" oppure "Velocità II"
-    prezzo_lapis,
-    prezzo_zucchero,
-    prezzo_blaze,
-    prezzo_core,
-    prezzo_carbone,
-    boccette_per_1b,
-    prezzo_vendita=None,
-):
+    num: int,
+    tipo: str,              # "Velocità I" oppure "Velocità II"
+    prezzo_lapis: float,
+    prezzo_zucchero: float,
+    prezzo_blaze: float,
+    prezzo_core: float,
+    prezzo_carbone: float,
+    boccette_per_1b: int,
+    prezzo_vendita: Optional[float] = None,
+) -> Dict[str, Any]:
     """
     Pozione di Velocità
 
