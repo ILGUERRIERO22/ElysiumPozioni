@@ -5,7 +5,7 @@ import shutil
 
 APP_NAME = "Elysium Pozioni"
 APP_DIRNAME = "ElysiumPozioni"
-APP_VERSION = "2.5.0"
+APP_VERSION = "2.6.0"
 APP_AUTHOR = "ILGUERRIERO22"
 
 def get_data_dir():
@@ -34,44 +34,61 @@ except Exception as e:
 CONFIG_FILE   = "config.json"
 PROFILES_FILE = "profiles.json"
 
-# === Tema / colori ===
+# === Tema / colori - Palette Moderna Migliorata ===
 
-BG_MAIN   = "#1e1e1e"
-BG_PANEL  = "#2a2a2a"
-BG_CARD   = "#252525"
-BG_RESULT = "#111111"
-BG_INPUT  = "#333333"
-FG_TEXT   = "#eaeaea"
-FG_SUBTLE = "#9e9e9e"
-FG_BRIGHT = "#ffffff"
-ACCENT    = "#6a5dfd"
-ACCENT_HOVER = "#8a7dff"
-ACCENT_LIGHT = "#9a8dff"
-ACCENT_GLOW  = "#7a6dfe"
-SECONDARY = "#4a4a4a"
-SECONDARY_HOVER = "#5a5a5a"
-SUCCESS = "#2e7d32"
-SUCCESS_HOVER = "#3e9d42"
-DANGER_BG = "#742e2e"
-DANGER_BG_HOVER = "#8a3e3e"
-DANGER_BG_ACTIVE = "#993737"
-GOLD = "#ffd700"
-GOLD_HOVER = "#ffe44d"
-BORDER_SUBTLE = "#3a3a3a"
-BORDER_ACCENT = "#6a5dfd"
-TAB_SELECTED = "#6a5dfd"
-TAB_HOVER = "#4a4a4a"
+# Backgrounds - Gradiente più ricco e profondo
+BG_MAIN   = "#0f0f1a"      # Blu scuro quasi nero per maggiore profondità
+BG_PANEL  = "#1a1a2e"      # Blu scuro per pannelli
+BG_CARD   = "#16213e"      # Blu medio per card
+BG_RESULT = "#0a0a15"      # Nero bluastro per risultati
+BG_INPUT  = "#1f2937"      # Grigio bluastro per input
 
-TITLE_FONT   = ("Segoe UI", 15, "bold")
-SECTION_FONT = ("Segoe UI", 11, "bold")
+# Foreground - Testi più leggibili
+FG_TEXT   = "#e8eaf6"      # Bianco leggermente bluastro
+FG_SUBTLE = "#9ca3af"      # Grigio chiaro per testo secondario
+FG_BRIGHT = "#ffffff"      # Bianco puro per evidenziare
+
+# Accent Colors - Viola/Blu più vivaci e moderni
+ACCENT    = "#7c3aed"      # Viola intenso
+ACCENT_HOVER = "#9d5cff"   # Viola chiaro hover
+ACCENT_LIGHT = "#a78bfa"   # Viola pastello
+ACCENT_GLOW  = "#8b5cf6"   # Viola luminoso per effetti glow
+
+# Secondary Colors
+SECONDARY = "#374151"      # Grigio scuro moderno
+SECONDARY_HOVER = "#4b5563" # Grigio hover
+
+# Status Colors - Più vivaci e distintivi
+SUCCESS = "#10b981"        # Verde smeraldo moderno
+SUCCESS_HOVER = "#34d399"  # Verde chiaro hover
+DANGER_BG = "#ef4444"      # Rosso moderno
+DANGER_BG_HOVER = "#f87171" # Rosso chiaro hover
+DANGER_BG_ACTIVE = "#dc2626" # Rosso scuro active
+
+# Special Colors
+GOLD = "#fbbf24"           # Oro moderno
+GOLD_HOVER = "#fcd34d"     # Oro chiaro
+
+# Borders - Più sottili e definiti
+BORDER_SUBTLE = "#2d3748"  # Grigio bluastro sottile
+BORDER_ACCENT = "#7c3aed"  # Viola come accent
+
+# Tab Colors
+TAB_SELECTED = "#7c3aed"   # Viola per tab selezionata
+TAB_HOVER = "#374151"      # Grigio scuro hover
+
+# Fonts - Leggermente più grandi e spaziati
+TITLE_FONT   = ("Segoe UI", 16, "bold")    # Più grande per titoli
+SECTION_FONT = ("Segoe UI", 12, "bold")    # Più leggibile
 LABEL_FONT   = ("Segoe UI", 10)
 BUTTON_FONT  = ("Segoe UI", 11, "bold")
-RESULT_FONT  = ("Consolas", 11)
+RESULT_FONT  = ("Consolas", 10)            # Leggermente più piccolo per risultati
 SMALL_FONT   = ("Segoe UI", 9)
-PREVIEW_FONT = ("Segoe UI", 10)
+PREVIEW_FONT = ("Segoe UI", 11)            # Più grande per preview
 
-BUTTON_PADX = 20
-BUTTON_PADY = 8
-PANEL_PADX  = 20
-PANEL_PADY  = 15
-ENTRY_WIDTH = 12
+# Spacing - Più generoso per respiro visivo
+BUTTON_PADX = 24     # Più padding orizzontale
+BUTTON_PADY = 10     # Più padding verticale
+PANEL_PADX  = 24     # Più spazio nei pannelli
+PANEL_PADY  = 18     # Più spazio verticale
+ENTRY_WIDTH = 14     # Input leggermente più larghi

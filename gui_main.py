@@ -144,19 +144,31 @@ class ModernButton(tk.Canvas):
         
     def _draw_button(self, color):
         self.delete("all")
-        r = 6  # radius
+        r = 10  # radius più grande per bordi più arrotondati
         w, h = self.width, self.height
-        
-        # Disegna rettangolo arrotondato
+
+        # Ombra sottile per profondità
+        shadow_offset = 2
+        shadow_color = "#000000"
+        self.create_arc(shadow_offset, shadow_offset, r*2+shadow_offset, r*2+shadow_offset,
+                       start=90, extent=90, fill=shadow_color, outline=shadow_color, stipple="gray50")
+        self.create_arc(w-r*2+shadow_offset, shadow_offset, w+shadow_offset, r*2+shadow_offset,
+                       start=0, extent=90, fill=shadow_color, outline=shadow_color, stipple="gray50")
+        self.create_arc(shadow_offset, h-r*2+shadow_offset, r*2+shadow_offset, h+shadow_offset,
+                       start=180, extent=90, fill=shadow_color, outline=shadow_color, stipple="gray50")
+        self.create_arc(w-r*2+shadow_offset, h-r*2+shadow_offset, w+shadow_offset, h+shadow_offset,
+                       start=270, extent=90, fill=shadow_color, outline=shadow_color, stipple="gray50")
+
+        # Disegna rettangolo arrotondato principale
         self.create_arc(0, 0, r*2, r*2, start=90, extent=90, fill=color, outline=color)
         self.create_arc(w-r*2, 0, w, r*2, start=0, extent=90, fill=color, outline=color)
         self.create_arc(0, h-r*2, r*2, h, start=180, extent=90, fill=color, outline=color)
         self.create_arc(w-r*2, h-r*2, w, h, start=270, extent=90, fill=color, outline=color)
         self.create_rectangle(r, 0, w-r, h, fill=color, outline=color)
         self.create_rectangle(0, r, w, h-r, fill=color, outline=color)
-        
+
         # Testo
-        self.create_text(w//2, h//2, text=self.text, fill=self.fg_color, 
+        self.create_text(w//2, h//2, text=self.text, fill=self.fg_color,
                         font=BUTTON_FONT)
         
     def _on_enter(self, event):
@@ -258,46 +270,55 @@ class ElysiumPozioniApp:
         self.root.destroy()
 
     def _configure_styles(self):
-        """Configura gli stili ttk per un look moderno"""
+        """Configura gli stili ttk per un look moderno e accattivante"""
         style = ttk.Style()
         style.theme_use('clam')
-        
-        # Notebook (tabs)
-        style.configure("TNotebook", 
-                       background=BG_MAIN, 
+
+        # Notebook (tabs) - Design più moderno con bordi e transizioni
+        style.configure("TNotebook",
+                       background=BG_MAIN,
                        borderwidth=0,
-                       padding=0)
+                       padding=0,
+                       relief="flat")
         style.configure("TNotebook.Tab",
                        background=BG_PANEL,
                        foreground=FG_SUBTLE,
-                       padding=[16, 10],
-                       font=('Segoe UI', 10, 'bold'))
+                       padding=[20, 12],  # Padding più generoso
+                       font=('Segoe UI', 10, 'bold'),
+                       borderwidth=0,
+                       relief="flat")
         style.map("TNotebook.Tab",
                  background=[("selected", ACCENT), ("active", TAB_HOVER)],
                  foreground=[("selected", FG_BRIGHT), ("active", FG_TEXT)],
-                 expand=[("selected", [0, 0, 0, 2])])
-        
-        # Combobox
+                 expand=[("selected", [1, 1, 1, 0])],  # Espansione per effetto rialzato
+                 borderwidth=[("selected", 0)])
+
+        # Combobox - Bordi più definiti e colori migliorati
         style.configure("TCombobox",
                        fieldbackground=BG_INPUT,
                        background=BG_INPUT,
                        foreground=FG_TEXT,
                        arrowcolor=ACCENT_LIGHT,
-                       borderwidth=0,
-                       padding=6)
+                       borderwidth=1,
+                       bordercolor=BORDER_SUBTLE,
+                       padding=8,  # Padding maggiore
+                       relief="flat")
         style.map("TCombobox",
-                 fieldbackground=[("readonly", BG_INPUT)],
+                 fieldbackground=[("readonly", BG_INPUT), ("focus", BG_INPUT)],
                  selectbackground=[("readonly", ACCENT)],
-                 selectforeground=[("readonly", FG_BRIGHT)])
-        
-        # Scrollbar
+                 selectforeground=[("readonly", FG_BRIGHT)],
+                 bordercolor=[("focus", ACCENT), ("!focus", BORDER_SUBTLE)],
+                 arrowcolor=[("active", ACCENT_HOVER)])
+
+        # Scrollbar - Più sottile e moderna
         style.configure("Vertical.TScrollbar",
                        background=BG_PANEL,
                        troughcolor=BG_MAIN,
                        borderwidth=0,
-                       arrowsize=14)
+                       arrowsize=12,
+                       width=12)  # Scrollbar più sottile
         style.map("Vertical.TScrollbar",
-                 background=[("active", ACCENT), ("pressed", ACCENT_HOVER)])
+                 background=[("active", ACCENT_LIGHT), ("pressed", ACCENT)])
 
     def _build_menu(self):
         """Costruisce il menu"""
