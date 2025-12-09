@@ -38,18 +38,40 @@ PROFILES_FILE = "profiles.json"
 
 BG_MAIN   = "#1e1e1e"
 BG_PANEL  = "#2a2a2a"
+BG_CARD   = "#252525"
 BG_RESULT = "#111111"
+BG_INPUT  = "#333333"
 FG_TEXT   = "#eaeaea"
 FG_SUBTLE = "#9e9e9e"
+FG_BRIGHT = "#ffffff"
 ACCENT    = "#6a5dfd"
+ACCENT_HOVER = "#8a7dff"
+ACCENT_LIGHT = "#9a8dff"
+ACCENT_GLOW  = "#7a6dfe"
+SECONDARY = "#4a4a4a"
+SECONDARY_HOVER = "#5a5a5a"
+SUCCESS = "#2e7d32"
+SUCCESS_HOVER = "#3e9d42"
 DANGER_BG = "#742e2e"
+DANGER_BG_HOVER = "#8a3e3e"
 DANGER_BG_ACTIVE = "#993737"
-DANGER_BG = "#742e2e"
-DANGER_BG_ACTIVE = "#993737"
-
+GOLD = "#ffd700"
+GOLD_HOVER = "#ffe44d"
+BORDER_SUBTLE = "#3a3a3a"
+BORDER_ACCENT = "#6a5dfd"
+TAB_SELECTED = "#6a5dfd"
+TAB_HOVER = "#4a4a4a"
 
 TITLE_FONT   = ("Segoe UI", 15, "bold")
 SECTION_FONT = ("Segoe UI", 11, "bold")
 LABEL_FONT   = ("Segoe UI", 10)
 BUTTON_FONT  = ("Segoe UI", 11, "bold")
 RESULT_FONT  = ("Consolas", 11)
+SMALL_FONT   = ("Segoe UI", 9)
+PREVIEW_FONT = ("Segoe UI", 10)
+
+BUTTON_PADX = 20
+BUTTON_PADY = 8
+PANEL_PADX  = 20
+PANEL_PADY  = 15
+ENTRY_WIDTH = 12

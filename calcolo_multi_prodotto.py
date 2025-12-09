@@ -331,14 +331,95 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc, costo_
         materiali['Boccetta'] = qty * 1  # Per Vel I
         materiali['Lapis'] = qty * 1  # Per Vel I
         materiali['Zucchero'] = qty * 1  # Per Vel I
-        
+
         costi['Blaze'] = qty * prezzi.get('blaze', 1.0)
         costi['Core fragment'] = qty * 2 * prezzi.get('core', 1.0)
         costi['Carbonella'] = qty * 3 * costo_carb
         costi['Boccetta'] = qty * costo_bocc
         costi['Lapis'] = qty * prezzi.get('lapis', 1.0)
         costi['Zucchero'] = qty * prezzi.get('zucchero', 1.0)
-    
+
+    # === ELISIR ===
+    elif tipo == 'elisir_minor':
+        # Minor mending (Terracotta): 1 Resina + 1 Core + 1 pepita Tin + 1 Brim + 1 Carbonella + 1 Boccetta
+        materiali['Resina'] = qty * 1
+        materiali['Core fragment'] = qty * 1
+        materiali['Pepita Tin'] = qty * 1
+        materiali['Brim powder'] = qty * 1
+        materiali['Carbonella'] = qty * 1
+        materiali['Boccetta'] = qty * 1
+
+        costi['Resina'] = qty * costo_resina
+        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
+        costi['Pepita Tin'] = qty * (prezzi.get('tin', 0.0) / 9.0)
+        costi['Brim powder'] = qty * prezzi.get('brim', 1.0)
+        costi['Carbonella'] = qty * costo_carb
+        costi['Boccetta'] = qty * costo_bocc
+
+    elif tipo == 'elisir_inferior':
+        # Inferior mending (Rame): 1 Resina + 1 Core + 1 pepita Rame + 1 Occhio di ragno + 1 Carbonella + 1 Boccetta
+        materiali['Resina'] = qty * 1
+        materiali['Core fragment'] = qty * 1
+        materiali['Pepita Rame'] = qty * 1
+        materiali['Occhio di ragno'] = qty * 1
+        materiali['Carbonella'] = qty * 1
+        materiali['Boccetta'] = qty * 1
+
+        costi['Resina'] = qty * costo_resina
+        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
+        costi['Pepita Rame'] = qty * (prezzi.get('copper', 0.0) / 9.0)
+        costi['Occhio di ragno'] = qty * prezzi.get('spidereye', 1.0)
+        costi['Carbonella'] = qty * costo_carb
+        costi['Boccetta'] = qty * costo_bocc
+
+    elif tipo == 'elisir_lesser':
+        # Lesser mending (Ferro): 1 Resina + 1 Core + 1 pepita Ferro + 1 Membrana Phantom + 2 Carbonella + 1 Boccetta
+        materiali['Resina'] = qty * 1
+        materiali['Core fragment'] = qty * 1
+        materiali['Pepita Ferro'] = qty * 1
+        materiali['Membrana Phantom'] = qty * 1
+        materiali['Carbonella'] = qty * 2
+        materiali['Boccetta'] = qty * 1
+
+        costi['Resina'] = qty * costo_resina
+        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
+        costi['Pepita Ferro'] = qty * (prezzi.get('iron', 0.0) / 9.0)
+        costi['Membrana Phantom'] = qty * prezzi.get('membrana', 1.0)
+        costi['Carbonella'] = qty * 2 * costo_carb
+        costi['Boccetta'] = qty * costo_bocc
+
+    elif tipo == 'elisir_medium':
+        # Medium mending (Oro): 1 Resina + 1 Core + 1 pepita Oro + 1 Slimeball + 2 Carbonella + 1 Boccetta
+        materiali['Resina'] = qty * 1
+        materiali['Core fragment'] = qty * 1
+        materiali['Pepita Oro'] = qty * 1
+        materiali['Slimeball'] = qty * 1
+        materiali['Carbonella'] = qty * 2
+        materiali['Boccetta'] = qty * 1
+
+        costi['Resina'] = qty * costo_resina
+        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
+        costi['Pepita Oro'] = qty * (prezzi.get('gold', 0.0) / 9.0)
+        costi['Slimeball'] = qty * prezzi.get('slime', 1.0)
+        costi['Carbonella'] = qty * 2 * costo_carb
+        costi['Boccetta'] = qty * costo_bocc
+
+    elif tipo == 'elisir_greater':
+        # Greater mending (Diamante): 1 Resina + 1 Core + 1 pepita Diamante + 1 Lost soul + 3 Carbonella + 1 Boccetta
+        materiali['Resina'] = qty * 1
+        materiali['Core fragment'] = qty * 1
+        materiali['Pepita Diamante'] = qty * 1
+        materiali['Lost soul'] = qty * 1
+        materiali['Carbonella'] = qty * 3
+        materiali['Boccetta'] = qty * 1
+
+        costi['Resina'] = qty * costo_resina
+        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
+        costi['Pepita Diamante'] = qty * (prezzi.get('diamond', 0.0) / 9.0)
+        costi['Lost soul'] = qty * prezzi.get('lost_soul', 1.0)
+        costi['Carbonella'] = qty * 3 * costo_carb
+        costi['Boccetta'] = qty * costo_bocc
+
     return materiali, costi
 
 
@@ -358,6 +439,11 @@ def get_nome_prodotto(tipo):
         'extinguish': 'Extinguish',
         'velocita_i': 'Velocità I',
         'velocita_ii': 'Velocità II',
+        'elisir_minor': 'Elisir Minor Mending (Terracotta)',
+        'elisir_inferior': 'Elisir Inferior Mending (Rame)',
+        'elisir_lesser': 'Elisir Lesser Mending (Ferro)',
+        'elisir_medium': 'Elisir Medium Mending (Oro)',
+        'elisir_greater': 'Elisir Greater Mending (Diamante)',
     }
     return nomi.get(tipo, tipo)
 
@@ -380,4 +466,10 @@ def get_tipi_prodotti_disponibili():
         ('extinguish', 'Extinguish'),
         ('velocita_i', 'Velocità I'),
         ('velocita_ii', 'Velocità II'),
+        # Elisir
+        ('elisir_minor', 'Elisir Minor Mending (Terracotta)'),
+        ('elisir_inferior', 'Elisir Inferior Mending (Rame)'),
+        ('elisir_lesser', 'Elisir Lesser Mending (Ferro)'),
+        ('elisir_medium', 'Elisir Medium Mending (Oro)'),
+        ('elisir_greater', 'Elisir Greater Mending (Diamante)'),
     ]
