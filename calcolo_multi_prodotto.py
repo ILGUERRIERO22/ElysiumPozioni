@@ -452,28 +452,39 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc, costo_
                     'metallo': nome_metallo,
                     'pepite': pepite_int_basso,
                     'rune': rune_ottenute_basso,
-                    'costo': costo_basso
+                    'costo': costo_basso,
+                    'label': f'{nome_metallo}: {pepite_int_basso} pep'
                 })
                 opzioni.append({
                     'metallo': nome_metallo,
                     'pepite': pepite_int_alto,
                     'rune': rune_ottenute_alto,
-                    'costo': costo_alto
+                    'costo': costo_alto,
+                    'label': f'{nome_metallo}: {pepite_int_alto} pep'
                 })
             else:
                 opzioni.append({
                     'metallo': nome_metallo,
                     'pepite': pepite_necessarie,
                     'rune': qty,
-                    'costo': pepite_necessarie * prezzo_pepita
+                    'costo': pepite_necessarie * prezzo_pepita,
+                    'label': f'{nome_metallo}'
                 })
 
         # Trova l'opzione più economica
         if opzioni:
             opzione_migliore = min(opzioni, key=lambda x: x['costo'])
-            materiali[f"💰 Opzione migliore: {opzione_migliore['metallo']}"] = opzione_migliore['pepite']
-            materiali[f"Rune ottenibili"] = opzione_migliore['rune']
-            costi[f"💰 Opzione migliore: {opzione_migliore['metallo']}"] = opzione_migliore['costo']
+
+            # Mostra TUTTE le opzioni nei materiali, ma solo la migliore nei costi (per il totale)
+            for opz in opzioni:
+                if opz == opzione_migliore:
+                    # Evidenzia la migliore - questa va nei costi per il totale
+                    materiali[f"💰 {opz['label']} → {opz['rune']:.0f} rune"] = opz['pepite']
+                    costi[f"💰 {opz['label']} → {opz['rune']:.0f} rune"] = opz['costo']
+                else:
+                    # Mostra le altre solo nei materiali, NON nei costi
+                    materiali[f"{opz['label']} → {opz['rune']:.0f} rune"] = opz['pepite']
+                    # NON aggiungo ai costi per non sommare nel totale
 
     elif tipo == 'rune_bardi':
         rese_bardi = [
@@ -503,28 +514,39 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc, costo_
                     'metallo': nome_metallo,
                     'pepite': pepite_int_basso,
                     'rune': rune_ottenute_basso,
-                    'costo': costo_basso
+                    'costo': costo_basso,
+                    'label': f'{nome_metallo}: {pepite_int_basso} pep'
                 })
                 opzioni.append({
                     'metallo': nome_metallo,
                     'pepite': pepite_int_alto,
                     'rune': rune_ottenute_alto,
-                    'costo': costo_alto
+                    'costo': costo_alto,
+                    'label': f'{nome_metallo}: {pepite_int_alto} pep'
                 })
             else:
                 opzioni.append({
                     'metallo': nome_metallo,
                     'pepite': pepite_necessarie,
                     'rune': qty,
-                    'costo': pepite_necessarie * prezzo_pepita
+                    'costo': pepite_necessarie * prezzo_pepita,
+                    'label': f'{nome_metallo}'
                 })
 
         # Trova l'opzione più economica
         if opzioni:
             opzione_migliore = min(opzioni, key=lambda x: x['costo'])
-            materiali[f"💰 Opzione migliore: {opzione_migliore['metallo']}"] = opzione_migliore['pepite']
-            materiali[f"Rune ottenibili"] = opzione_migliore['rune']
-            costi[f"💰 Opzione migliore: {opzione_migliore['metallo']}"] = opzione_migliore['costo']
+
+            # Mostra TUTTE le opzioni nei materiali, ma solo la migliore nei costi (per il totale)
+            for opz in opzioni:
+                if opz == opzione_migliore:
+                    # Evidenzia la migliore - questa va nei costi per il totale
+                    materiali[f"💰 {opz['label']} → {opz['rune']:.0f} rune"] = opz['pepite']
+                    costi[f"💰 {opz['label']} → {opz['rune']:.0f} rune"] = opz['costo']
+                else:
+                    # Mostra le altre solo nei materiali, NON nei costi
+                    materiali[f"{opz['label']} → {opz['rune']:.0f} rune"] = opz['pepite']
+                    # NON aggiungo ai costi per non sommare nel totale
 
     return materiali, costi
 
