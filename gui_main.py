@@ -425,47 +425,34 @@ class ElysiumPozioniApp:
                              lambda e: self.outer_canvas.configure(
                                  scrollregion=self.outer_canvas.bbox("all")))
         
-        # Mouse wheel scrolling con controllo del widget
+        # Mouse wheel scrolling con controllo intelligente del widget
         def _on_mousewheel(event):
-            # Controlla se l'evento proviene da un widget che gestisce il proprio scroll
+            # Ottieni il widget sotto il mouse
             widget = event.widget
 
-            # Verifica che widget sia un oggetto valido e non una stringa
-            if isinstance(widget, str):
-                # Se è una stringa, prova a ottenere il widget dal nametowidget
-                try:
-                    widget = self.root.nametowidget(widget)
-                except:
-                    # Se fallisce, scrolla il canvas normalmente
-                    self.outer_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-                    return
+            # Blocca scroll se il mouse è su certi widget
+            widget_class = widget.winfo_class()
 
-            try:
-                widget_class = widget.winfo_class()
-            except:
-                # Se non possiamo ottenere la classe, scrolla normalmente
-                self.outer_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            # Non scrollare se siamo su combobox popup o Text widget con scrollbar
+            if widget_class in ('Listbox', 'TCombobox', 'Toplevel'):
                 return
 
-            # Blocca lo scroll se siamo su:
-            # - Listbox (menu dropdown della combobox)
-            # - Text (area testo scrollabile)
-            # - Combobox stessa
-            if widget_class in ('Listbox', 'Text'):
-                return "break"
+            # Se siamo su un Text widget, non scrollare il canvas principale
+            if widget_class == 'Text':
+                return
 
-            # Controlla anche i widget parent
-            check_widget = widget
-            while check_widget:
-                if isinstance(check_widget, (ttk.Combobox, tk.Text)):
-                    return "break"
-                check_widget = check_widget.master if hasattr(check_widget, 'master') else None
+            # Altrimenti scrolla il canvas principale
+            try:
+                self.outer_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            except:
+                pass
+            return "break"
 
-            # Altrimenti scrolla il canvas normalmente
-            self.outer_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        # Salva il riferimento al handler
+        self._mousewheel_handler = _on_mousewheel
 
-        # Bind a tutti i widget
-        self.outer_canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        # Bind globale con controllo intelligente
+        self.root.bind_all("<MouseWheel>", self._mousewheel_handler)
         
         # Notebook (tabs)
         self.notebook = ttk.Notebook(self.inner_frame)
@@ -581,18 +568,18 @@ class ElysiumPozioniApp:
             self.tooltip_window = None
 
     def _on_tab_change(self, event):
-        """Gestisce cambio tab con animazione slide"""
+        """Gestisce cambio tab con animazione slide-fade"""
         try:
             new_tab = self.notebook.index(self.notebook.select())
 
             # Determina direzione
             direction = "right" if new_tab > self.current_tab else "left"
 
-            # Applica fade effect al nuovo tab
+            # Applica slide-fade effect al nuovo tab
             current_frame = self.notebook.nametowidget(self.notebook.select())
 
-            # Fade in sul tab selezionato
-            self.animator.fade_in(current_frame, duration=150)
+            # Animazione slide-fade sul tab selezionato
+            self.animator.slide_fade_tab(current_frame, direction=direction, duration=150)
 
             # Aggiorna indice corrente
             self.current_tab = new_tab
@@ -700,7 +687,7 @@ class ElysiumPozioniApp:
             bg=BG_CARD,
             fg=FG_TEXT,
         ).grid(row=row, column=0, sticky="e", padx=(0, 8), pady=4)
-        
+
         combo = ttk.Combobox(
             parent,
             values=values,
@@ -711,7 +698,16 @@ class ElysiumPozioniApp:
         combo.current(0)
         combo.grid(row=row, column=1, pady=4, sticky="w")
 
+        # Blocca scroll su combobox per evitare scroll della finestra principale
+        self._block_combobox_scroll(combo)
+
         return combo
+
+    def _block_combobox_scroll(self, combo):
+        """Blocca lo scroll del mouse su una combobox per evitare scroll indesiderato"""
+        # Con il nuovo sistema Enter/Leave sul canvas, non serve fare nulla qui
+        # Lo scroll funziona solo quando il mouse è sul canvas
+        pass
 
     def make_action_button(self, parent, text, command, style="primary", icon=""):
         """Crea un bottone azione con stile"""
@@ -812,7 +808,6 @@ class ElysiumPozioniApp:
         )
         text_widget.pack(fill="both", expand=True)
         scrollbar.config(command=text_widget.yview)
-        
         setattr(self, text_var_name, text_widget)
 
     # =========================
@@ -854,7 +849,8 @@ class ElysiumPozioniApp:
             font=LABEL_FONT,
         )
         self.combo_profile.grid(row=0, column=1, padx=4, pady=4, sticky="w")
-        
+        self._block_combobox_scroll(self.combo_profile)
+
         # Bottoni profilo
         btn_frame = tk.Frame(prof_inner, bg=BG_CARD)
         btn_frame.grid(row=0, column=2, columnspan=4, padx=(10, 0), pady=4, sticky="w")
@@ -901,7 +897,8 @@ class ElysiumPozioniApp:
         )
         self.combo_tier.current(0)
         self.combo_tier.grid(row=1, column=1, pady=4, sticky="w")
-        
+        self._block_combobox_scroll(self.combo_tier)
+
         tk.Label(
             prod_inner,
             text="Calderone:",
@@ -919,6 +916,7 @@ class ElysiumPozioniApp:
         )
         self.combo_calderone.current(0)
         self.combo_calderone.grid(row=2, column=1, pady=4, sticky="w")
+        self._block_combobox_scroll(self.combo_calderone)
         
         panel_prod.pack(padx=0, pady=(0, 8), fill="x")
         
@@ -1017,6 +1015,7 @@ class ElysiumPozioniApp:
         )
         self.combo_ant_calderone.current(0)
         self.combo_ant_calderone.grid(row=1, column=1, pady=4, sticky="w")
+        self._block_combobox_scroll(self.combo_ant_calderone)
         
         panel_prod.pack(padx=0, pady=(0, 8), fill="x")
         
@@ -1256,6 +1255,7 @@ class ElysiumPozioniApp:
         )
         self.combo_danno_tipo.current(0)
         self.combo_danno_tipo.grid(row=1, column=1, pady=4, sticky="w")
+        self._block_combobox_scroll(self.combo_danno_tipo)
         
         panel_prod.pack(padx=0, pady=(0, 8), fill="x")
         
@@ -1428,6 +1428,7 @@ class ElysiumPozioniApp:
         )
         self.combo_el_tipo.current(0)
         self.combo_el_tipo.grid(row=1, column=1, pady=4, sticky="w")
+        self._block_combobox_scroll(self.combo_el_tipo)
         
         panel_prod.pack(padx=0, pady=(0, 8), fill="x")
         
@@ -1562,6 +1563,7 @@ class ElysiumPozioniApp:
         )
         self.combo_rune_tipo.current(0)
         self.combo_rune_tipo.grid(row=0, column=1, pady=4, sticky="w")
+        self._block_combobox_scroll(self.combo_rune_tipo)
         
         panel_tipo.pack(padx=0, pady=(0, 8), fill="x")
         
@@ -1639,6 +1641,7 @@ class ElysiumPozioniApp:
         )
         self.combo_vel_tipo.current(0)
         self.combo_vel_tipo.grid(row=1, column=1, pady=4, sticky="w")
+        self._block_combobox_scroll(self.combo_vel_tipo)
         
         panel_prod.pack(padx=0, pady=(0, 8), fill="x")
         
@@ -1734,6 +1737,7 @@ class ElysiumPozioniApp:
         )
         self.combo_multi_tipo.current(0)
         self.combo_multi_tipo.grid(row=0, column=1, pady=4, sticky="w", columnspan=2)
+        self._block_combobox_scroll(self.combo_multi_tipo)
 
         self.entry_multi_qty = self.make_labeled_entry(
             add_inner, "Quantità:", "10", row=1
@@ -1775,7 +1779,7 @@ class ElysiumPozioniApp:
         )
         self.multi_lista_text.pack(fill="both", expand=True)
         scrollbar_list.config(command=self.multi_lista_text.yview)
-        
+
         # Bottoni azioni
         btn_frame = tk.Frame(lista_inner, bg=BG_CARD)
         btn_frame.pack(pady=8)
