@@ -493,7 +493,11 @@ class ElysiumPozioniApp:
         self.notebook.add(self.tab_multi, text="🧮")
         
         self.notebook.pack(fill="both", expand=True, padx=5, pady=5)
-        
+
+        # Animazione cambio tab
+        self.current_tab = 0
+        self.notebook.bind("<<NotebookTabChanged>>", self._on_tab_change)
+
         # Setup tooltip per le tab
         self._setup_tab_tooltips()
 
@@ -575,6 +579,26 @@ class ElysiumPozioniApp:
             except:
                 pass
             self.tooltip_window = None
+
+    def _on_tab_change(self, event):
+        """Gestisce cambio tab con animazione slide"""
+        try:
+            new_tab = self.notebook.index(self.notebook.select())
+
+            # Determina direzione
+            direction = "right" if new_tab > self.current_tab else "left"
+
+            # Applica fade effect al nuovo tab
+            current_frame = self.notebook.nametowidget(self.notebook.select())
+
+            # Fade in sul tab selezionato
+            self.animator.fade_in(current_frame, duration=150)
+
+            # Aggiorna indice corrente
+            self.current_tab = new_tab
+        except Exception as e:
+            # Fallback silenzioso se l'animazione fallisce
+            pass
 
     def make_panel(self, parent, title, icon=""):
         """Crea un pannello card con stile moderno"""
