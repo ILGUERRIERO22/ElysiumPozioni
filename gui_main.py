@@ -1788,6 +1788,18 @@ class ElysiumPozioniApp:
                 'lapis': float(self.entry_vel_lapis.get()),
                 'zucchero': float(self.entry_vel_zucchero.get()),
                 'blaze': float(self.entry_vel_blaze.get()),
+                # Prezzi elisir (lingotti)
+                'tin': float(self.entry_price_tin.get() if hasattr(self, 'entry_price_tin') else 0),
+                'copper': float(self.entry_price_cu.get() if hasattr(self, 'entry_price_cu') else 0),
+                'iron': float(self.entry_price_fe.get() if hasattr(self, 'entry_price_fe') else 0),
+                'gold': float(self.entry_price_au.get() if hasattr(self, 'entry_price_au') else 0),
+                'diamond': float(self.entry_price_dia.get() if hasattr(self, 'entry_price_dia') else 0),
+                # Ingredienti speciali elisir
+                'membrana': float(self.entry_membrana.get() if hasattr(self, 'entry_membrana') else 0),
+                'slime': float(self.entry_slime.get() if hasattr(self, 'entry_slime') else 0),
+                'lost_soul': float(self.entry_lost_soul.get() if hasattr(self, 'entry_lost_soul') else 0),
+                # Argento per rune
+                'silver': float(self.entry_silver.get() if hasattr(self, 'entry_silver') else 0),
             }
             
             # Calcola
