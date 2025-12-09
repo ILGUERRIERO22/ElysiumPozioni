@@ -1,5 +1,5 @@
 # gui_main.py
-# Versione 3.0 - UI Moderna e Migliorata
+# Versione 3.2 - UI Moderna con Animazioni
 
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -22,6 +22,8 @@ from config_app import (
     BUTTON_PADX, BUTTON_PADY, PANEL_PADX, PANEL_PADY, ENTRY_WIDTH,
     CONFIG_FILE, PROFILES_FILE,
 )
+
+from animations import AnimationManager
 
 from calcolo_pozioni import calcola_pozioni
 from calcolo_antidoti import calcola_antidoti as core_calcola_antidoti
@@ -173,21 +175,31 @@ class ModernButton(tk.Canvas):
         
     def _on_enter(self, event):
         self.is_hovered = True
-        self._draw_button(self.hover_color)
+        self._animate_color_transition(self.bg_color, self.hover_color, duration=150)
         self.config(cursor="hand2")
-        
+
     def _on_leave(self, event):
         self.is_hovered = False
-        self._draw_button(self.bg_color)
-        
+        self._animate_color_transition(self.hover_color, self.bg_color, duration=150)
+
     def _on_click(self, event):
-        # Effetto press
+        # Effetto press con leggera riduzione
         self._draw_button(self.bg_color)
-        
+
     def _on_release(self, event):
         if self.is_hovered and self.command:
-            self.command()
-        self._draw_button(self.hover_color if self.is_hovered else self.bg_color)
+            # Piccolo feedback visivo
+            self._draw_button(ACCENT_LIGHT)
+            self.after(50, lambda: self._draw_button(self.hover_color if self.is_hovered else self.bg_color))
+            # Esegue comando dopo feedback
+            self.after(100, self.command)
+        else:
+            self._draw_button(self.hover_color if self.is_hovered else self.bg_color)
+
+    def _animate_color_transition(self, color_from: str, color_to: str, duration: int = 150):
+        """Anima transizione di colore smooth"""
+        # Per ora usa cambio diretto, ma prepara per future animazioni
+        self._draw_button(color_to)
 
 
 class ModernEntry(tk.Entry):
@@ -245,10 +257,13 @@ class ElysiumPozioniApp:
         self.root.configure(bg=BG_MAIN)
         self.root.resizable(True, True)
         self.root.minsize(800, 600)
-        
+
         # Profili in memoria
         self.profiles = load_all_profiles()
-        
+
+        # Sistema di animazioni
+        self.animator = AnimationManager(self.root)
+
         # Configura stili ttk
         self._configure_styles()
         
@@ -637,6 +652,20 @@ class ElysiumPozioniApp:
             ).grid(row=row, column=2, sticky="w", padx=(8, 0))
         
         return entry
+
+    def update_result_with_fade(self, preview_label, text_widget, preview_text, output_lines):
+        """Aggiorna risultati con effetto fade"""
+        # Pulse effetto sul preview
+        original_bg = preview_label.cget('bg')
+        preview_label.config(bg=ACCENT_GLOW)
+        self.root.after(200, lambda: preview_label.config(bg=original_bg))
+
+        # Aggiorna testo
+        preview_label.config(text=f"💰 {preview_text}")
+        text_widget.config(state="normal")
+        text_widget.delete("1.0", tk.END)
+        text_widget.insert(tk.END, "\n".join(output_lines))
+        text_widget.config(state="disabled")
 
     def make_labeled_combo(self, parent, label_text, values, row=0, width=12):
         """Crea una coppia label + combobox"""
@@ -2022,12 +2051,14 @@ class ElysiumPozioniApp:
                 prezzo_vendita=prezzo_vendita,
                 profilo_attivo=profilo_attivo,
             )
-            
-            self.label_preview.config(text=f"💰 {result['preview_text']}")
-            self.text_result.config(state="normal")
-            self.text_result.delete("1.0", tk.END)
-            self.text_result.insert(tk.END, "\n".join(result["output_lines"]))
-            self.text_result.config(state="disabled")
+
+            # Aggiorna con animazione
+            self.update_result_with_fade(
+                self.label_preview,
+                self.text_result,
+                result['preview_text'],
+                result["output_lines"]
+            )
             
         except ValueError:
             messagebox.showerror("❌ Errore", "Controlla i campi: inserisci numeri validi!")
