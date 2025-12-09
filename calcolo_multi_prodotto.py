@@ -420,6 +420,58 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc, costo_
         costi['Carbonella'] = qty * 3 * costo_carb
         costi['Boccetta'] = qty * costo_bocc
 
+    # === RUNE ===
+    # Rese: rune per pepita
+    # Maghi: Tin=0, Rame=11, Ferro=23, Oro=35, Argento=47
+    # Bardi: Tin=23, Rame=23, Ferro=23, Oro=35, Argento=47
+
+    elif tipo.startswith('rune_maghi_'):
+        metallo = tipo.replace('rune_maghi_', '')
+        rese_maghi = {'tin': 0, 'rame': 11, 'ferro': 23, 'oro': 35, 'argento': 47}
+        resa = rese_maghi.get(metallo, 0)
+
+        if resa == 0:
+            # Tin non produce rune Maghi
+            materiali[f'⚠️ AVVISO'] = 0
+            costi[f'⚠️ Tin non produce rune Maghi'] = 0
+        else:
+            pepite_necessarie = qty / resa
+            pepite_int_basso = int(pepite_necessarie)
+            pepite_int_alto = pepite_int_basso + 1
+            rune_ottenute_basso = pepite_int_basso * resa
+            rune_ottenute_alto = pepite_int_alto * resa
+
+            materiali[f'Pepite {metallo.capitalize()}'] = pepite_necessarie
+            if abs(pepite_necessarie - pepite_int_basso) > 0.001:
+                materiali[f'⚠️ Opzione A: {pepite_int_basso} pepite'] = rune_ottenute_basso
+                materiali[f'⚠️ Opzione B: {pepite_int_alto} pepite'] = rune_ottenute_alto
+
+            prezzo_pepita = prezzi.get(metallo, 0.0) / 9.0
+            costi[f'Pepite {metallo.capitalize()}'] = pepite_necessarie * prezzo_pepita
+
+    elif tipo.startswith('rune_bardi_'):
+        metallo = tipo.replace('rune_bardi_', '')
+        rese_bardi = {'tin': 23, 'rame': 23, 'ferro': 23, 'oro': 35, 'argento': 47}
+        resa = rese_bardi.get(metallo, 0)
+
+        if resa == 0:
+            materiali[f'⚠️ AVVISO'] = 0
+            costi[f'⚠️ Metallo non valido'] = 0
+        else:
+            pepite_necessarie = qty / resa
+            pepite_int_basso = int(pepite_necessarie)
+            pepite_int_alto = pepite_int_basso + 1
+            rune_ottenute_basso = pepite_int_basso * resa
+            rune_ottenute_alto = pepite_int_alto * resa
+
+            materiali[f'Pepite {metallo.capitalize()}'] = pepite_necessarie
+            if abs(pepite_necessarie - pepite_int_basso) > 0.001:
+                materiali[f'⚠️ Opzione A: {pepite_int_basso} pepite'] = rune_ottenute_basso
+                materiali[f'⚠️ Opzione B: {pepite_int_alto} pepite'] = rune_ottenute_alto
+
+            prezzo_pepita = prezzi.get(metallo, 0.0) / 9.0
+            costi[f'Pepite {metallo.capitalize()}'] = pepite_necessarie * prezzo_pepita
+
     return materiali, costi
 
 
@@ -444,6 +496,15 @@ def get_nome_prodotto(tipo):
         'elisir_lesser': 'Elisir Lesser Mending (Ferro)',
         'elisir_medium': 'Elisir Medium Mending (Oro)',
         'elisir_greater': 'Elisir Greater Mending (Diamante)',
+        'rune_maghi_rame': 'Rune Maghi (Rame)',
+        'rune_maghi_ferro': 'Rune Maghi (Ferro)',
+        'rune_maghi_oro': 'Rune Maghi (Oro)',
+        'rune_maghi_argento': 'Rune Maghi (Argento)',
+        'rune_bardi_tin': 'Rune Bardi (Tin)',
+        'rune_bardi_rame': 'Rune Bardi (Rame)',
+        'rune_bardi_ferro': 'Rune Bardi (Ferro)',
+        'rune_bardi_oro': 'Rune Bardi (Oro)',
+        'rune_bardi_argento': 'Rune Bardi (Argento)',
     }
     return nomi.get(tipo, tipo)
 
@@ -472,4 +533,15 @@ def get_tipi_prodotti_disponibili():
         ('elisir_lesser', 'Elisir Lesser Mending (Ferro)'),
         ('elisir_medium', 'Elisir Medium Mending (Oro)'),
         ('elisir_greater', 'Elisir Greater Mending (Diamante)'),
+        # Rune Maghi
+        ('rune_maghi_rame', 'Rune Maghi (Rame)'),
+        ('rune_maghi_ferro', 'Rune Maghi (Ferro)'),
+        ('rune_maghi_oro', 'Rune Maghi (Oro)'),
+        ('rune_maghi_argento', 'Rune Maghi (Argento)'),
+        # Rune Bardi
+        ('rune_bardi_tin', 'Rune Bardi (Tin)'),
+        ('rune_bardi_rame', 'Rune Bardi (Rame)'),
+        ('rune_bardi_ferro', 'Rune Bardi (Ferro)'),
+        ('rune_bardi_oro', 'Rune Bardi (Oro)'),
+        ('rune_bardi_argento', 'Rune Bardi (Argento)'),
     ]
