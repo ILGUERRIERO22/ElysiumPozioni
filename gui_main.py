@@ -414,7 +414,23 @@ class ElysiumPozioniApp:
         def _on_mousewheel(event):
             # Controlla se l'evento proviene da un widget che gestisce il proprio scroll
             widget = event.widget
-            widget_class = widget.winfo_class()
+
+            # Verifica che widget sia un oggetto valido e non una stringa
+            if isinstance(widget, str):
+                # Se è una stringa, prova a ottenere il widget dal nametowidget
+                try:
+                    widget = self.root.nametowidget(widget)
+                except:
+                    # Se fallisce, scrolla il canvas normalmente
+                    self.outer_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+                    return
+
+            try:
+                widget_class = widget.winfo_class()
+            except:
+                # Se non possiamo ottenere la classe, scrolla normalmente
+                self.outer_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+                return
 
             # Blocca lo scroll se siamo su:
             # - Listbox (menu dropdown della combobox)
