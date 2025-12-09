@@ -389,10 +389,30 @@ class ElysiumPozioniApp:
                              lambda e: self.outer_canvas.configure(
                                  scrollregion=self.outer_canvas.bbox("all")))
         
-        # Mouse wheel scrolling
+        # Mouse wheel scrolling con controllo del widget
         def _on_mousewheel(event):
+            # Controlla se l'evento proviene da un widget che gestisce il proprio scroll
+            widget = event.widget
+            widget_class = widget.winfo_class()
+
+            # Blocca lo scroll se siamo su:
+            # - Listbox (menu dropdown della combobox)
+            # - Text (area testo scrollabile)
+            # - Combobox stessa
+            if widget_class in ('Listbox', 'Text'):
+                return "break"
+
+            # Controlla anche i widget parent
+            check_widget = widget
+            while check_widget:
+                if isinstance(check_widget, (ttk.Combobox, tk.Text)):
+                    return "break"
+                check_widget = check_widget.master if hasattr(check_widget, 'master') else None
+
+            # Altrimenti scrolla il canvas normalmente
             self.outer_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        
+
+        # Bind a tutti i widget
         self.outer_canvas.bind_all("<MouseWheel>", _on_mousewheel)
         
         # Notebook (tabs)
@@ -600,7 +620,7 @@ class ElysiumPozioniApp:
         )
         combo.current(0)
         combo.grid(row=row, column=1, pady=4, sticky="w")
-        
+
         return combo
 
     def make_action_button(self, parent, text, command, style="primary", icon=""):
@@ -1624,7 +1644,7 @@ class ElysiumPozioniApp:
         )
         self.combo_multi_tipo.current(0)
         self.combo_multi_tipo.grid(row=0, column=1, pady=4, sticky="w", columnspan=2)
-        
+
         self.entry_multi_qty = self.make_labeled_entry(
             add_inner, "Quantità:", "10", row=1
         )
@@ -1804,7 +1824,14 @@ class ElysiumPozioniApp:
             
             # Calcola
             risultato = core_multi_prod(self.multi_prodotti_lista, prezzi_base)
-            
+
+            # DEBUG: Stampa risultato per diagnosi
+            print("=== DEBUG MULTI-PRODOTTO ===")
+            print(f"Materiali aggregati: {risultato['materiali_aggregati']}")
+            print(f"Costi materiali: {risultato['costi_materiali']}")
+            print(f"Costo totale: {risultato['costo_totale']}")
+            print("============================")
+
             # Mostra preview
             preview = f"Totale: {risultato['costo_totale']:.2f}b"
             if risultato['profitto_netto']:
@@ -1822,8 +1849,12 @@ class ElysiumPozioniApp:
             output_lines.append("MATERIALI NECESSARI (AGGREGATI):")
             output_lines.append("-" * 60)
             for mat, qty in sorted(risultato['materiali_aggregati'].items()):
-                costo = risultato['costi_materiali'][mat]
-                output_lines.append(f"  • {mat:25s} {qty:8.2f} unità  ({costo:8.2f}b)")
+                costo = risultato['costi_materiali'].get(mat, None)
+                if costo is not None:
+                    output_lines.append(f"  • {mat:25s} {qty:8.2f} unità  ({costo:8.2f}b)")
+                else:
+                    # Materiale senza costo (opzione runa non selezionata)
+                    output_lines.append(f"  • {mat:25s} {qty:8.2f} unità")
             
             output_lines.append("")
             output_lines.append("=" * 60)

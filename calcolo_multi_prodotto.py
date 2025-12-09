@@ -479,11 +479,11 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc, costo_
             for opz in opzioni:
                 if opz == opzione_migliore:
                     # Evidenzia la migliore - questa va nei costi per il totale
-                    materiali[f"💰 {opz['label']} → {opz['rune']:.0f} rune"] = opz['pepite']
-                    costi[f"💰 {opz['label']} → {opz['rune']:.0f} rune"] = opz['costo']
+                    materiali[f"[BEST] {opz['label']} -> {opz['rune']:.0f} rune"] = opz['pepite']
+                    costi[f"[BEST] {opz['label']} -> {opz['rune']:.0f} rune"] = opz['costo']
                 else:
                     # Mostra le altre solo nei materiali, NON nei costi
-                    materiali[f"{opz['label']} → {opz['rune']:.0f} rune"] = opz['pepite']
+                    materiali[f"{opz['label']} -> {opz['rune']:.0f} rune"] = opz['pepite']
                     # NON aggiungo ai costi per non sommare nel totale
 
     elif tipo == 'rune_bardi':
@@ -541,11 +541,11 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc, costo_
             for opz in opzioni:
                 if opz == opzione_migliore:
                     # Evidenzia la migliore - questa va nei costi per il totale
-                    materiali[f"💰 {opz['label']} → {opz['rune']:.0f} rune"] = opz['pepite']
-                    costi[f"💰 {opz['label']} → {opz['rune']:.0f} rune"] = opz['costo']
+                    materiali[f"[BEST] {opz['label']} -> {opz['rune']:.0f} rune"] = opz['pepite']
+                    costi[f"[BEST] {opz['label']} -> {opz['rune']:.0f} rune"] = opz['costo']
                 else:
                     # Mostra le altre solo nei materiali, NON nei costi
-                    materiali[f"{opz['label']} → {opz['rune']:.0f} rune"] = opz['pepite']
+                    materiali[f"{opz['label']} -> {opz['rune']:.0f} rune"] = opz['pepite']
                     # NON aggiungo ai costi per non sommare nel totale
 
     return materiali, costi
