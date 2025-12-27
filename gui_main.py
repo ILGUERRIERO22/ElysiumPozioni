@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import json
 import os
+from PIL import Image, ImageTk
 
 from config_app import (
     APP_NAME, APP_VERSION, APP_AUTHOR,
@@ -94,7 +95,7 @@ def show_info():
         f"Autore: {APP_AUTHOR}\n\n"
         "🧪 Calcolatore di costo e profitto pozioni per Elysium.\n\n"
         "✨ Funzionalità:\n"
-        "• Supporto calderoni Terracotta / Rame / Ferro / Oro / Diamante\n"
+        "• Supporto calderoni Terracotta / Rame / Ferro / Oro / Diamante / Smeraldo\n"
         "• Profili di mercato multipli\n"
         "• Salvataggio automatico configurazione\n"
         "• Analisi margine e profitto\n"
@@ -264,6 +265,9 @@ class ElysiumPozioniApp:
         # Sistema di animazioni
         self.animator = AnimationManager(self.root)
 
+        # Carica icone materiali
+        self.icons = self._load_icons()
+
         # Configura stili ttk
         self._configure_styles()
         
@@ -283,6 +287,82 @@ class ElysiumPozioniApp:
         """Salva config alla chiusura"""
         self.save_config()
         self.root.destroy()
+
+    def _load_icons(self):
+        """Carica le icone dei materiali dalla cartella icon/"""
+        icons = {}
+        icon_mapping = {
+            # Lingotti
+            'ferro': 'Iron_Ingot_JE3_BE2.png',
+            'oro': 'Gold_Ingot_JE4_BE2.png',
+            'rame': 'Copper_Ingot_JE2_BE1.webp',
+            # Pepite
+            'pepita_ferro': 'Iron_Nugget_JE1_BE1.png',
+            'pepita_oro': 'Gold_nugget.png',
+            'pepita_rame': 'copper_nugget.png',
+            # Reagenti
+            'brim': 'Brim.png',
+            'phantom': 'Phantom_Membrane_JE1_BE1.webp',
+            'blaze': 'Blaze_Powder_JE2_BE1.webp',
+            'rotten': 'Rotten_Flesh_JE3_BE2.webp',
+            'spidereye': 'Spider_Eye_JE2_BE2.webp',
+            'slimeball': 'Slimeball_JE2_BE2.webp',
+            'quarzo': 'Nether_Quartz_JE2_BE2.webp',
+            'lapis': 'Lapis_Lazuli_JE2_BE2.webp',
+            'zucchero': 'Sugar_JE2_BE2.webp',
+            'lost_soul': 'soul.png',
+            # Materiali base
+            'carbone': 'Coal_JE4_BE3.webp',
+            'boccetta': 'Water_Bottle_JE2_BE2.png',
+            'verdure': 'verdure.png',
+            # Pozioni
+            'pozione_danno': 'pozione_danno.png'
+        }
+
+        # Percorso base per le icone - cerca sia nella directory corrente che nella directory dell'eseguibile
+        base_dirs = [
+            os.path.join(os.path.dirname(__file__), 'icon'),  # Directory del file .py
+            os.path.join(os.getcwd(), 'icon'),  # Directory di lavoro
+            'icon'  # Percorso relativo
+        ]
+
+        for material, filename in icon_mapping.items():
+            icon_loaded = False
+            for base_dir in base_dirs:
+                icon_path = os.path.join(base_dir, filename)
+                if os.path.exists(icon_path):
+                    try:
+                        # Carica l'icona
+                        img = Image.open(icon_path)
+
+                        # Converti in RGBA per gestire la trasparenza
+                        if img.mode != 'RGBA':
+                            img = img.convert('RGBA')
+
+                        # Se l'immagine ha uno sfondo bianco, prova a renderlo trasparente
+                        # Questo funziona per icone Minecraft-style con sfondo bianco uniforme
+                        datas = img.getdata()
+                        newData = []
+                        for item in datas:
+                            # Cambia tutti i pixel quasi-bianchi in trasparente
+                            if item[0] > 240 and item[1] > 240 and item[2] > 240:
+                                newData.append((255, 255, 255, 0))
+                            else:
+                                newData.append(item)
+                        img.putdata(newData)
+
+                        # Ridimensiona l'icona
+                        img = img.resize((20, 20), Image.Resampling.LANCZOS)
+                        icons[material] = ImageTk.PhotoImage(img)
+                        icon_loaded = True
+                        break
+                    except Exception as e:
+                        print(f"Errore caricamento icona {material}: {e}")
+
+            if not icon_loaded:
+                print(f"Icona non trovata per {material}")
+
+        return icons
 
     def _configure_styles(self):
         """Configura gli stili ttk per un look moderno e accattivante"""
@@ -627,17 +707,31 @@ class ElysiumPozioniApp:
         
         return outer, inner
 
-    def make_labeled_entry(self, parent, label_text, default_value="", row=0, 
-                          hint_text="", width=ENTRY_WIDTH):
-        """Crea una coppia label + entry con stile uniforme"""
+    def make_labeled_entry(self, parent, label_text, default_value="", row=0,
+                          hint_text="", width=ENTRY_WIDTH, icon_key=None):
+        """Crea una coppia label + entry con stile uniforme e icona opzionale"""
+        # Frame per label con icona
+        label_frame = tk.Frame(parent, bg=BG_CARD)
+        label_frame.grid(row=row, column=0, sticky="e", padx=(0, 8), pady=4)
+
+        # Aggiungi icona se disponibile
+        if icon_key and icon_key in self.icons:
+            icon_label = tk.Label(
+                label_frame,
+                image=self.icons[icon_key],
+                bg=BG_CARD
+            )
+            icon_label.pack(side="left", padx=(0, 4))
+
+        # Label di testo
         tk.Label(
-            parent,
+            label_frame,
             text=label_text,
             font=LABEL_FONT,
             bg=BG_CARD,
             fg=FG_TEXT,
-        ).grid(row=row, column=0, sticky="e", padx=(0, 8), pady=4)
-        
+        ).pack(side="left")
+
         entry = tk.Entry(
             parent,
             width=width,
@@ -652,7 +746,7 @@ class ElysiumPozioniApp:
         )
         entry.insert(0, default_value)
         entry.grid(row=row, column=1, pady=4, sticky="w")
-        
+
         if hint_text:
             tk.Label(
                 parent,
@@ -661,22 +755,79 @@ class ElysiumPozioniApp:
                 bg=BG_CARD,
                 fg=FG_SUBTLE,
             ).grid(row=row, column=2, sticky="w", padx=(8, 0))
-        
+
         return entry
 
     def update_result_with_fade(self, preview_label, text_widget, preview_text, output_lines):
-        """Aggiorna risultati con effetto fade"""
+        """Aggiorna risultati con effetto fade e icone inline"""
         # Pulse effetto sul preview
         original_bg = preview_label.cget('bg')
         preview_label.config(bg=ACCENT_GLOW)
         self.root.after(200, lambda: preview_label.config(bg=original_bg))
 
-        # Aggiorna testo
+        # Aggiorna testo con icone
         preview_label.config(text=f"💰 {preview_text}")
         text_widget.config(state="normal")
         text_widget.delete("1.0", tk.END)
-        text_widget.insert(tk.END, "\n".join(output_lines))
+
+        # Inserisci testo riga per riga con icone
+        self._insert_text_with_icons(text_widget, output_lines)
+
         text_widget.config(state="disabled")
+
+    def _insert_text_with_icons(self, text_widget, output_lines):
+        """Inserisce testo con icone inline per i materiali"""
+        # Mapping parole chiave -> icone (case insensitive)
+        keyword_icons = {
+            'ferro': 'ferro',
+            'oro': 'oro',
+            'rame': 'rame',
+            'carbone': 'carbone',
+            'carbonella': 'carbone',
+            'boccett': 'boccetta',  # Cattura sia "boccetta" che "boccette"
+            'verdure': 'verdure',
+            'brim': 'brim',
+            'phantom': 'phantom',
+            'blaze': 'blaze',
+            'carne marcia': 'rotten',
+            'rotten': 'rotten',
+            'ragno': 'spidereye',
+            'spider': 'spidereye',
+            'slime': 'slimeball',
+            'quarzo': 'quarzo',
+            'lapis': 'lapis',
+            'zucchero': 'zucchero',
+            'lost soul': 'lost_soul',
+            'soul': 'lost_soul',
+        }
+
+        for line in output_lines:
+            line_lower = line.lower()
+            icon_inserted = False
+
+            # Cerca keyword nella riga
+            for keyword, icon_key in keyword_icons.items():
+                if keyword in line_lower and icon_key in self.icons:
+                    # Trova la posizione della keyword
+                    idx = line_lower.find(keyword)
+
+                    # Inserisci testo prima della keyword
+                    if idx > 0:
+                        text_widget.insert(tk.END, line[:idx])
+
+                    # Inserisci icona
+                    text_widget.image_create(tk.END, image=self.icons[icon_key])
+                    text_widget.insert(tk.END, " ")
+
+                    # Inserisci resto della riga
+                    text_widget.insert(tk.END, line[idx:] + "\n")
+                    icon_inserted = True
+                    break
+
+            # Se non c'è icona, inserisci normalmente
+            if not icon_inserted:
+                text_widget.insert(tk.END, line + "\n")
+
 
     def make_labeled_combo(self, parent, label_text, values, row=0, width=12):
         """Crea una coppia label + combobox"""
@@ -909,7 +1060,7 @@ class ElysiumPozioniApp:
         
         self.combo_calderone = ttk.Combobox(
             prod_inner,
-            values=["Terracotta", "Rame", "Ferro", "Oro", "Diamante"],
+            values=["Terracotta", "Rame", "Ferro", "Oro", "Diamante", "Smeraldo"],
             width=ENTRY_WIDTH,
             state="readonly",
             font=LABEL_FONT,
@@ -930,8 +1081,8 @@ class ElysiumPozioniApp:
             price_inner, "Core fragment (1x):", "1.0", row=1
         )
         self.entry_carbone = self.make_labeled_entry(
-            price_inner, "Carbone (1 blocco):", "1.5", row=2, 
-            hint_text="= 12 carbonella"
+            price_inner, "Carbone (1 blocco):", "1.5", row=2,
+            hint_text="= 12 carbonella", icon_key="carbone"
         )
         
         panel_price.pack(padx=0, pady=(0, 8), fill="x")
@@ -940,13 +1091,13 @@ class ElysiumPozioniApp:
         panel_bundle, bundle_inner = self.make_panel(container, "Unità per 1 b", "📦")
         
         self.entry_verdure_per_b = self.make_labeled_entry(
-            bundle_inner, "Verdure per 1 b:", "3", row=0
+            bundle_inner, "Verdure per 1 b:", "3", row=0, icon_key="verdure"
         )
         self.entry_vasetti_per_b = self.make_labeled_entry(
             bundle_inner, "Vasetti per 1 b:", "15", row=1
         )
         self.entry_boccette_per_b = self.make_labeled_entry(
-            bundle_inner, "Boccette per 1 b:", "14", row=2
+            bundle_inner, "Boccette per 1 b:", "14", row=2, icon_key="boccetta"
         )
         
         # Bind per aggiornare resina
@@ -1023,10 +1174,10 @@ class ElysiumPozioniApp:
         panel_price, price_inner = self.make_panel(container, "Prezzi ingredienti", "💰")
         
         self.entry_brim = self.make_labeled_entry(
-            price_inner, "Brim powder (1x):", "1.0", row=0
+            price_inner, "Brim powder (1x):", "1.0", row=0, icon_key="brim"
         )
         self.entry_rotten = self.make_labeled_entry(
-            price_inner, "Carne marcia (1x):", "1.0", row=1
+            price_inner, "Carne marcia (1x):", "1.0", row=1, icon_key="rotten"
         )
         self.entry_revival = self.make_labeled_entry(
             price_inner, "Revival star (1x):", "2.0", row=2
@@ -1181,7 +1332,7 @@ class ElysiumPozioniApp:
         panel_price, price_inner = self.make_panel(container, "Prezzo ingrediente", "💰")
         
         self.entry_ext_quartz = self.make_labeled_entry(
-            price_inner, "Quarzo (1x):", "1.0", row=0
+            price_inner, "Quarzo (1x):", "1.0", row=0, icon_key="quarzo"
         )
         
         panel_price.pack(padx=0, pady=(0, 8), fill="x")
@@ -1263,14 +1414,27 @@ class ElysiumPozioniApp:
         panel_price, price_inner = self.make_panel(container, "Prezzi ingredienti (b)", "💰")
         
         # Occhio di ragno (readonly da Elisir)
+        # Frame per label con icona
+        label_frame_spider = tk.Frame(price_inner, bg=BG_CARD)
+        label_frame_spider.grid(row=0, column=0, sticky="e", padx=(0, 8), pady=3)
+
+        # Icona Spider Eye
+        if 'spidereye' in self.icons:
+            icon_label = tk.Label(
+                label_frame_spider,
+                image=self.icons['spidereye'],
+                bg=BG_CARD
+            )
+            icon_label.pack(side="left", padx=(0, 4))
+
         tk.Label(
-            price_inner,
+            label_frame_spider,
             text="Occhio di ragno (1x):",
             font=LABEL_FONT,
             bg=BG_CARD,
             fg=FG_TEXT,
-        ).grid(row=0, column=0, sticky="e", padx=(0, 8), pady=3)
-        
+        ).pack(side="left")
+
         self.label_danno_spidereye = tk.Label(
             price_inner,
             text="-",
@@ -1320,14 +1484,27 @@ class ElysiumPozioniApp:
         ).grid(row=2, column=2, sticky="w", padx=(8, 0))
         
         # Carbone (readonly da Pozioni)
+        # Frame per label con icona
+        label_frame_carbone = tk.Frame(price_inner, bg=BG_CARD)
+        label_frame_carbone.grid(row=3, column=0, sticky="e", padx=(0, 8), pady=3)
+
+        # Icona Carbone
+        if 'carbone' in self.icons:
+            icon_label = tk.Label(
+                label_frame_carbone,
+                image=self.icons['carbone'],
+                bg=BG_CARD
+            )
+            icon_label.pack(side="left", padx=(0, 4))
+
         tk.Label(
-            price_inner,
+            label_frame_carbone,
             text="Carbone (1 blocco):",
             font=LABEL_FONT,
             bg=BG_CARD,
             fg=FG_TEXT,
-        ).grid(row=3, column=0, sticky="e", padx=(0, 8), pady=3)
-        
+        ).pack(side="left")
+
         self.label_danno_carbone = tk.Label(
             price_inner,
             text="-",
@@ -1346,14 +1523,27 @@ class ElysiumPozioniApp:
         ).grid(row=3, column=2, sticky="w", padx=(8, 0))
         
         # Boccette (readonly da Pozioni)
+        # Frame per label con icona
+        label_frame_boccette = tk.Frame(price_inner, bg=BG_CARD)
+        label_frame_boccette.grid(row=4, column=0, sticky="e", padx=(0, 8), pady=3)
+
+        # Icona Boccetta
+        if 'boccetta' in self.icons:
+            icon_label = tk.Label(
+                label_frame_boccette,
+                image=self.icons['boccetta'],
+                bg=BG_CARD
+            )
+            icon_label.pack(side="left", padx=(0, 4))
+
         tk.Label(
-            price_inner,
+            label_frame_boccette,
             text="Boccette per 1b:",
             font=LABEL_FONT,
             bg=BG_CARD,
             fg=FG_TEXT,
-        ).grid(row=4, column=0, sticky="e", padx=(0, 8), pady=3)
-        
+        ).pack(side="left")
+
         self.label_danno_boccette = tk.Label(
             price_inner,
             text="-",
@@ -1436,14 +1626,27 @@ class ElysiumPozioniApp:
         panel_price, price_inner = self.make_panel(container, "Ingredienti speciali (b)", "💎")
         
         # Brim (readonly da antidoti)
+        # Frame per label con icona
+        label_frame_brim = tk.Frame(price_inner, bg=BG_CARD)
+        label_frame_brim.grid(row=0, column=0, sticky="e", padx=(0, 8), pady=3)
+
+        # Icona Brim
+        if 'brim' in self.icons:
+            icon_label = tk.Label(
+                label_frame_brim,
+                image=self.icons['brim'],
+                bg=BG_CARD
+            )
+            icon_label.pack(side="left", padx=(0, 4))
+
         tk.Label(
-            price_inner,
+            label_frame_brim,
             text="Brim powder (1x):",
             font=LABEL_FONT,
             bg=BG_CARD,
             fg=FG_TEXT,
-        ).grid(row=0, column=0, sticky="e", padx=(0, 8), pady=3)
-        
+        ).pack(side="left")
+
         self.label_el_brim = tk.Label(
             price_inner,
             text="-",
@@ -1462,16 +1665,16 @@ class ElysiumPozioniApp:
         ).grid(row=0, column=2, sticky="w", padx=(8, 0))
         
         self.entry_spidereye = self.make_labeled_entry(
-            price_inner, "Occhio di ragno (1x):", "1.0", row=1
+            price_inner, "Occhio di ragno (1x):", "1.0", row=1, icon_key="spidereye"
         )
         self.entry_membrana = self.make_labeled_entry(
-            price_inner, "Membrana Phantom (1x):", "1.0", row=2
+            price_inner, "Membrana Phantom (1x):", "1.0", row=2, icon_key="phantom"
         )
         self.entry_slime = self.make_labeled_entry(
-            price_inner, "Slimeball (1x):", "1.0", row=3
+            price_inner, "Slimeball (1x):", "1.0", row=3, icon_key="slimeball"
         )
         self.entry_lost_soul = self.make_labeled_entry(
-            price_inner, "Lost soul (1x):", "1.0", row=4
+            price_inner, "Lost soul (1x):", "1.0", row=4, icon_key="lost_soul"
         )
         
         panel_price.pack(padx=0, pady=(0, 8), fill="x")
@@ -1483,13 +1686,13 @@ class ElysiumPozioniApp:
             metals_inner, "Tin:", "", row=0
         )
         self.entry_price_cu = self.make_labeled_entry(
-            metals_inner, "Rame:", "", row=1
+            metals_inner, "Rame:", "", row=1, icon_key="rame"
         )
         self.entry_price_fe = self.make_labeled_entry(
-            metals_inner, "Ferro:", "", row=2
+            metals_inner, "Ferro:", "", row=2, icon_key="ferro"
         )
         self.entry_price_au = self.make_labeled_entry(
-            metals_inner, "Oro:", "", row=3
+            metals_inner, "Oro:", "", row=3, icon_key="oro"
         )
         self.entry_price_dia = self.make_labeled_entry(
             metals_inner, "Diamante:", "", row=4
@@ -1571,11 +1774,18 @@ class ElysiumPozioniApp:
         panel_pepite, pepite_inner = self.make_panel(container, "Pepite disponibili", "🪙")
         
         metals = ["Tin", "Rame", "Ferro", "Oro", "Argento"]
+        # Mapping metalli -> chiave icona
+        metal_icons = {
+            "Rame": "pepita_rame",
+            "Ferro": "pepita_ferro",
+            "Oro": "pepita_oro"
+        }
         self.entry_rune_pepite = {}
-        
+
         for r, met in enumerate(metals):
+            icon_key = metal_icons.get(met)  # None se non c'è icona
             entry = self.make_labeled_entry(
-                pepite_inner, f"{met} (pepite):", "0", row=r
+                pepite_inner, f"{met} (pepite):", "0", row=r, icon_key=icon_key
             )
             self.entry_rune_pepite[met] = entry
         
@@ -1649,13 +1859,13 @@ class ElysiumPozioniApp:
         panel_price, price_inner = self.make_panel(container, "Prezzi ingredienti (b)", "💰")
         
         self.entry_vel_lapis = self.make_labeled_entry(
-            price_inner, "Lapis (1x):", "1.0", row=0
+            price_inner, "Lapis (1x):", "1.0", row=0, icon_key="lapis"
         )
         self.entry_vel_zucchero = self.make_labeled_entry(
-            price_inner, "Zucchero (1x):", "1.0", row=1
+            price_inner, "Zucchero (1x):", "1.0", row=1, icon_key="zucchero"
         )
         self.entry_vel_blaze = self.make_labeled_entry(
-            price_inner, "Blaze (1x):", "1.0", row=2
+            price_inner, "Blaze (1x):", "1.0", row=2, icon_key="blaze"
         )
         
         tk.Label(
@@ -1975,7 +2185,7 @@ class ElysiumPozioniApp:
             
             self.text_multi_result.config(state="normal")
             self.text_multi_result.delete("1.0", tk.END)
-            self.text_multi_result.insert("1.0", "\n".join(output_lines))
+            self._insert_text_with_icons(self.text_multi_result, output_lines)
             self.text_multi_result.config(state="disabled")
             
         except ValueError as e:
@@ -2121,7 +2331,7 @@ class ElysiumPozioniApp:
             self.label_ant_preview.config(text=f"💰 {result['preview_text']}")
             self.text_ant_result.config(state="normal")
             self.text_ant_result.delete("1.0", tk.END)
-            self.text_ant_result.insert("1.0", "\n".join(result["output_lines"]))
+            self._insert_text_with_icons(self.text_ant_result, result["output_lines"])
             self.text_ant_result.config(state="disabled")
             
         except ValueError:
@@ -2152,7 +2362,7 @@ class ElysiumPozioniApp:
             self.label_rev_preview.config(text=f"💰 {result['preview_text']}")
             self.text_rev_result.config(state="normal")
             self.text_rev_result.delete("1.0", tk.END)
-            self.text_rev_result.insert("1.0", "\n".join(result["output_lines"]))
+            self._insert_text_with_icons(self.text_rev_result, result["output_lines"])
             self.text_rev_result.config(state="disabled")
             
         except ValueError:
@@ -2183,7 +2393,7 @@ class ElysiumPozioniApp:
             self.label_ext_preview.config(text=f"💰 {result['preview_text']}")
             self.text_ext_result.config(state="normal")
             self.text_ext_result.delete("1.0", tk.END)
-            self.text_ext_result.insert("1.0", "\n".join(result["output_lines"]))
+            self._insert_text_with_icons(self.text_ext_result, result["output_lines"])
             self.text_ext_result.config(state="disabled")
             
         except ValueError:
@@ -2221,7 +2431,7 @@ class ElysiumPozioniApp:
             self.label_danno_preview.config(text=f"💰 {result['preview_text']}")
             self.text_danno_result.config(state="normal")
             self.text_danno_result.delete("1.0", tk.END)
-            self.text_danno_result.insert("1.0", "\n".join(result["output_lines"]))
+            self._insert_text_with_icons(self.text_danno_result, result["output_lines"])
             self.text_danno_result.config(state="disabled")
             
         except ValueError:
@@ -2269,7 +2479,7 @@ class ElysiumPozioniApp:
             self.label_el_preview.config(text=f"💰 {result['preview_text']}")
             self.text_el_result.config(state="normal")
             self.text_el_result.delete("1.0", tk.END)
-            self.text_el_result.insert("1.0", "\n".join(result["output_lines"]))
+            self._insert_text_with_icons(self.text_el_result, result["output_lines"])
             self.text_el_result.config(state="disabled")
             
         except ValueError:
@@ -2290,7 +2500,7 @@ class ElysiumPozioniApp:
             self.label_rune_preview.config(text=f"🔮 {result['preview_text']}")
             self.text_rune_result.config(state="normal")
             self.text_rune_result.delete("1.0", tk.END)
-            self.text_rune_result.insert("1.0", "\n".join(result["output_lines"]))
+            self._insert_text_with_icons(self.text_rune_result, result["output_lines"])
             self.text_rune_result.config(state="disabled")
             
         except ValueError:
@@ -2326,7 +2536,7 @@ class ElysiumPozioniApp:
             self.label_vel_preview.config(text=f"💰 {result['preview_text']}")
             self.text_vel_result.config(state="normal")
             self.text_vel_result.delete("1.0", tk.END)
-            self.text_vel_result.insert("1.0", "\n".join(result["output_lines"]))
+            self._insert_text_with_icons(self.text_vel_result, result["output_lines"])
             self.text_vel_result.config(state="disabled")
             
         except ValueError:

@@ -11,7 +11,7 @@ Può essere usato sia dal programma principale che da eventuali test.
 def calcola_pozioni(
     num_pozioni: float,
     tier_reagente: str,           # "T1" / "T2" / "T3"
-    tipo_calderone: str,          # "Terracotta" / "Rame" / "Ferro" / "Oro" / "Diamante"
+    tipo_calderone: str,          # "Terracotta" / "Rame" / "Ferro" / "Oro" / "Diamante" / "Smeraldo"
     prezzo_reagente: float,
     prezzo_core: float,
     prezzo_carbone: float,
@@ -73,6 +73,12 @@ def calcola_pozioni(
     elif tipo_calderone == "Diamante":
         pozioni_per_catalyst = (2.0 / 3.0)
         pozioni_per_carbonella = (2.0 / 3.0)
+        tier_pozione_prodotta = "T3"
+
+    elif tipo_calderone == "Smeraldo":
+        # Ricetta speciale: 2 catalyst + 3 carbonella + 2 boccette = 2 pozioni T3
+        pozioni_per_catalyst = 1.0  # 2 catalyst -> 2 pozioni
+        pozioni_per_carbonella = (2.0 / 3.0)  # 3 carbonella -> 2 pozioni
         tier_pozione_prodotta = "T3"
 
     else:
