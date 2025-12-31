@@ -223,14 +223,31 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc, costo_
         materiali['Vasetto'] = ricette * 1.5  # 3 catalyst × 0.5 vasetti
         materiali['Carbonella'] = ricette * 3
         materiali['Boccetta'] = ricette * 2
-        
+
         costi['Reagente'] = ricette * 3 * prezzi.get('reagente', 1.5)
         costi['Core fragment'] = ricette * 3 * prezzi.get('core', 1.0)
         costi['Verdura'] = ricette * 3 * (1.0 / prezzi.get('verdure_per_1b', 3))
         costi['Vasetto'] = ricette * 1.5 * (1.0 / prezzi.get('vasetti_per_1b', 15))
         costi['Carbonella'] = ricette * 3 * costo_carb
         costi['Boccetta'] = ricette * 2 * costo_bocc
-    
+
+    elif tipo == 'cura_smeraldo':
+        # 2 catalyst + 3 carb + 2 bocc = 2 pozioni T3 → per qty pozioni servono qty/2 ricette
+        ricette = qty / 2.0
+        materiali['Reagente'] = ricette * 2
+        materiali['Core fragment'] = ricette * 2
+        materiali['Verdura'] = ricette * 2  # 2 catalyst × 1 verdura
+        materiali['Vasetto'] = ricette * 1.0  # 2 catalyst × 0.5 vasetti
+        materiali['Carbonella'] = ricette * 3
+        materiali['Boccetta'] = ricette * 2
+
+        costi['Reagente'] = ricette * 2 * prezzi.get('reagente', 1.5)
+        costi['Core fragment'] = ricette * 2 * prezzi.get('core', 1.0)
+        costi['Verdura'] = ricette * 2 * (1.0 / prezzi.get('verdure_per_1b', 3))
+        costi['Vasetto'] = ricette * 1.0 * (1.0 / prezzi.get('vasetti_per_1b', 15))
+        costi['Carbonella'] = ricette * 3 * costo_carb
+        costi['Boccetta'] = ricette * 2 * costo_bocc
+
     elif tipo == 'danno_i':
         # 1 Occhio ragno + 1 Core + 1 Carbonella + 1 Boccetta
         materiali['Occhio di ragno'] = qty * 1
@@ -338,6 +355,34 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc, costo_
         costi['Boccetta'] = qty * costo_bocc
         costi['Lapis'] = qty * prezzi.get('lapis', 1.0)
         costi['Zucchero'] = qty * prezzi.get('zucchero', 1.0)
+
+    # === RIDUZIONE ===
+    elif tipo == 'riduzione_i':
+        # 1 Fungo marrone + 1 Core + 1 Carbonella + 1 Boccetta
+        materiali['Fungo marrone'] = qty * 1
+        materiali['Core fragment'] = qty * 1
+        materiali['Carbonella'] = qty * 1
+        materiali['Boccetta'] = qty * 1
+
+        costi['Fungo marrone'] = qty * prezzi.get('fungo_marrone', 1.0)
+        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
+        costi['Carbonella'] = qty * costo_carb
+        costi['Boccetta'] = qty * costo_bocc
+
+    elif tipo == 'riduzione_ii':
+        # 1 Slimeball + 1 Core + 2 Carbonella + 1 Riduzione I
+        # Riduzione I = 1 Fungo + 1 Core + 1 Carb + 1 Bocc
+        materiali['Slimeball'] = qty * 1
+        materiali['Core fragment'] = qty * 2  # 1 per Rid II + 1 per Rid I
+        materiali['Carbonella'] = qty * 3  # 2 per Rid II + 1 per Rid I
+        materiali['Boccetta'] = qty * 1  # Per Rid I
+        materiali['Fungo marrone'] = qty * 1  # Per Rid I
+
+        costi['Slimeball'] = qty * prezzi.get('slime', 1.0)
+        costi['Core fragment'] = qty * 2 * prezzi.get('core', 1.0)
+        costi['Carbonella'] = qty * 3 * costo_carb
+        costi['Boccetta'] = qty * costo_bocc
+        costi['Fungo marrone'] = qty * prezzi.get('fungo_marrone', 1.0)
 
     # === ELISIR ===
     elif tipo == 'elisir_minor':
@@ -559,6 +604,7 @@ def get_nome_prodotto(tipo):
         'cura_ferro': 'Pozione Cura T2 (Ferro)',
         'cura_oro': 'Pozione Cura T2 (Oro)',
         'cura_diamante': 'Pozione Cura T3 (Diamante)',
+        'cura_smeraldo': 'Pozione Cura T3 (Smeraldo)',
         'danno_i': 'Pozione Danno I',
         'danno_ii': 'Pozione Danno II (Avvizzimento)',
         'antidoto_terracotta': 'Antidoto (Terracotta)',
@@ -567,6 +613,8 @@ def get_nome_prodotto(tipo):
         'extinguish': 'Extinguish',
         'velocita_i': 'Velocità I',
         'velocita_ii': 'Velocità II',
+        'riduzione_i': 'Riduzione I',
+        'riduzione_ii': 'Riduzione II',
         'elisir_minor': 'Elisir Minor Mending (Terracotta)',
         'elisir_inferior': 'Elisir Inferior Mending (Rame)',
         'elisir_lesser': 'Elisir Lesser Mending (Ferro)',
@@ -581,12 +629,13 @@ def get_nome_prodotto(tipo):
 def get_tipi_prodotti_disponibili():
     """Restituisce lista di tutti i prodotti disponibili"""
     return [
-        # Pozioni di cura (5 calderoni)
+        # Pozioni di cura (6 calderoni)
         ('cura_terracotta', 'Pozione Cura T1 (Terracotta)'),
         ('cura_rame', 'Pozione Cura T1 (Rame)'),
         ('cura_ferro', 'Pozione Cura T2 (Ferro)'),
         ('cura_oro', 'Pozione Cura T2 (Oro)'),
         ('cura_diamante', 'Pozione Cura T3 (Diamante)'),
+        ('cura_smeraldo', 'Pozione Cura T3 (Smeraldo)'),
         # Altri prodotti
         ('danno_i', 'Pozione Danno I'),
         ('danno_ii', 'Pozione Danno II (Avvizzimento)'),
@@ -596,6 +645,8 @@ def get_tipi_prodotti_disponibili():
         ('extinguish', 'Extinguish'),
         ('velocita_i', 'Velocità I'),
         ('velocita_ii', 'Velocità II'),
+        ('riduzione_i', 'Riduzione I'),
+        ('riduzione_ii', 'Riduzione II'),
         # Elisir
         ('elisir_minor', 'Elisir Minor Mending (Terracotta)'),
         ('elisir_inferior', 'Elisir Inferior Mending (Rame)'),

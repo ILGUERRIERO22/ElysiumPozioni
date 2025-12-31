@@ -6,7 +6,11 @@
       "Bash(del:*)",
       "Bash(pip show:*)",
       "Bash(pyinstaller:*)",
-      "Bash(./ElysiumPozioni.exe)"
+      "Bash(./ElysiumPozioni.exe)",
+      "Bash(./dist/ElysiumPozioni.exe)",
+      "Bash(start distElysiumPozioni.exe)",
+      "Bash(start ElysiumPozioni.exe)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []
