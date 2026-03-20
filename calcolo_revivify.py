@@ -1,5 +1,7 @@
 # calcolo_revivify.py
 from typing import Optional, Dict, Any, List
+from ricette import CARBONELLA_PER_BLOCCO, REVIVIFY
+
 
 def calcola_revivify(
     num: int,
@@ -10,31 +12,30 @@ def calcola_revivify(
     prezzo_vendita: Optional[float] = None,
 ) -> Dict[str, Any]:
     """
-    Calderone in RAME:
+    Ricetta da recipes.json:
       1 Revival star + 1 Core fragment + 1 Carbonella + 1 Boccetta = 1 Revivify
     """
 
     if num <= 0:
         raise ValueError("Numero Revivify deve essere > 0")
 
-    # costi unitari derivati
-    costo_carbonella_unit = prezzo_carbone / 12.0       # 1 blocco = 12 carbonella
-    costo_boccetta_unit = 1.0 / boccette_per_1b         # boccette per 1b
+    costo_carbonella_unit = prezzo_carbone / CARBONELLA_PER_BLOCCO
+    costo_boccetta_unit   = 1.0 / boccette_per_1b
 
-    # costo di UNA Revivify con la ricetta data
+    p = REVIVIFY["per_revivify"]
     costo_unit = (
-        prezzo_revival          # 1 revival star
-        + prezzo_core           # 1 core fragment
-        + costo_carbonella_unit # 1 carbonella
-        + costo_boccetta_unit   # 1 boccetta
+        p["revival_star"]  * prezzo_revival
+        + p["core"]        * prezzo_core
+        + p["carbonella"]  * costo_carbonella_unit
+        + p["boccette"]    * costo_boccetta_unit
     )
 
     costo_tot = costo_unit * num
 
     ricavo = guadagno = margine_unit = ricarico_pct = None
     if prezzo_vendita is not None:
-        ricavo = prezzo_vendita * num
-        guadagno = ricavo - costo_tot
+        ricavo       = prezzo_vendita * num
+        guadagno     = ricavo - costo_tot
         margine_unit = guadagno / num if num else 0.0
         ricarico_pct = (margine_unit / costo_unit * 100.0) if costo_unit > 0 else 0.0
 

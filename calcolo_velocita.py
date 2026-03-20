@@ -1,5 +1,7 @@
 # calcolo_velocita.py
 from typing import Optional, Dict, Any
+from ricette import CARBONELLA_PER_BLOCCO, get_ricetta_velocita
+
 
 def calcola_pozione_velocita(
     num: int,
@@ -13,45 +15,45 @@ def calcola_pozione_velocita(
     prezzo_vendita: Optional[float] = None,
 ) -> Dict[str, Any]:
     """
-    Pozione di Velocità
+    Pozione di Velocità. Ricette da recipes.json.
 
     Velocità I (Calderone in terracotta):
         1 Lapis + 1 Zucchero + 1 Carbonella + 1 Boccetta = 1 pozione
 
     Velocità II (Calderone in ferro):
         1 Blaze + 1 Core fragment + 2 Carbonella + 1 Pozione Velocità I
-
-    NB: per Velocità II il costo totale è:
-        costo(Vel I) + Blaze + Core + 2 Carbonella aggiuntive
     """
 
     if num <= 0:
         raise ValueError("Numero pozioni deve essere > 0")
 
-    # costi unitari derivati
-    costo_carbonella_unit = prezzo_carbone / 12.0   # 1 blocco = 12 carbonella
+    # Usa chiavi senza accento per il lookup nel JSON
+    tipo_key = tipo.replace("à", "a")  # "Velocità I" -> "Velocita I"
+
+    costo_carbonella_unit = prezzo_carbone / CARBONELLA_PER_BLOCCO
     costo_boccetta_unit   = 1.0 / boccette_per_1b
 
-    # costo base di 1 Velocità I
+    rec1 = get_ricetta_velocita("Velocita I")
+    p1   = rec1["per_pozione"]
     costo_vel1_unit = (
-        prezzo_lapis
-        + prezzo_zucchero
-        + costo_carbonella_unit
-        + costo_boccetta_unit
+        p1["lapis"]     * prezzo_lapis
+        + p1["zucchero"] * prezzo_zucchero
+        + p1["carbonella"] * costo_carbonella_unit
+        + p1["boccette"] * costo_boccetta_unit
     )
 
-    if tipo == "Velocità I":
-        calderone_txt = "Terracotta"
-        costo_unit = costo_vel1_unit
+    if tipo_key == "Velocita I":
+        calderone_txt = rec1["calderone"]
+        costo_unit    = costo_vel1_unit
 
-    elif tipo == "Velocità II":
-        calderone_txt = "Ferro"
-
-        # costo extra per trasformare 1 Vel I in Vel II
+    elif tipo_key == "Velocita II":
+        rec2  = get_ricetta_velocita("Velocita II")
+        calderone_txt = rec2["calderone"]
+        p2    = rec2["step_aggiuntivo_per_pozione"]
         costo_extra = (
-            prezzo_blaze           # 1 blaze
-            + prezzo_core          # 1 core fragment
-            + 2 * costo_carbonella_unit  # 2 carbonella nel secondo step
+            p2["blaze"]      * prezzo_blaze
+            + p2["core"]     * prezzo_core
+            + p2["carbonella"] * costo_carbonella_unit
         )
         costo_unit = costo_vel1_unit + costo_extra
     else:
@@ -61,8 +63,8 @@ def calcola_pozione_velocita(
 
     ricavo = guadagno = margine_unit = ricarico_pct = None
     if prezzo_vendita is not None:
-        ricavo = prezzo_vendita * num
-        guadagno = ricavo - costo_tot
+        ricavo       = prezzo_vendita * num
+        guadagno     = ricavo - costo_tot
         margine_unit = guadagno / num if num else 0.0
         ricarico_pct = (margine_unit / costo_unit * 100.0) if costo_unit > 0 else 0.0
 
@@ -95,7 +97,7 @@ def calcola_pozione_velocita(
         f"Costo Velocità I (solo step 1): {costo_vel1_unit:.2f} b/poz",
     ]
 
-    if tipo == "Velocità II":
+    if tipo_key == "Velocita II":
         lines += [
             "",
             "Step aggiuntivo Velocità II:",

@@ -7,6 +7,14 @@ Nessuna dipendenza da Tkinter o GUI.
 Può essere usato sia dal programma principale che da eventuali test.
 """
 
+from ricette import (
+    CARBONELLA_PER_BLOCCO,
+    RESINA,
+    get_calderone_pozioni,
+    get_catalyst_per_reagente,
+    POZIONI_CURA,
+)
+
 
 def calcola_pozioni(
     num_pozioni: float,
@@ -22,7 +30,7 @@ def calcola_pozioni(
     profilo_attivo: str | None = None,
 ) -> dict:
     """
-    Esegue tutti i calcoli che prima stavano in calcola() dentro la GUI.
+    Esegue tutti i calcoli per le pozioni di cura.
 
     Ritorna un dizionario con:
       - preview_text: stringa breve per la label in alto
@@ -36,87 +44,56 @@ def calcola_pozioni(
         raise ValueError("num_pozioni deve essere > 0")
 
     # --- PACCHETTI (quante unità per 1b) ---
-    costo_verdura_unit = 1.0 / verdure_per_1b      # b per 1 verdura
-    costo_vasetto_unit = 1.0 / vasetti_per_1b      # b per 1 vasetto
-    costo_boccetta_unit = 1.0 / boccette_per_1b    # b per 1 boccetta
+    costo_verdura_unit  = 1.0 / verdure_per_1b
+    costo_vasetto_unit  = 1.0 / vasetti_per_1b
+    costo_boccetta_unit = 1.0 / boccette_per_1b
 
-    # Resina: 2 verdure + 1 vasetto -> 2 resine
-    costo_resina_unit = (2.0 * costo_verdura_unit + costo_vasetto_unit) / 2.0
+    # Resina: ricetta da recipes.json (default: 2 verdure + 1 vasetto -> 2 resine)
+    r = RESINA
+    costo_resina_unit = (
+        r["verdure_per_batch"] * costo_verdura_unit + r["vasetti_per_batch"] * costo_vasetto_unit
+    ) / r["output_per_batch"]
 
-    # Carbonella: 1 carbone = 12 carbonella
-    costo_carbonella_unit = prezzo_carbone / 12.0
+    # Carbonella: da recipes.json
+    costo_carbonella_unit = prezzo_carbone / CARBONELLA_PER_BLOCCO
 
     # ======================================================
-    # LOGICA CALDERONI
+    # LOGICA CALDERONI (da recipes.json)
     # ======================================================
+    cal = get_calderone_pozioni(tipo_calderone)
+    pozioni_per_catalyst   = cal["pozioni_per_catalyst"]
+    pozioni_per_carbonella = cal["pozioni_per_carbonella"]
+    tier_pozione_prodotta  = cal["tier_prodotto"]
 
-    if tipo_calderone == "Terracotta":
-        pozioni_per_catalyst = 2.0
-        pozioni_per_carbonella = 2.0
-        tier_pozione_prodotta = "T1"
-
-    elif tipo_calderone == "Rame":
-        pozioni_per_catalyst = 3.0
-        pozioni_per_carbonella = 3.0
-        tier_pozione_prodotta = "T1"
-
-    elif tipo_calderone == "Ferro":
-        pozioni_per_catalyst = 1.0
-        pozioni_per_carbonella = 1.0 / 2.0
-        tier_pozione_prodotta = "T2"
-
-    elif tipo_calderone == "Oro":
-        pozioni_per_catalyst = 1.5
-        pozioni_per_carbonella = 1.5
-        tier_pozione_prodotta = "T2"
-
-    elif tipo_calderone == "Diamante":
-        pozioni_per_catalyst = (2.0 / 3.0)
-        pozioni_per_carbonella = (2.0 / 3.0)
-        tier_pozione_prodotta = "T3"
-
-    elif tipo_calderone == "Smeraldo":
-        # Ricetta speciale: 2 catalyst + 3 carbonella + 2 boccette = 2 pozioni T3
-        pozioni_per_catalyst = 1.0  # 2 catalyst -> 2 pozioni
-        pozioni_per_carbonella = (2.0 / 3.0)  # 3 carbonella -> 2 pozioni
-        tier_pozione_prodotta = "T3"
-
-    else:
-        raise ValueError("Tipo calderone non valido")
-
-    # catalyst necessari:
+    # catalyst necessari
     catalyst_necessari = num_pozioni / pozioni_per_catalyst
-    # carbonella necessaria:
-    carbonella_tot = num_pozioni / pozioni_per_carbonella
+    carbonella_tot     = num_pozioni / pozioni_per_carbonella
 
-    # efficienze per output leggibile
-    catalyst_per_pozione = 1.0 / pozioni_per_catalyst
+    catalyst_per_pozione   = 1.0 / pozioni_per_catalyst
     carbonella_per_pozione = 1.0 / pozioni_per_carbonella
 
     # =========================
     # REAGENTI / CORE / RESINE
     # =========================
-    catalyst_per_reagente = {"T1": 1.0, "T2": 2.0, "T3": 3.0}
-    if tier_reagente not in catalyst_per_reagente:
-        raise ValueError("Tier reagente non valido")
+    cat_per_reagente = get_catalyst_per_reagente(tier_reagente)
+    reagenti_usati   = catalyst_necessari / cat_per_reagente
 
-    reagenti_usati = catalyst_necessari / catalyst_per_reagente[tier_reagente]
+    core_per_reagente = POZIONI_CURA["core_per_reagente"]
+    resine_per_reagente = POZIONI_CURA["resine_per_reagente"]
+    boccette_per_pozione = POZIONI_CURA["boccette_per_pozione"]
 
-    # Ogni reagente batch usa 1 core e 1 resina
-    core_usati = reagenti_usati
-    resine_usate = reagenti_usati
-
-    # Boccette: 1 per pozione
-    boccette_tot = num_pozioni * 1.0
+    core_usati   = reagenti_usati * core_per_reagente
+    resine_usate = reagenti_usati * resine_per_reagente
+    boccette_tot = num_pozioni * boccette_per_pozione
 
     # =========================
     # COSTI PARZIALI
     # =========================
-    costo_reagenti = reagenti_usati * prezzo_reagente
-    costo_core = core_usati * prezzo_core
-    costo_resine = resine_usate * costo_resina_unit
+    costo_reagenti  = reagenti_usati * prezzo_reagente
+    costo_core      = core_usati * prezzo_core
+    costo_resine    = resine_usate * costo_resina_unit
     costo_carbonella = carbonella_tot * costo_carbonella_unit
-    costo_boccette = boccette_tot * costo_boccetta_unit
+    costo_boccette  = boccette_tot * costo_boccetta_unit
 
     costo_totale = (
         costo_reagenti
@@ -132,20 +109,16 @@ def calcola_pozioni(
     # PROFITTO / MARGINE
     # =========================
     if prezzo_vendita is not None:
-        ricavo_lotto = prezzo_vendita * num_pozioni
-        guadagno = ricavo_lotto - costo_totale
+        ricavo_lotto       = prezzo_vendita * num_pozioni
+        guadagno           = ricavo_lotto - costo_totale
         margine_per_pozione = guadagno / num_pozioni if num_pozioni else 0.0
-        ricarico_percent = (
+        ricarico_percent   = (
             (margine_per_pozione / costo_per_pozione * 100.0)
             if costo_per_pozione > 0 else 0.0
         )
-        prezzo_break_even = costo_per_pozione
+        prezzo_break_even  = costo_per_pozione
     else:
-        ricavo_lotto = None
-        guadagno = None
-        margine_per_pozione = None
-        ricarico_percent = None
-        prezzo_break_even = None
+        ricavo_lotto = guadagno = margine_per_pozione = ricarico_percent = prezzo_break_even = None
 
     # =========================
     # TESTO PREVIEW
@@ -163,7 +136,7 @@ def calcola_pozioni(
         )
 
     # =========================
-    # OUTPUT DETTAGLIATO (righe testo)
+    # OUTPUT DETTAGLIATO
     # =========================
     profilo_label = profilo_attivo or "(non salvato)"
 

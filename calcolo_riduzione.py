@@ -1,5 +1,7 @@
 # calcolo_riduzione.py
 from typing import Optional, Dict, Any
+from ricette import CARBONELLA_PER_BLOCCO, get_ricetta_riduzione
+
 
 def calcola_pozione_riduzione(
     num: int,
@@ -12,45 +14,43 @@ def calcola_pozione_riduzione(
     prezzo_vendita: Optional[float] = None,
 ) -> Dict[str, Any]:
     """
-    Pozione di Riduzione
+    Pozione di Riduzione. Ricette da recipes.json.
 
     Riduzione I (Calderone in rame):
         1 Fungo marrone + 1 Core fragment + 1 Boccetta + 1 Carbonella = 1 pozione
 
     Riduzione II (Calderone in oro):
         1 Slimeball + 1 Core fragment + 2 Carbonella + 1 Pozione Riduzione I
-
-    NB: per Riduzione II il costo totale è:
-        costo(Rid I) + Slimeball + Core + 2 Carbonella aggiuntive
     """
 
     if num <= 0:
         raise ValueError("Numero pozioni deve essere > 0")
 
-    # costi unitari derivati
-    costo_carbonella_unit = prezzo_carbone / 12.0   # 1 blocco = 12 carbonella
+    costo_carbonella_unit = prezzo_carbone / CARBONELLA_PER_BLOCCO
     costo_boccetta_unit   = 1.0 / boccette_per_1b
 
-    # costo base di 1 Riduzione I
+    rec1 = get_ricetta_riduzione("Riduzione I")
+    p1   = rec1["per_pozione"]
+
     costo_rid1_unit = (
-        prezzo_fungo_marrone
-        + prezzo_core
-        + costo_carbonella_unit
-        + costo_boccetta_unit
+        p1["fungo_marrone"] * prezzo_fungo_marrone
+        + p1["core"]        * prezzo_core
+        + p1["carbonella"]  * costo_carbonella_unit
+        + p1["boccette"]    * costo_boccetta_unit
     )
 
     if tipo == "Riduzione I":
-        calderone_txt = "Rame"
-        costo_unit = costo_rid1_unit
+        calderone_txt = rec1["calderone"]
+        costo_unit    = costo_rid1_unit
 
     elif tipo == "Riduzione II":
-        calderone_txt = "Oro"
-
-        # costo extra per trasformare 1 Rid I in Rid II
+        rec2 = get_ricetta_riduzione("Riduzione II")
+        calderone_txt = rec2["calderone"]
+        p2   = rec2["step_aggiuntivo_per_pozione"]
         costo_extra = (
-            prezzo_slimeball           # 1 slimeball
-            + prezzo_core              # 1 core fragment
-            + 2 * costo_carbonella_unit  # 2 carbonella nel secondo step
+            p2["slimeball"]    * prezzo_slimeball
+            + p2["core"]       * prezzo_core
+            + p2["carbonella"] * costo_carbonella_unit
         )
         costo_unit = costo_rid1_unit + costo_extra
     else:
@@ -60,8 +60,8 @@ def calcola_pozione_riduzione(
 
     ricavo = guadagno = margine_unit = ricarico_pct = None
     if prezzo_vendita is not None:
-        ricavo = prezzo_vendita * num
-        guadagno = ricavo - costo_tot
+        ricavo       = prezzo_vendita * num
+        guadagno     = ricavo - costo_tot
         margine_unit = guadagno / num if num else 0.0
         ricarico_pct = (margine_unit / costo_unit * 100.0) if costo_unit > 0 else 0.0
 

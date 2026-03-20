@@ -5,7 +5,7 @@ import shutil
 
 APP_NAME = "Elysium Pozioni"
 APP_DIRNAME = "ElysiumPozioni"
-APP_VERSION = "3.8.0"
+APP_VERSION = "4.0.0"
 APP_AUTHOR = "ILGUERRIERO22"
 
 def get_data_dir():
@@ -72,6 +72,9 @@ GOLD_HOVER = "#fcd34d"     # Oro chiaro
 # Borders - Più sottili e definiti
 BORDER_SUBTLE = "#2d3748"  # Grigio bluastro sottile
 BORDER_ACCENT = "#7c3aed"  # Viola come accent
+INPUT_ERROR = "#8B2222"   # rosso scuro per campo numerico non valido
+LOSS_BG     = "#2d0808"   # sfondo preview vendita in perdita
+LOSS_FG     = "#ff6b6b"   # testo preview vendita in perdita
 
 # Tab Colors
 TAB_SELECTED = "#7c3aed"   # Viola per tab selezionata

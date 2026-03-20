@@ -1,57 +1,18 @@
 # calcolo_rune.py
 from typing import Dict, List, Any
+from ricette import RESA_PEPITA_NET, METALLI_ORDINE
 
 """
-Calcolo delle rune ottenibili a partire da un certo numero di pepite
-(Tin, Rame, Ferro, Oro, Argento), con due tipologie di rune:
-- Maghi
-- Bardi
-
-Tutte le rese sono espresse in "rune per 1 pepita".
+Calcolo delle rune ottenibili a partire da un certo numero di pepite.
+Rese per tipo di rune caricate da recipes.json.
 """
-
-# Resa in rune per 1 pepita, per tipo di rune
-RESA_PEPITA_NET: Dict[str, Dict[str, int]] = {
-    "Maghi": {
-        "Tin":      0,   # N/D -> lo trattiamo come 0
-        "Rame":    11,
-        "Ferro":   23,
-        "Oro":     35,
-        "Argento": 47,
-    },
-    "Bardi": {
-        "Tin":     23,
-        "Rame":    23,
-        "Ferro":   23,
-        "Oro":     35,
-        "Argento": 47,
-    },
-}
-
-METALLI_ORDINE: List[str] = ["Tin", "Rame", "Ferro", "Oro", "Argento"]
 
 
 def calcola_rune_diretto(tipo_rune: str, q_pepite: Dict[str, float]) -> Dict[str, Any]:
     """
     Calcola quante rune si ottengono in totale (e i dettagli per metallo)
     in base al tipo di rune ("Maghi" o "Bardi") e a un dizionario
-    'q_pepite' con le quantità di pepite per ciascun metallo, es:
-
-        {
-            "Tin": 0,
-            "Rame": 2,
-            "Ferro": 0,
-            "Oro": 0,
-            "Argento": 0,
-        }
-
-    Ritorna un dizionario con:
-    {
-        "preview_text": str,
-        "output_lines": [ ... ],
-        "tot_rune": float,
-        "dettagli_per_metallo": [str, ...]
-    }
+    'q_pepite' con le quantità di pepite per ciascun metallo.
     """
 
     tipo_rune = tipo_rune.strip()
@@ -106,10 +67,7 @@ def calcola_rune_diretto(tipo_rune: str, q_pepite: Dict[str, float]) -> Dict[str
 def calcola_rune_inverso(tipo_rune: str, num_rune_desiderate: int) -> Dict[str, Any]:
     """
     Per compatibilità con l'import nella GUI.
-    Al momento NON implementa ancora il calcolo inverso
-    (dato un target di rune, calcolare quante pepite servono).
-
-    Potremo implementarlo in seguito se ti serve.
+    Al momento NON implementa ancora il calcolo inverso.
     """
     raise NotImplementedError(
         "calcola_rune_inverso non è ancora implementato."

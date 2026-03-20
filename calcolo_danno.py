@@ -1,6 +1,7 @@
 # calcolo_danno.py
-# Versione 2.0 - Supporto Danno I e Danno II (Avvizzimento)
 from typing import Optional, Dict, Any
+from ricette import CARBONELLA_PER_BLOCCO, get_ricetta_danno
+
 
 def calcola_pozione_danno(
     num: int,
@@ -13,96 +14,81 @@ def calcola_pozione_danno(
     prezzo_vendita: Optional[float] = None,
 ) -> Dict[str, Any]:
     """
-    Pozioni di Danno:
-    
+    Pozioni di Danno. Ricette da recipes.json.
+
     DANNO I (Calderone Rame):
         1 Occhio di ragno + 1 Core + 1 Carbonella + 1 Boccetta = 1 Pozione Danno I
-    
+
     DANNO II / AVVIZZIMENTO (Calderone Oro):
         1 Withering dust + 1 Core + 2 Carbonella + 1 Pozione Danno I = 1 Pozione Danno II
-        
-        Nota: La Pozione Danno I è un ingrediente, quindi il costo viene calcolato ricorsivamente
     """
 
     if num <= 0:
         raise ValueError("Numero pozioni deve essere > 0")
 
-    # Costi unitari derivati
-    costo_carbonella_unit = prezzo_carbone / 12.0       # 1 blocco = 12 carbonella
-    costo_boccetta_unit = 1.0 / boccette_per_1b         # boccette per 1b
+    costo_carbonella_unit = prezzo_carbone / CARBONELLA_PER_BLOCCO
+    costo_boccetta_unit   = 1.0 / boccette_per_1b
+
+    rec1 = get_ricetta_danno("Danno I")
+    p1   = rec1["per_pozione"]
+
+    # Costo di 1 Danno I
+    danno_i_costo_unit = (
+        p1["occhio_ragno"]  * prezzo_spidereye
+        + p1["core"]        * prezzo_core
+        + p1["carbonella"]  * costo_carbonella_unit
+        + p1["boccette"]    * costo_boccetta_unit
+    )
 
     if tipo == "Danno I":
-        # Ricetta Danno I (Calderone Rame)
-        q_spidereye = num * 1.0
-        q_withering = 0.0
-        q_core = num * 1.0
-        q_carbonella = num * 1.0
-        q_boccette = num * 1.0
-        q_danno_i = 0.0  # Non serve Danno I per fare Danno I
-        
+        calderone_info = rec1["calderone"]
+        q_spidereye   = num * p1["occhio_ragno"]
+        q_withering   = 0.0
+        q_core        = num * p1["core"]
+        q_carbonella  = num * p1["carbonella"]
+        q_boccette    = num * p1["boccette"]
+        q_danno_i     = 0.0
+        costo_danno_i_ingrediente = 0.0
+
         costo_spidereye = q_spidereye * prezzo_spidereye
         costo_withering = 0.0
-        costo_core = q_core * prezzo_core
+        costo_core_tot  = q_core * prezzo_core
         costo_carbonella = q_carbonella * costo_carbonella_unit
-        costo_boccette = q_boccette * costo_boccetta_unit
-        costo_danno_i_ingrediente = 0.0
-        
-        costo_tot = (
-            costo_spidereye
-            + costo_core
-            + costo_carbonella
-            + costo_boccette
-        )
-        
-        calderone_info = "Rame"
-        
+        costo_boccette  = q_boccette * costo_boccetta_unit
+
+        costo_tot = costo_spidereye + costo_core_tot + costo_carbonella + costo_boccette
+
     elif tipo == "Danno II":
-        # Ricetta Danno II / Avvizzimento (Calderone Oro)
-        # Serve 1 Pozione Danno I per ogni Danno II
-        q_danno_i = num * 1.0
-        
-        # Per fare le Danno I necessarie, calcoliamo ricorsivamente
-        # 1 Danno I = 1 spider + 1 core + 1 carb + 1 bocc
-        danno_i_costo_unit = (
-            prezzo_spidereye
-            + prezzo_core
-            + costo_carbonella_unit
-            + costo_boccetta_unit
-        )
+        rec2 = get_ricetta_danno("Danno II")
+        calderone_info = rec2["calderone"]
+        p2   = rec2["step_aggiuntivo_per_pozione"]
+
+        q_danno_i     = num * 1.0
         costo_danno_i_ingrediente = q_danno_i * danno_i_costo_unit
-        
-        # Ingredienti diretti per Danno II
-        q_spidereye = 0.0  # Già incluso in Danno I
-        q_withering = num * 1.0
-        q_core = num * 1.0
-        q_carbonella = num * 2.0
-        q_boccette = 0.0  # Già incluso in Danno I
-        
+
+        q_spidereye  = 0.0
+        q_withering  = num * p2["withering_dust"]
+        q_core       = num * p2["core"]
+        q_carbonella = num * p2["carbonella"]
+        q_boccette   = 0.0
+
         costo_spidereye = 0.0
         costo_withering = q_withering * prezzo_withering_dust
-        costo_core = q_core * prezzo_core
+        costo_core_tot  = q_core * prezzo_core
         costo_carbonella = q_carbonella * costo_carbonella_unit
-        costo_boccette = 0.0
-        
-        costo_tot = (
-            costo_withering
-            + costo_core
-            + costo_carbonella
-            + costo_danno_i_ingrediente
-        )
-        
-        calderone_info = "Oro"
-        
+        costo_boccette  = 0.0
+
+        costo_tot = costo_withering + costo_core_tot + costo_carbonella + costo_danno_i_ingrediente
+
     else:
         raise ValueError("Tipo pozione non valido. Usa 'Danno I' o 'Danno II'")
 
     costo_unit = costo_tot / num if num else 0.0
 
-    # Profitto (facoltativo)
     ricavo = guadagno = margine_unit = ricarico_pct = None
     if prezzo_vendita is not None:
-        ricavo = prezzo_vendita * num
-        guadagno = ricavo - costo_tot
+        ricavo       = prezzo_vendita * num
+        guadagno     = ricavo - costo_tot
         margine_unit = guadagno / num if num else 0.0
         ricarico_pct = (margine_unit / costo_unit * 100.0) if costo_unit > 0 else 0.0
 
@@ -125,7 +111,7 @@ def calcola_pozione_danno(
         f"Costo per pozione:       {costo_unit:.2f} b",
         "",
     ]
-    
+
     if tipo == "Danno I":
         lines += [
             "Materiali per 1 Pozione Danno I:",

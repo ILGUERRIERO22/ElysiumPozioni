@@ -1,5 +1,7 @@
 # calcolo_antidoti.py
 from typing import Optional, Dict, Any
+from ricette import CARBONELLA_PER_BLOCCO, RESINA, get_ricetta_antidoto
+
 
 def calcola_antidoti(
     num: int,
@@ -14,55 +16,48 @@ def calcola_antidoti(
     prezzo_vendita: Optional[float] = None,
 ) -> Dict[str, Any]:
     """
-    Antidoti (ricette corrette):
+    Antidoti (ricette da recipes.json):
 
     TERRACOTTA:
         1 Brim powder + 1 Carne marcia + 1 Carbonella + 1 Boccetta = 1 antidoto
 
     FERRO:
         1 Resina + 1 Revival star + 2 Carbonella + 2 Boccette = 2 antidoti
-
-    La resina NON ha un prezzo diretto:
-    il suo costo unitario è ricavato dai parametri delle pozioni:
-        costo_resina_unit = (2*verdura_unit + vasetto_unit) / 2
     """
 
     if num <= 0:
         raise ValueError("Numero antidoti deve essere > 0")
 
-    # --- COSTI UNITARI DERIVATI GLOBALI ---
-    costo_boccetta_unit = 1.0 / boccette_per_1b
-    costo_vasetto_unit  = 1.0 / vasetti_per_1b
-    costo_verdura_unit  = 1.0 / verdure_per_1b
-    costo_resina_unit   = (2.0 * costo_verdura_unit + costo_vasetto_unit) / 2.0
-    costo_carbonella_unit = prezzo_carbone / 12.0  # 1 blocco = 12 carbonella
+    # --- COSTI UNITARI DERIVATI ---
+    costo_boccetta_unit   = 1.0 / boccette_per_1b
+    costo_vasetto_unit    = 1.0 / vasetti_per_1b
+    costo_verdura_unit    = 1.0 / verdure_per_1b
+    r = RESINA
+    costo_resina_unit     = (
+        r["verdure_per_batch"] * costo_verdura_unit + r["vasetti_per_batch"] * costo_vasetto_unit
+    ) / r["output_per_batch"]
+    costo_carbonella_unit = prezzo_carbone / CARBONELLA_PER_BLOCCO
 
-    # quantità materiali
-    q_brim = q_rotten = q_resina = q_revival = 0.0
-    q_carbonella = q_boccette = 0.0
+    # --- RICETTA DA recipes.json ---
+    ricetta = get_ricetta_antidoto(tipo)
+    q_brim = q_rotten = q_resina = q_revival = q_carbonella = q_boccette = 0.0
 
-    # --- RICETTE ANTIDOTO ---
-    # Terracotta: brim + carne marcia + 1 carbonella + 1 boccetta  -> 1 antidoto
-    # Ferro:      resina + revival star + 2 carbonella + 2 boccette -> 2 antidoti
     if tipo == "Terracotta":
-        # 1 batch = 1 antidoto
-        q_brim       = num * 1.0
-        q_rotten     = num * 1.0
-        q_resina     = 0.0
-        q_revival    = 0.0
-        q_carbonella = num * 1.0
-        q_boccette   = num * 1.0
+        p = ricetta["per_antidoto"]
+        antidoti_per_batch = ricetta["antidoti_per_batch"]
+        batch = num / antidoti_per_batch
+        q_brim       = batch * p["brim"]
+        q_rotten     = batch * p["carne_marcia"]
+        q_carbonella = batch * p["carbonella"]
+        q_boccette   = batch * p["boccette"]
     elif tipo == "Ferro":
-        # 1 batch = 2 antidoti
-        batch        = num / 2.0
-        q_brim       = 0.0
-        q_rotten     = 0.0
-        q_resina     = batch * 1.0
-        q_revival    = batch * 1.0
-        q_carbonella = batch * 2.0
-        q_boccette   = batch * 2.0
-    else:
-        raise ValueError("Tipo calderone antidoti non valido (usa 'Terracotta' o 'Ferro')")
+        p = ricetta["per_batch"]
+        antidoti_per_batch = ricetta["antidoti_per_batch"]
+        batch = num / antidoti_per_batch
+        q_resina     = batch * p["resina"]
+        q_revival    = batch * p["revival_star"]
+        q_carbonella = batch * p["carbonella"]
+        q_boccette   = batch * p["boccette"]
 
     # --- COSTI PARZIALI ---
     costo_brim       = q_brim       * prezzo_brim
@@ -73,21 +68,16 @@ def calcola_antidoti(
     costo_boccette   = q_boccette   * costo_boccetta_unit
 
     costo_tot = (
-        costo_brim
-        + costo_rotten
-        + costo_resina
-        + costo_revival
-        + costo_carbonella
-        + costo_boccette
+        costo_brim + costo_rotten + costo_resina
+        + costo_revival + costo_carbonella + costo_boccette
     )
-
     costo_unit = costo_tot / num if num else 0.0
 
     # --- PROFITTO (facoltativo) ---
     ricavo = guadagno = margine_unit = ricarico_pct = None
     if prezzo_vendita is not None:
-        ricavo = prezzo_vendita * num
-        guadagno = ricavo - costo_tot
+        ricavo       = prezzo_vendita * num
+        guadagno     = ricavo - costo_tot
         margine_unit = guadagno / num if num else 0.0
         ricarico_pct = (margine_unit / costo_unit * 100.0) if costo_unit > 0 else 0.0
 

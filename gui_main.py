@@ -1,5 +1,5 @@
 # gui_main.py
-# Versione 3.2 - UI Moderna con Animazioni
+# Versione 4.0 - Ricette centralizzate e GUI modulare
 
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -16,7 +16,7 @@ from config_app import (
     SUCCESS, SUCCESS_HOVER,
     DANGER_BG, DANGER_BG_HOVER, DANGER_BG_ACTIVE,
     GOLD, GOLD_HOVER,
-    BORDER_SUBTLE, BORDER_ACCENT,
+    BORDER_SUBTLE, BORDER_ACCENT, INPUT_ERROR, LOSS_BG, LOSS_FG,
     TAB_SELECTED, TAB_HOVER,
     TITLE_FONT, SECTION_FONT, LABEL_FONT, BUTTON_FONT, RESULT_FONT,
     SMALL_FONT, PREVIEW_FONT,
@@ -549,7 +549,8 @@ class ElysiumPozioniApp:
         self.tab_velocita = tk.Frame(self.notebook, bg=BG_MAIN)
         self.tab_riduzione = tk.Frame(self.notebook, bg=BG_MAIN)
         self.tab_multi = tk.Frame(self.notebook, bg=BG_MAIN)
-        
+        self.tab_spesa  = tk.Frame(self.notebook, bg=BG_MAIN)
+
         # Aggiungi tabs con solo icone
         self.notebook.add(self.tab_pozioni, text="🧪")
         self.notebook.add(self.tab_antidoti, text="💊")
@@ -561,7 +562,8 @@ class ElysiumPozioniApp:
         self.notebook.add(self.tab_velocita, text="⚡")
         self.notebook.add(self.tab_riduzione, text="🔻")
         self.notebook.add(self.tab_multi, text="🧮")
-        
+        self.notebook.add(self.tab_spesa,  text="🛒")
+
         self.notebook.pack(fill="both", expand=True, padx=5, pady=5)
 
         # Animazione cambio tab
@@ -583,7 +585,8 @@ class ElysiumPozioniApp:
             6: "Elisir",
             7: "Velocità",
             8: "Riduzione",
-            9: "Multi-Prodotto"
+            9: "Multi-Prodotto",
+            10: "Lista della Spesa"
         }
         
         self.tooltip_window = None
@@ -712,7 +715,7 @@ class ElysiumPozioniApp:
         return outer, inner
 
     def make_labeled_entry(self, parent, label_text, default_value="", row=0,
-                          hint_text="", width=ENTRY_WIDTH, icon_key=None):
+                          hint_text="", width=ENTRY_WIDTH, icon_key=None, allow_empty=False):
         """Crea una coppia label + entry con stile uniforme e icona opzionale"""
         # Frame per label con icona
         label_frame = tk.Frame(parent, bg=BG_CARD)
@@ -750,6 +753,7 @@ class ElysiumPozioniApp:
         )
         entry.insert(0, default_value)
         entry.grid(row=row, column=1, pady=4, sticky="w")
+        self._bind_numeric_validation(entry, allow_empty)
 
         if hint_text:
             tk.Label(
@@ -761,6 +765,29 @@ class ElysiumPozioniApp:
             ).grid(row=row, column=2, sticky="w", padx=(8, 0))
 
         return entry
+
+    def _validate_entry(self, entry, allow_empty=False):
+        """Valida un campo numerico e aggiorna il colore del bordo."""
+        val = entry.get().strip()
+        if val == "":
+            is_valid = allow_empty
+        else:
+            try:
+                float(val)
+                is_valid = True
+            except ValueError:
+                is_valid = False
+        entry.config(
+            highlightbackground=BORDER_SUBTLE if is_valid else INPUT_ERROR,
+            highlightcolor=ACCENT if is_valid else INPUT_ERROR,
+        )
+        return is_valid
+
+    def _bind_numeric_validation(self, entry, allow_empty=False):
+        """Lega la validazione numerica a un campo entry."""
+        validate = lambda e=None: self._validate_entry(entry, allow_empty)
+        entry.bind("<KeyRelease>", validate, add="+")
+        entry.bind("<FocusOut>",   validate, add="+")
 
     def update_result_with_fade(self, preview_label, text_widget, preview_text, output_lines):
         """Aggiorna risultati con effetto fade e icone inline"""
@@ -970,1742 +997,23 @@ class ElysiumPozioniApp:
     # =========================
 
     def _build_tabs(self):
-        """Costruisce tutte le tab"""
-        self._build_tab_pozioni()
-        self._build_tab_antidoti()
-        self._build_tab_revivify()
-        self._build_tab_extinguish()
-        self._build_tab_danno()
-        self._build_tab_elisir()
-        self._build_tab_rune()
-        self._build_tab_velocita()
-        self._build_tab_riduzione()
-        self._build_tab_multi()
-
-    def _build_tab_pozioni(self):
-        """Tab Pozioni di cura - principale"""
-        container = tk.Frame(self.tab_pozioni, bg=BG_MAIN)
-        container.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        # === PROFILO PREZZI ===
-        panel_prof, prof_inner = self.make_panel(container, "Gestione Profili", "👤")
-        
-        # Riga profilo
-        tk.Label(
-            prof_inner,
-            text="Profilo:",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT
-        ).grid(row=0, column=0, sticky="e", padx=(0, 8), pady=4)
-        
-        self.combo_profile = ttk.Combobox(
-            prof_inner,
-            width=16,
-            font=LABEL_FONT,
-        )
-        self.combo_profile.grid(row=0, column=1, padx=4, pady=4, sticky="w")
-        self._block_combobox_scroll(self.combo_profile)
-
-        # Bottoni profilo
-        btn_frame = tk.Frame(prof_inner, bg=BG_CARD)
-        btn_frame.grid(row=0, column=2, columnspan=4, padx=(10, 0), pady=4, sticky="w")
-        
-        self.make_action_button(
-            btn_frame, "Carica", self.apply_profile, "secondary", "📥"
-        ).pack(side="left", padx=2)
-        
-        self.make_action_button(
-            btn_frame, "Salva", self.save_profile, "primary", "💾"
-        ).pack(side="left", padx=2)
-        
-        self.make_action_button(
-            btn_frame, "Rinomina", self.rename_profile, "secondary", "✏️"
-        ).pack(side="left", padx=2)
-        
-        self.make_action_button(
-            btn_frame, "Elimina", self.delete_profile, "danger", "🗑️"
-        ).pack(side="left", padx=2)
-        
-        panel_prof.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === PRODUZIONE ===
-        panel_prod, prod_inner = self.make_panel(container, "Produzione", "🏭")
-        
-        self.entry_pozioni = self.make_labeled_entry(
-            prod_inner, "Numero pozioni:", "", row=0
-        )
-        
-        tk.Label(
-            prod_inner,
-            text="Tipo reagente:",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=1, column=0, sticky="e", padx=(0, 8), pady=4)
-        
-        self.combo_tier = ttk.Combobox(
-            prod_inner,
-            values=["T1", "T2", "T3"],
-            width=ENTRY_WIDTH,
-            state="readonly",
-            font=LABEL_FONT,
-        )
-        self.combo_tier.current(0)
-        self.combo_tier.grid(row=1, column=1, pady=4, sticky="w")
-        self._block_combobox_scroll(self.combo_tier)
-
-        tk.Label(
-            prod_inner,
-            text="Calderone:",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=2, column=0, sticky="e", padx=(0, 8), pady=4)
-        
-        self.combo_calderone = ttk.Combobox(
-            prod_inner,
-            values=["Terracotta", "Rame", "Ferro", "Oro", "Diamante", "Smeraldo"],
-            width=ENTRY_WIDTH,
-            state="readonly",
-            font=LABEL_FONT,
-        )
-        self.combo_calderone.current(0)
-        self.combo_calderone.grid(row=2, column=1, pady=4, sticky="w")
-        self._block_combobox_scroll(self.combo_calderone)
-        
-        panel_prod.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === PREZZI DIRETTI ===
-        panel_price, price_inner = self.make_panel(container, "Prezzi diretti (b)", "💰")
-        
-        self.entry_reagente = self.make_labeled_entry(
-            price_inner, "Reagente (1x):", "1.5", row=0
-        )
-        self.entry_core = self.make_labeled_entry(
-            price_inner, "Core fragment (1x):", "1.0", row=1
-        )
-        # Aggiorna i prezzi nelle altre tab quando cambia
-        def update_core_prices(e=None):
-            self._aggiorna_prezzi_riduzione()
-            self._aggiorna_prezzi_velocita()
-            self._aggiorna_prezzi_antidoti()
-            self._aggiorna_prezzi_revivify()
-        self.entry_core.bind("<KeyRelease>", update_core_prices)
-        self.entry_core.bind("<FocusOut>", update_core_prices)
-
-        self.entry_carbone = self.make_labeled_entry(
-            price_inner, "Carbone (1 blocco):", "1.5", row=2,
-            hint_text="= 12 carbonella", icon_key="carbone"
-        )
-        # Aggiorna i prezzi nelle altre tab quando cambia
-        def update_carbone_prices(e=None):
-            self._aggiorna_prezzi_riduzione()
-            self._aggiorna_prezzi_velocita()
-            self._aggiorna_prezzi_antidoti()
-            self._aggiorna_prezzi_revivify()
-            self._aggiorna_prezzi_elisir()
-        self.entry_carbone.bind("<KeyRelease>", update_carbone_prices)
-        self.entry_carbone.bind("<FocusOut>", update_carbone_prices)
-        
-        panel_price.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === QUANTITÀ PER 1b ===
-        panel_bundle, bundle_inner = self.make_panel(container, "Unità per 1 b", "📦")
-        
-        self.entry_verdure_per_b = self.make_labeled_entry(
-            bundle_inner, "Verdure per 1 b:", "3", row=0, icon_key="verdure"
-        )
-        self.entry_vasetti_per_b = self.make_labeled_entry(
-            bundle_inner, "Vasetti per 1 b:", "15", row=1
-        )
-        self.entry_boccette_per_b = self.make_labeled_entry(
-            bundle_inner, "Boccette per 1 b:", "14", row=2, icon_key="boccetta"
-        )
-        # Aggiorna i prezzi nelle altre tab quando cambia
-        def update_boccette_prices(e=None):
-            self._aggiorna_prezzi_riduzione()
-            self._aggiorna_prezzi_velocita()
-            self._aggiorna_prezzi_antidoti()
-            self._aggiorna_prezzi_revivify()
-            self._aggiorna_prezzi_elisir()
-        self.entry_boccette_per_b.bind("<KeyRelease>", update_boccette_prices)
-        self.entry_boccette_per_b.bind("<FocusOut>", update_boccette_prices)
-
-        # Bind per aggiornare resina
-        self.entry_verdure_per_b.bind("<FocusOut>", lambda e: self._aggiorna_resina_da_pozioni())
-        self.entry_vasetti_per_b.bind("<FocusOut>", lambda e: self._aggiorna_resina_da_pozioni())
-        
-        panel_bundle.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === VENDITA ===
-        panel_sale, sale_inner = self.make_panel(container, "Vendita & Profitto", "📈")
-        
-        self.entry_prezzo_vendita = self.make_labeled_entry(
-            sale_inner, "Prezzo vendita/poz (b):", "", row=0,
-            hint_text="Lascia vuoto per solo costo"
-        )
-        self.entry_sconto_perc = self.make_labeled_entry(
-            sale_inner, "Sconto cliente (%):", "0", row=1
-        )
-        
-        panel_sale.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === BOTTONE CALCOLA ===
-        btn_container = tk.Frame(container, bg=BG_MAIN)
-        btn_container.pack(pady=12)
-        
-        calc_btn = self.make_action_button(
-            btn_container, "CALCOLA POZIONI", self.do_calcola_pozioni, "success", "🧮"
-        )
-        calc_btn.config(font=("Segoe UI", 12, "bold"), padx=24, pady=10)
-        calc_btn.pack()
-        
-        # === RISULTATI ===
-        self.make_result_area(container, "label_preview", "text_result")
-        
-        # Inizializza combobox profili
-        self.combo_profile["values"] = list(self.profiles.keys())
-        if self.combo_profile["values"]:
-            self.combo_profile.set(self.combo_profile["values"][0])
-
-    def _build_tab_antidoti(self):
-        """Tab Antidoti"""
-        container = tk.Frame(self.tab_antidoti, bg=BG_MAIN)
-        container.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        # === PRODUZIONE ===
-        panel_prod, prod_inner = self.make_panel(container, "Produzione Antidoti", "🏭")
-        
-        self.entry_ant_num = self.make_labeled_entry(
-            prod_inner, "Numero antidoti:", "", row=0
-        )
-        
-        tk.Label(
-            prod_inner,
-            text="Calderone:",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=1, column=0, sticky="e", padx=(0, 8), pady=4)
-        
-        self.combo_ant_calderone = ttk.Combobox(
-            prod_inner,
-            values=["Terracotta", "Ferro"],
-            width=ENTRY_WIDTH,
-            state="readonly",
-            font=LABEL_FONT,
-        )
-        self.combo_ant_calderone.current(0)
-        self.combo_ant_calderone.grid(row=1, column=1, pady=4, sticky="w")
-        self._block_combobox_scroll(self.combo_ant_calderone)
-        
-        panel_prod.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === PREZZI ===
-        panel_price, price_inner = self.make_panel(container, "Prezzi ingredienti", "💰")
-        
-        self.entry_brim = self.make_labeled_entry(
-            price_inner, "Brim powder (1x):", "1.0", row=0, icon_key="brim"
-        )
-        self.entry_rotten = self.make_labeled_entry(
-            price_inner, "Carne marcia (1x):", "1.0", row=1, icon_key="rotten"
-        )
-        self.entry_revival = self.make_labeled_entry(
-            price_inner, "Revival star (1x):", "2.0", row=2
-        )
-        # Aggiorna i prezzi nelle altre tab quando cambia
-        def update_revival_prices(e=None):
-            self._aggiorna_prezzi_revivify()
-        self.entry_revival.bind("<KeyRelease>", update_revival_prices)
-        self.entry_revival.bind("<FocusOut>", update_revival_prices)
-        
-        # Resina (readonly)
-        tk.Label(
-            price_inner,
-            text="Resina (auto):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=3, column=0, sticky="e", padx=(0, 8), pady=4)
-        
-        self.resina_var = tk.StringVar()
-        self.entry_resina = tk.Entry(
-            price_inner,
-            width=ENTRY_WIDTH,
-            font=LABEL_FONT,
-            bg=BG_INPUT,
-            fg=FG_SUBTLE,
-            disabledbackground=BG_INPUT,
-            disabledforeground=FG_SUBTLE,
-            relief="flat",
-            textvariable=self.resina_var,
-            state="disabled",
-        )
-        self.entry_resina.grid(row=3, column=1, pady=4, sticky="w")
-        
-        tk.Label(
-            price_inner,
-            text="(calcolato da verdure/vasetti)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=3, column=2, sticky="w", padx=(8, 0))
-
-        # Campo readonly per Core fragment (dalla tab Pozioni)
-        tk.Label(
-            price_inner,
-            text="Core fragment (1x):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=4, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        self.label_ant_core = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_ant_core.grid(row=4, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=4, column=2, sticky="w", padx=(8, 0))
-
-        # Campo readonly per Carbone (dalla tab Pozioni)
-        label_frame_carbone = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_carbone.grid(row=5, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        if 'carbone' in self.icons:
-            icon_label = tk.Label(
-                label_frame_carbone,
-                image=self.icons['carbone'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_carbone,
-            text="Carbone (1b):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_ant_carbone = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_ant_carbone.grid(row=5, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=5, column=2, sticky="w", padx=(8, 0))
-
-        # Campo readonly per Boccette (dalla tab Pozioni)
-        label_frame_boccette = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_boccette.grid(row=6, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        if 'boccetta' in self.icons:
-            icon_label = tk.Label(
-                label_frame_boccette,
-                image=self.icons['boccetta'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_boccette,
-            text="Boccette (per 1b):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_ant_boccette = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_ant_boccette.grid(row=6, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=6, column=2, sticky="w", padx=(8, 0))
-
-        panel_price.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === VENDITA ===
-        panel_sale, sale_inner = self.make_panel(container, "Vendita", "📈")
-        
-        self.entry_ant_prezzo = self.make_labeled_entry(
-            sale_inner, "Prezzo vendita/antidoto:", "", row=0
-        )
-        
-        panel_sale.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === BOTTONE ===
-        btn_container = tk.Frame(container, bg=BG_MAIN)
-        btn_container.pack(pady=12)
-        
-        calc_btn = self.make_action_button(
-            btn_container, "CALCOLA ANTIDOTI", self.do_calcola_antidoti, "success", "🧮"
-        )
-        calc_btn.config(font=("Segoe UI", 12, "bold"), padx=24, pady=10)
-        calc_btn.pack()
-        
-        # === RISULTATI ===
-        self.make_result_area(container, "label_ant_preview", "text_ant_result")
-        
-        # Inizializza resina
-        self._aggiorna_resina_da_pozioni()
-
-        # Inizializza valori prezzi
-        try:
-            self._aggiorna_prezzi_antidoti()
-        except AttributeError:
-            pass
-
-    def _build_tab_revivify(self):
-        """Tab Revivify"""
-        container = tk.Frame(self.tab_revivify, bg=BG_MAIN)
-        container.pack(fill="both", expand=True, padx=10, pady=10)
-
-        # Info header
-        info_frame = tk.Frame(container, bg=BG_CARD, padx=15, pady=10)
-        info_frame.pack(fill="x", pady=(0, 10))
-        tk.Label(
-            info_frame,
-            text="✨ Revivify - Calderone in Rame",
-            font=SECTION_FONT,
-            bg=BG_CARD,
-            fg=SECONDARY,
-        ).pack(anchor="w")
-        tk.Label(
-            info_frame,
-            text="Ricetta: 1 Revival star + 1 Core + 1 Carbonella + 1 Boccetta = 1 Revivify",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).pack(anchor="w", pady=(4, 0))
-
-        # === PRODUZIONE ===
-        panel_prod, prod_inner = self.make_panel(container, "Produzione", "🏭")
-
-        self.entry_rev_num = self.make_labeled_entry(
-            prod_inner, "Numero Revivify:", "", row=0
-        )
-
-        panel_prod.pack(padx=0, pady=(0, 8), fill="x")
-
-        # === PREZZI INGREDIENTI (readonly) ===
-        panel_price, price_inner = self.make_panel(container, "Prezzi ingredienti (b)", "💰")
-
-        # Campo readonly per Revival star (dalla tab Pozioni)
-        tk.Label(
-            price_inner,
-            text="Revival star (1x):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=0, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        self.label_rev_revival = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_rev_revival.grid(row=0, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=0, column=2, sticky="w", padx=(8, 0))
-
-        # Campo readonly per Core fragment (dalla tab Pozioni)
-        tk.Label(
-            price_inner,
-            text="Core fragment (1x):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=1, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        self.label_rev_core = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_rev_core.grid(row=1, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=1, column=2, sticky="w", padx=(8, 0))
-
-        # Campo readonly per Carbone (dalla tab Pozioni)
-        label_frame_carbone = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_carbone.grid(row=2, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        # Icona Carbone
-        if 'carbone' in self.icons:
-            icon_label = tk.Label(
-                label_frame_carbone,
-                image=self.icons['carbone'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_carbone,
-            text="Carbone (1b):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_rev_carbone = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_rev_carbone.grid(row=2, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=2, column=2, sticky="w", padx=(8, 0))
-
-        # Campo readonly per Boccette (dalla tab Pozioni)
-        label_frame_boccette = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_boccette.grid(row=3, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        # Icona Boccetta
-        if 'boccetta' in self.icons:
-            icon_label = tk.Label(
-                label_frame_boccette,
-                image=self.icons['boccetta'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_boccette,
-            text="Boccette (per 1b):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_rev_boccette = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_rev_boccette.grid(row=3, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=3, column=2, sticky="w", padx=(8, 0))
-
-        panel_price.pack(padx=0, pady=(0, 8), fill="x")
-
-        # === VENDITA ===
-        panel_sale, sale_inner = self.make_panel(container, "Vendita", "📈")
-
-        self.entry_rev_prezzo_vendita = self.make_labeled_entry(
-            sale_inner, "Prezzo vendita (b):", "", row=0
-        )
-
-        panel_sale.pack(padx=0, pady=(0, 8), fill="x")
-
-        # === BOTTONE ===
-        btn_container = tk.Frame(container, bg=BG_MAIN)
-        btn_container.pack(pady=12)
-
-        calc_btn = self.make_action_button(
-            btn_container, "CALCOLA REVIVIFY", self.do_calcola_revivify, "success", "🧮"
-        )
-        calc_btn.config(font=("Segoe UI", 12, "bold"), padx=24, pady=10)
-        calc_btn.pack()
-
-        # === RISULTATI ===
-        self.make_result_area(container, "label_rev_preview", "text_rev_result")
-
-        # Inizializza valori prezzi
-        try:
-            self._aggiorna_prezzi_revivify()
-        except AttributeError:
-            pass
-
-    def _build_tab_extinguish(self):
-        """Tab Extinguish"""
-        container = tk.Frame(self.tab_extinguish, bg=BG_MAIN)
-        container.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        # Info header
-        info_frame = tk.Frame(container, bg=BG_CARD, padx=15, pady=10)
-        info_frame.pack(fill="x", pady=(0, 10))
-        tk.Label(
-            info_frame,
-            text="🔥 Extinguish - Calderone in Rame",
-            font=SECTION_FONT,
-            bg=BG_CARD,
-            fg=GOLD,
-        ).pack(anchor="w")
-        tk.Label(
-            info_frame,
-            text="Ricetta: 1 Quarzo + 1 Core + 1 Carbonella + 1 Boccetta = 1 Extinguish",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).pack(anchor="w", pady=(4, 0))
-        
-        # === PRODUZIONE ===
-        panel_prod, prod_inner = self.make_panel(container, "Produzione", "🏭")
-        
-        self.entry_ext_num = self.make_labeled_entry(
-            prod_inner, "Numero Extinguish:", "", row=0
-        )
-        
-        panel_prod.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === PREZZO QUARZO ===
-        panel_price, price_inner = self.make_panel(container, "Prezzo ingrediente", "💰")
-        
-        self.entry_ext_quartz = self.make_labeled_entry(
-            price_inner, "Quarzo (1x):", "1.0", row=0, icon_key="quarzo"
-        )
-        
-        panel_price.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === VENDITA ===
-        panel_sale, sale_inner = self.make_panel(container, "Vendita", "📈")
-        
-        self.entry_ext_prezzo_vendita = self.make_labeled_entry(
-            sale_inner, "Prezzo vendita (b):", "", row=0
-        )
-        
-        panel_sale.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === BOTTONE ===
-        btn_container = tk.Frame(container, bg=BG_MAIN)
-        btn_container.pack(pady=12)
-        
-        calc_btn = self.make_action_button(
-            btn_container, "CALCOLA EXTINGUISH", self.do_calcola_extinguish, "success", "🧮"
-        )
-        calc_btn.config(font=("Segoe UI", 12, "bold"), padx=24, pady=10)
-        calc_btn.pack()
-        
-        # === RISULTATI ===
-        self.make_result_area(container, "label_ext_preview", "text_ext_result")
-
-    def _build_tab_danno(self):
-        """Tab Pozioni di Danno (I e II)"""
-        container = tk.Frame(self.tab_danno, bg=BG_MAIN)
-        container.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        # Info header
-        info_frame = tk.Frame(container, bg=BG_CARD, padx=15, pady=10)
-        info_frame.pack(fill="x", pady=(0, 10))
-        tk.Label(
-            info_frame,
-            text="⚔️ Pozioni di Danno",
-            font=SECTION_FONT,
-            bg=BG_CARD,
-            fg=DANGER_BG_HOVER,
-        ).pack(anchor="w")
-        tk.Label(
-            info_frame,
-            text="Danno I: Rame | Danno II (Avvizzimento): Oro (upgrade da Danno I)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).pack(anchor="w", pady=(4, 0))
-        
-        # === PRODUZIONE ===
-        panel_prod, prod_inner = self.make_panel(container, "Produzione", "🏭")
-        
-        self.entry_danno_num = self.make_labeled_entry(
-            prod_inner, "Numero pozioni:", "", row=0
-        )
-        
-        tk.Label(
-            prod_inner,
-            text="Tipo pozione:",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=1, column=0, sticky="e", padx=(0, 8), pady=4)
-        
-        self.combo_danno_tipo = ttk.Combobox(
-            prod_inner,
-            values=["Danno I", "Danno II"],
-            width=14,
-            state="readonly",
-            font=LABEL_FONT,
-        )
-        self.combo_danno_tipo.current(0)
-        self.combo_danno_tipo.grid(row=1, column=1, pady=4, sticky="w")
-        self._block_combobox_scroll(self.combo_danno_tipo)
-        
-        panel_prod.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === PREZZI INGREDIENTI ===
-        panel_price, price_inner = self.make_panel(container, "Prezzi ingredienti (b)", "💰")
-        
-        # Occhio di ragno (readonly da Elisir)
-        # Frame per label con icona
-        label_frame_spider = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_spider.grid(row=0, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        # Icona Spider Eye
-        if 'spidereye' in self.icons:
-            icon_label = tk.Label(
-                label_frame_spider,
-                image=self.icons['spidereye'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_spider,
-            text="Occhio di ragno (1x):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_danno_spidereye = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_danno_spidereye.grid(row=0, column=1, sticky="w", padx=4, pady=3)
-        
-        tk.Label(
-            price_inner,
-            text="(dalla tab Elisir)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=0, column=2, sticky="w", padx=(8, 0))
-        
-        # Withering dust
-        self.entry_withering_dust = self.make_labeled_entry(
-            price_inner, "Withering dust (1x):", "1.0", row=1
-        )
-        
-        # Core (readonly da Pozioni)
-        tk.Label(
-            price_inner,
-            text="Core fragment (1x):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=2, column=0, sticky="e", padx=(0, 8), pady=3)
-        
-        self.label_danno_core = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_danno_core.grid(row=2, column=1, sticky="w", padx=4, pady=3)
-        
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=2, column=2, sticky="w", padx=(8, 0))
-        
-        # Carbone (readonly da Pozioni)
-        # Frame per label con icona
-        label_frame_carbone = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_carbone.grid(row=3, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        # Icona Carbone
-        if 'carbone' in self.icons:
-            icon_label = tk.Label(
-                label_frame_carbone,
-                image=self.icons['carbone'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_carbone,
-            text="Carbone (1 blocco):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_danno_carbone = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_danno_carbone.grid(row=3, column=1, sticky="w", padx=4, pady=3)
-        
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=3, column=2, sticky="w", padx=(8, 0))
-        
-        # Boccette (readonly da Pozioni)
-        # Frame per label con icona
-        label_frame_boccette = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_boccette.grid(row=4, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        # Icona Boccetta
-        if 'boccetta' in self.icons:
-            icon_label = tk.Label(
-                label_frame_boccette,
-                image=self.icons['boccetta'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_boccette,
-            text="Boccette per 1b:",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_danno_boccette = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_danno_boccette.grid(row=4, column=1, sticky="w", padx=4, pady=3)
-        
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=4, column=2, sticky="w", padx=(8, 0))
-        
-        panel_price.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === VENDITA ===
-        panel_sale, sale_inner = self.make_panel(container, "Vendita", "📈")
-        
-        self.entry_danno_prezzo_vendita = self.make_labeled_entry(
-            sale_inner, "Prezzo vendita (b):", "", row=0
-        )
-        
-        panel_sale.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === BOTTONE ===
-        btn_container = tk.Frame(container, bg=BG_MAIN)
-        btn_container.pack(pady=12)
-        
-        calc_btn = self.make_action_button(
-            btn_container, "CALCOLA DANNO", self.do_calcola_danno, "danger", "🧮"
-        )
-        calc_btn.config(font=("Segoe UI", 12, "bold"), padx=24, pady=10)
-        calc_btn.pack()
-        
-        # === RISULTATI ===
-        self.make_result_area(container, "label_danno_preview", "text_danno_result")
-        
-        # Inizializza label prezzi
-        self._aggiorna_prezzi_danno()
-
-    def _build_tab_elisir(self):
-        """Tab Elisir di cura"""
-        container = tk.Frame(self.tab_elisir, bg=BG_MAIN)
-        container.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        # === PRODUZIONE ===
-        panel_prod, prod_inner = self.make_panel(container, "Produzione Elisir", "🏭")
-        
-        self.entry_el_num = self.make_labeled_entry(
-            prod_inner, "Numero elisir:", "", row=0
-        )
-        
-        tk.Label(
-            prod_inner,
-            text="Tipo elisir:",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=1, column=0, sticky="e", padx=(0, 8), pady=4)
-        
-        self.combo_el_tipo = ttk.Combobox(
-            prod_inner,
-            values=["Minor mending", "Inferior mending", "Lesser mending", 
-                   "Medium mending", "Greater mending"],
-            width=18,
-            state="readonly",
-            font=LABEL_FONT,
-        )
-        self.combo_el_tipo.current(0)
-        self.combo_el_tipo.grid(row=1, column=1, pady=4, sticky="w")
-        self._block_combobox_scroll(self.combo_el_tipo)
-        
-        panel_prod.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === PREZZI SPECIALI ===
-        panel_price, price_inner = self.make_panel(container, "Ingredienti speciali (b)", "💎")
-        
-        # Brim (readonly da antidoti)
-        # Frame per label con icona
-        label_frame_brim = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_brim.grid(row=0, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        # Icona Brim
-        if 'brim' in self.icons:
-            icon_label = tk.Label(
-                label_frame_brim,
-                image=self.icons['brim'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_brim,
-            text="Brim powder (1x):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_el_brim = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_el_brim.grid(row=0, column=1, sticky="w", padx=4, pady=3)
-        
-        tk.Label(
-            price_inner,
-            text="(dalla tab Antidoti)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=0, column=2, sticky="w", padx=(8, 0))
-        
-        self.entry_spidereye = self.make_labeled_entry(
-            price_inner, "Occhio di ragno (1x):", "1.0", row=1, icon_key="spidereye"
-        )
-        self.entry_membrana = self.make_labeled_entry(
-            price_inner, "Membrana Phantom (1x):", "1.0", row=2, icon_key="phantom"
-        )
-        self.entry_slime = self.make_labeled_entry(
-            price_inner, "Slimeball (1x):", "1.0", row=3, icon_key="slimeball"
-        )
-        # Aggiorna i prezzi nella tab Riduzione quando cambia
-        self.entry_slime.bind("<KeyRelease>", lambda e: self._aggiorna_prezzi_riduzione())
-        self.entry_slime.bind("<FocusOut>", lambda e: self._aggiorna_prezzi_riduzione())
-
-        self.entry_lost_soul = self.make_labeled_entry(
-            price_inner, "Lost soul (1x):", "1.0", row=4, icon_key="lost_soul"
-        )
-
-        # Campo readonly per Carbone (dalla tab Pozioni)
-        label_frame_carbone = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_carbone.grid(row=5, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        # Icona Carbone
-        if 'carbone' in self.icons:
-            icon_label = tk.Label(
-                label_frame_carbone,
-                image=self.icons['carbone'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_carbone,
-            text="Carbone (1b):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_el_carbone = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_el_carbone.grid(row=5, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=5, column=2, sticky="w", padx=(8, 0))
-
-        # Campo readonly per Boccette (dalla tab Pozioni)
-        label_frame_boccette = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_boccette.grid(row=6, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        # Icona Boccetta
-        if 'boccetta' in self.icons:
-            icon_label = tk.Label(
-                label_frame_boccette,
-                image=self.icons['boccetta'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_boccette,
-            text="Boccette (per 1b):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_el_boccette = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_el_boccette.grid(row=6, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=6, column=2, sticky="w", padx=(8, 0))
-
-        panel_price.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === PREZZI LINGOTTI ===
-        panel_metals, metals_inner = self.make_panel(container, "Lingotti (b/lingotto)", "🪙")
-        
-        self.entry_price_tin = self.make_labeled_entry(
-            metals_inner, "Tin:", "", row=0
-        )
-        self.entry_price_cu = self.make_labeled_entry(
-            metals_inner, "Rame:", "", row=1, icon_key="rame"
-        )
-        self.entry_price_fe = self.make_labeled_entry(
-            metals_inner, "Ferro:", "", row=2, icon_key="ferro"
-        )
-        self.entry_price_au = self.make_labeled_entry(
-            metals_inner, "Oro:", "", row=3, icon_key="oro"
-        )
-        self.entry_price_dia = self.make_labeled_entry(
-            metals_inner, "Diamante:", "", row=4
-        )
-        
-        panel_metals.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === VENDITA ===
-        panel_sale, sale_inner = self.make_panel(container, "Vendita", "📈")
-        
-        self.entry_el_prezzo = self.make_labeled_entry(
-            sale_inner, "Prezzo vendita (b):", "", row=0
-        )
-        
-        panel_sale.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === BOTTONE ===
-        btn_container = tk.Frame(container, bg=BG_MAIN)
-        btn_container.pack(pady=12)
-        
-        calc_btn = self.make_action_button(
-            btn_container, "CALCOLA ELISIR", self.do_calcola_elisir, "success", "🧮"
-        )
-        calc_btn.config(font=("Segoe UI", 12, "bold"), padx=24, pady=10)
-        calc_btn.pack()
-        
-        # === RISULTATI ===
-        self.make_result_area(container, "label_el_preview", "text_el_result")
-
-        # Bind per aggiornare brim
-        try:
-            self._aggiorna_brim_elisir()
-            self.entry_brim.bind("<KeyRelease>", lambda e: self._aggiorna_brim_elisir())
-            self.entry_brim.bind("<FocusOut>", lambda e: self._aggiorna_brim_elisir())
-        except AttributeError:
-            pass
-
-        # Inizializza valori prezzi
-        try:
-            self._aggiorna_prezzi_elisir()
-        except AttributeError:
-            pass
-
-    def _build_tab_rune(self):
-        """Tab Rune"""
-        container = tk.Frame(self.tab_rune, bg=BG_MAIN)
-        container.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        # Info header
-        info_frame = tk.Frame(container, bg=BG_CARD, padx=15, pady=10)
-        info_frame.pack(fill="x", pady=(0, 10))
-        tk.Label(
-            info_frame,
-            text="🔮 Calcolo Rune - Altare delle Rune",
-            font=SECTION_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        ).pack(anchor="w")
-        
-        # === TIPO RUNE ===
-        panel_tipo, tipo_inner = self.make_panel(container, "Tipo di rune", "⚔️")
-        
-        tk.Label(
-            tipo_inner,
-            text="Tipo rune:",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=0, column=0, sticky="e", padx=(0, 8), pady=4)
-        
-        self.combo_rune_tipo = ttk.Combobox(
-            tipo_inner,
-            values=["Maghi", "Bardi"],
-            width=ENTRY_WIDTH,
-            state="readonly",
-            font=LABEL_FONT,
-        )
-        self.combo_rune_tipo.current(0)
-        self.combo_rune_tipo.grid(row=0, column=1, pady=4, sticky="w")
-        self._block_combobox_scroll(self.combo_rune_tipo)
-        
-        panel_tipo.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === PEPITE ===
-        panel_pepite, pepite_inner = self.make_panel(container, "Pepite disponibili", "🪙")
-        
-        metals = ["Tin", "Rame", "Ferro", "Oro", "Argento"]
-        # Mapping metalli -> chiave icona
-        metal_icons = {
-            "Rame": "pepita_rame",
-            "Ferro": "pepita_ferro",
-            "Oro": "pepita_oro"
-        }
-        self.entry_rune_pepite = {}
-
-        for r, met in enumerate(metals):
-            icon_key = metal_icons.get(met)  # None se non c'è icona
-            entry = self.make_labeled_entry(
-                pepite_inner, f"{met} (pepite):", "0", row=r, icon_key=icon_key
-            )
-            self.entry_rune_pepite[met] = entry
-        
-        panel_pepite.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === BOTTONE ===
-        btn_container = tk.Frame(container, bg=BG_MAIN)
-        btn_container.pack(pady=12)
-        
-        calc_btn = self.make_action_button(
-            btn_container, "CALCOLA RUNE", self.do_calcola_rune, "success", "🧮"
-        )
-        calc_btn.config(font=("Segoe UI", 12, "bold"), padx=24, pady=10)
-        calc_btn.pack()
-        
-        # === RISULTATI ===
-        self.make_result_area(container, "label_rune_preview", "text_rune_result")
-
-    def _build_tab_velocita(self):
-        """Tab Velocità"""
-        container = tk.Frame(self.tab_velocita, bg=BG_MAIN)
-        container.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        # Info header
-        info_frame = tk.Frame(container, bg=BG_CARD, padx=15, pady=10)
-        info_frame.pack(fill="x", pady=(0, 10))
-        tk.Label(
-            info_frame,
-            text="⚡ Pozioni di Velocità",
-            font=SECTION_FONT,
-            bg=BG_CARD,
-            fg=GOLD,
-        ).pack(anchor="w")
-        tk.Label(
-            info_frame,
-            text="Velocità I: Terracotta | Velocità II: Ferro (upgrade da Vel I)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).pack(anchor="w", pady=(4, 0))
-        
-        # === PRODUZIONE ===
-        panel_prod, prod_inner = self.make_panel(container, "Produzione", "🏭")
-        
-        self.entry_vel_num = self.make_labeled_entry(
-            prod_inner, "Numero pozioni:", "", row=0
-        )
-        
-        tk.Label(
-            prod_inner,
-            text="Tipo pozione:",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=1, column=0, sticky="e", padx=(0, 8), pady=4)
-        
-        self.combo_vel_tipo = ttk.Combobox(
-            prod_inner,
-            values=["Velocità I", "Velocità II"],
-            width=14,
-            state="readonly",
-            font=LABEL_FONT,
-        )
-        self.combo_vel_tipo.current(0)
-        self.combo_vel_tipo.grid(row=1, column=1, pady=4, sticky="w")
-        self._block_combobox_scroll(self.combo_vel_tipo)
-        
-        panel_prod.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === PREZZI ===
-        panel_price, price_inner = self.make_panel(container, "Prezzi ingredienti (b)", "💰")
-        
-        self.entry_vel_lapis = self.make_labeled_entry(
-            price_inner, "Lapis (1x):", "1.0", row=0, icon_key="lapis"
-        )
-        self.entry_vel_zucchero = self.make_labeled_entry(
-            price_inner, "Zucchero (1x):", "1.0", row=1, icon_key="zucchero"
-        )
-        self.entry_vel_blaze = self.make_labeled_entry(
-            price_inner, "Blaze (1x):", "1.0", row=2, icon_key="blaze"
-        )
-
-        # Campo readonly per Core fragment (dalla tab Pozioni)
-        tk.Label(
-            price_inner,
-            text="Core fragment (1x):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=3, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        self.label_vel_core = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_vel_core.grid(row=3, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=3, column=2, sticky="w", padx=(8, 0))
-
-        # Campo readonly per Carbone (dalla tab Pozioni)
-        label_frame_carbone = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_carbone.grid(row=4, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        if 'carbone' in self.icons:
-            icon_label = tk.Label(
-                label_frame_carbone,
-                image=self.icons['carbone'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_carbone,
-            text="Carbone (1b):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_vel_carbone = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_vel_carbone.grid(row=4, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=4, column=2, sticky="w", padx=(8, 0))
-
-        # Campo readonly per Boccette (dalla tab Pozioni)
-        label_frame_boccette = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_boccette.grid(row=5, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        if 'boccetta' in self.icons:
-            icon_label = tk.Label(
-                label_frame_boccette,
-                image=self.icons['boccetta'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_boccette,
-            text="Boccette (per 1b):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_vel_boccette = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_vel_boccette.grid(row=5, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=5, column=2, sticky="w", padx=(8, 0))
-
-        panel_price.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === VENDITA ===
-        panel_sale, sale_inner = self.make_panel(container, "Vendita", "📈")
-        
-        self.entry_vel_prezzo = self.make_labeled_entry(
-            sale_inner, "Prezzo vendita (b):", "", row=0
-        )
-        
-        panel_sale.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === BOTTONE ===
-        btn_container = tk.Frame(container, bg=BG_MAIN)
-        btn_container.pack(pady=12)
-        
-        calc_btn = self.make_action_button(
-            btn_container, "CALCOLA VELOCITÀ", self.do_calcola_velocita, "success", "🧮"
-        )
-        calc_btn.config(font=("Segoe UI", 12, "bold"), padx=24, pady=10)
-        calc_btn.pack()
-        
-        # === RISULTATI ===
-        self.make_result_area(container, "label_vel_preview", "text_vel_result")
-
-        # Inizializza valori prezzi
-        try:
-            self._aggiorna_prezzi_velocita()
-        except AttributeError:
-            pass
-
-    def _build_tab_riduzione(self):
-        """Tab Riduzione"""
-        container = tk.Frame(self.tab_riduzione, bg=BG_MAIN)
-        container.pack(fill="both", expand=True, padx=10, pady=10)
-
-        # Info header
-        info_frame = tk.Frame(container, bg=BG_CARD, padx=15, pady=10)
-        info_frame.pack(fill="x", pady=(0, 10))
-        tk.Label(
-            info_frame,
-            text="🔻 Pozioni di Riduzione",
-            font=SECTION_FONT,
-            bg=BG_CARD,
-            fg=GOLD,
-        ).pack(anchor="w")
-        tk.Label(
-            info_frame,
-            text="Riduzione I: Rame | Riduzione II: Oro (upgrade da Rid I)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).pack(anchor="w", pady=(4, 0))
-
-        # === PRODUZIONE ===
-        panel_prod, prod_inner = self.make_panel(container, "Produzione", "🏭")
-
-        self.entry_rid_num = self.make_labeled_entry(
-            prod_inner, "Numero pozioni:", "", row=0
-        )
-
-        tk.Label(
-            prod_inner,
-            text="Tipo pozione:",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=1, column=0, sticky="e", padx=(0, 8), pady=4)
-
-        self.combo_rid_tipo = ttk.Combobox(
-            prod_inner,
-            values=["Riduzione I", "Riduzione II"],
-            width=14,
-            state="readonly",
-            font=LABEL_FONT,
-        )
-        self.combo_rid_tipo.current(0)
-        self.combo_rid_tipo.grid(row=1, column=1, pady=4, sticky="w")
-        self._block_combobox_scroll(self.combo_rid_tipo)
-
-        panel_prod.pack(padx=0, pady=(0, 8), fill="x")
-
-        # === PREZZI ===
-        panel_price, price_inner = self.make_panel(container, "Prezzi ingredienti (b)", "💰")
-
-        self.entry_rid_fungo = self.make_labeled_entry(
-            price_inner, "Fungo marrone (1x):", "1.0", row=0
-        )
-
-        # Campo readonly per Slimeball (dalla tab Elisir)
-        label_frame_slime = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_slime.grid(row=1, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        # Icona Slimeball
-        if 'slimeball' in self.icons:
-            icon_label = tk.Label(
-                label_frame_slime,
-                image=self.icons['slimeball'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_slime,
-            text="Slimeball (1x):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_rid_slime = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_rid_slime.grid(row=1, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Elisir)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=1, column=2, sticky="w", padx=(8, 0))
-
-        # Campo readonly per Core fragment (dalla tab Pozioni)
-        tk.Label(
-            price_inner,
-            text="Core fragment (1x):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=2, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        self.label_rid_core = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_rid_core.grid(row=2, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=2, column=2, sticky="w", padx=(8, 0))
-
-        # Campo readonly per Carbone (dalla tab Pozioni)
-        label_frame_carbone = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_carbone.grid(row=3, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        # Icona Carbone
-        if 'carbone' in self.icons:
-            icon_label = tk.Label(
-                label_frame_carbone,
-                image=self.icons['carbone'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_carbone,
-            text="Carbone (1b):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_rid_carbone = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_rid_carbone.grid(row=3, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=3, column=2, sticky="w", padx=(8, 0))
-
-        # Campo readonly per Boccette (dalla tab Pozioni)
-        label_frame_boccette = tk.Frame(price_inner, bg=BG_CARD)
-        label_frame_boccette.grid(row=4, column=0, sticky="e", padx=(0, 8), pady=3)
-
-        # Icona Boccetta
-        if 'boccetta' in self.icons:
-            icon_label = tk.Label(
-                label_frame_boccette,
-                image=self.icons['boccetta'],
-                bg=BG_CARD
-            )
-            icon_label.pack(side="left", padx=(0, 4))
-
-        tk.Label(
-            label_frame_boccette,
-            text="Boccette (per 1b):",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).pack(side="left")
-
-        self.label_rid_boccette = tk.Label(
-            price_inner,
-            text="-",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        )
-        self.label_rid_boccette.grid(row=4, column=1, sticky="w", padx=4, pady=3)
-
-        tk.Label(
-            price_inner,
-            text="(dalla tab Pozioni)",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).grid(row=4, column=2, sticky="w", padx=(8, 0))
-
-        panel_price.pack(padx=0, pady=(0, 8), fill="x")
-
-        # === VENDITA ===
-        panel_sale, sale_inner = self.make_panel(container, "Vendita", "📈")
-
-        self.entry_rid_prezzo = self.make_labeled_entry(
-            sale_inner, "Prezzo vendita (b):", "", row=0
-        )
-
-        panel_sale.pack(padx=0, pady=(0, 8), fill="x")
-
-        # === BOTTONE ===
-        btn_container = tk.Frame(container, bg=BG_MAIN)
-        btn_container.pack(pady=12)
-
-        calc_btn = self.make_action_button(
-            btn_container, "CALCOLA RIDUZIONE", self.do_calcola_riduzione, "success", "🧮"
-        )
-        calc_btn.config(font=("Segoe UI", 12, "bold"), padx=24, pady=10)
-        calc_btn.pack()
-
-        # === RISULTATI ===
-        self.make_result_area(container, "label_rid_preview", "text_rid_result")
-
-        # Inizializza valori prezzi
-        try:
-            self._aggiorna_prezzi_riduzione()
-        except AttributeError:
-            pass
-
-# CODICE_TAB_MULTI.txt
-# Questo è il codice da inserire dopo _build_tab_velocita()
-
-    def _build_tab_multi(self):
-        """Tab Calcolatrice Multi-Prodotto"""
-        container = tk.Frame(self.tab_multi, bg=BG_MAIN)
-        container.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        # Info header
-        info_frame = tk.Frame(container, bg=BG_CARD, padx=15, pady=10)
-        info_frame.pack(fill="x", pady=(0, 10))
-        tk.Label(
-            info_frame,
-            text="🧮 Calcolatrice Multi-Prodotto",
-            font=SECTION_FONT,
-            bg=BG_CARD,
-            fg=ACCENT_LIGHT,
-        ).pack(anchor="w")
-        tk.Label(
-            info_frame,
-            text="Calcola materiali aggregati per produzioni multiple",
-            font=SMALL_FONT,
-            bg=BG_CARD,
-            fg=FG_SUBTLE,
-        ).pack(anchor="w", pady=(4, 0))
-        
-        # === AGGIUNGI PRODOTTO ===
-        panel_add, add_inner = self.make_panel(container, "Aggiungi Prodotto", "➕")
-        
-        tk.Label(
-            add_inner,
-            text="Tipo prodotto:",
-            font=LABEL_FONT,
-            bg=BG_CARD,
-            fg=FG_TEXT,
-        ).grid(row=0, column=0, sticky="e", padx=(0, 8), pady=4)
-        
-        tipi_prodotti = get_tipi_prodotti_disponibili()
-        self.combo_multi_tipo = ttk.Combobox(
-            add_inner,
-            values=[nome for _, nome in tipi_prodotti],
-            width=30,
-            state="readonly",
-            font=LABEL_FONT,
-        )
-        self.combo_multi_tipo.current(0)
-        self.combo_multi_tipo.grid(row=0, column=1, pady=4, sticky="w", columnspan=2)
-        self._block_combobox_scroll(self.combo_multi_tipo)
-
-        self.entry_multi_qty = self.make_labeled_entry(
-            add_inner, "Quantità:", "10", row=1
-        )
-        
-        self.entry_multi_prezzo = self.make_labeled_entry(
-            add_inner, "Prezzo vendita (opz):", "", row=2
-        )
-        
-        btn_aggiungi = self.make_action_button(
-            add_inner, "Aggiungi alla lista", self.do_aggiungi_multi_prodotto, "primary", "➕"
-        )
-        btn_aggiungi.grid(row=3, column=0, columnspan=3, pady=8)
-        
-        panel_add.pack(padx=0, pady=(0, 8), fill="x")
-        
-        # === LISTA PRODUZIONE ===
-        panel_lista, lista_inner = self.make_panel(container, "Lista Produzione", "📦")
-        
-        # Frame scrollabile per lista
-        list_container = tk.Frame(lista_inner, bg=BG_CARD)
-        list_container.pack(fill="both", expand=True)
-        
-        scrollbar_list = ttk.Scrollbar(list_container, style="Vertical.TScrollbar")
-        scrollbar_list.pack(side="right", fill="y")
-        
-        self.multi_lista_text = tk.Text(
-            list_container,
-            height=8,
-            font=LABEL_FONT,
-            state="disabled",
-            wrap="word",
-            yscrollcommand=scrollbar_list.set,
-            bg=BG_RESULT,
-            fg=FG_TEXT,
-            relief="flat",
-            padx=10,
-            pady=8,
-        )
-        self.multi_lista_text.pack(fill="both", expand=True)
-        scrollbar_list.config(command=self.multi_lista_text.yview)
-
-        # Bottoni azioni
-        btn_frame = tk.Frame(lista_inner, bg=BG_CARD)
-        btn_frame.pack(pady=8)
-        
-        self.make_action_button(
-            btn_frame, "Svuota Tutto", self.do_svuota_multi_lista, "danger", "🗑️"
-        ).pack(side="left", padx=4)
-        
-        self.make_action_button(
-            btn_frame, "CALCOLA TOTALE", self.do_calcola_multi, "success", "🧮"
-        ).config(font=("Segoe UI", 11, "bold"), padx=20, pady=8)
-        self.make_action_button(
-            btn_frame, "CALCOLA TOTALE", self.do_calcola_multi, "success", "🧮"
-        ).pack(side="left", padx=4)
-        
-        panel_lista.pack(padx=0, pady=(0, 8), fill="both", expand=True)
-        
-        # === RISULTATI ===
-        self.make_result_area(container, "label_multi_preview", "text_multi_result")
-        
-        # Inizializza lista prodotti
-        self.multi_prodotti_lista = []
+        """Costruisce tutte le tab (ogni tab è definita nel proprio modulo tabs/)"""
+        from tabs import (
+            tab_pozioni, tab_antidoti, tab_revivify, tab_extinguish,
+            tab_danno, tab_elisir, tab_rune, tab_velocita, tab_riduzione, tab_multi,
+            tab_spesa,
+        )
+        tab_pozioni.build(self)
+        tab_antidoti.build(self)
+        tab_revivify.build(self)
+        tab_extinguish.build(self)
+        tab_danno.build(self)
+        tab_elisir.build(self)
+        tab_rune.build(self)
+        tab_velocita.build(self)
+        tab_riduzione.build(self)
+        tab_multi.build(self)
+        tab_spesa.build(self)
 
     def do_aggiungi_multi_prodotto(self):
         """Aggiungi prodotto alla lista"""
@@ -3090,6 +1398,47 @@ class ElysiumPozioniApp:
     #   CALCOLI
     # =========================
 
+    def _get_prezzo_carbone_norm(self) -> float:
+        """Normalizza il prezzo del combustibile scelto a equivalente Carbone (÷ carbonella × 12).
+        Questo permette ai calcoli di restare invariati (usano sempre 12 carbonella/blocco).
+        """
+        from ricette import COMBUSTIBILI, CARBONELLA_PER_BLOCCO
+        prezzo = float(self.entry_carbone.get())
+        tipo = self.combo_combustibile.get() if hasattr(self, "combo_combustibile") else "Carbone"
+        carbonella = COMBUSTIBILI.get(tipo, {}).get("carbonella", CARBONELLA_PER_BLOCCO)
+        return prezzo / carbonella * CARBONELLA_PER_BLOCCO
+
+    def _mostra_risultato(self, preview_label, text_widget, result):
+        """
+        Aggiorna box risultati con animazione fade.
+        Se guadagno < 0 prepone un avviso e colora il preview in rosso;
+        se guadagno >= 0 ripristina i colori normali.
+        """
+        guadagno     = result.get("guadagno")
+        output_lines = list(result["output_lines"])
+
+        in_perdita = guadagno is not None and guadagno < 0
+
+        if in_perdita:
+            output_lines = [
+                f"⚠️  VENDITA IN PERDITA  — perdi {abs(guadagno):.2f} b su questo lotto!",
+                "",
+                *output_lines,
+            ]
+
+        # Animazione fade standard
+        self.update_result_with_fade(
+            preview_label, text_widget,
+            result["preview_text"], output_lines)
+
+        # Stile colore preview (sovrascrive dopo il fade)
+        if in_perdita:
+            preview_label.config(
+                text=f"🔴 {result['preview_text']}",
+                bg=LOSS_BG, fg=LOSS_FG)
+        else:
+            preview_label.config(bg=BG_RESULT, fg=FG_TEXT)
+
     def do_calcola_pozioni(self):
         try:
             num_pozioni = float(self.entry_pozioni.get())
@@ -3098,7 +1447,7 @@ class ElysiumPozioniApp:
             
             prezzo_reagente = float(self.entry_reagente.get())
             prezzo_core = float(self.entry_core.get())
-            prezzo_carbone = float(self.entry_carbone.get())
+            prezzo_carbone = self._get_prezzo_carbone_norm()
             verdure_per_1b = float(self.entry_verdure_per_b.get())
             vasetti_per_1b = float(self.entry_vasetti_per_b.get())
             boccette_per_1b = float(self.entry_boccette_per_b.get())
@@ -3124,13 +1473,7 @@ class ElysiumPozioniApp:
                 profilo_attivo=profilo_attivo,
             )
 
-            # Aggiorna con animazione
-            self.update_result_with_fade(
-                self.label_preview,
-                self.text_result,
-                result['preview_text'],
-                result["output_lines"]
-            )
+            self._mostra_risultato(self.label_preview, self.text_result, result)
             
         except ValueError:
             messagebox.showerror("❌ Errore", "Controlla i campi: inserisci numeri validi!")
@@ -3142,7 +1485,7 @@ class ElysiumPozioniApp:
             num = float(self.entry_ant_num.get())
             tipo = self.combo_ant_calderone.get()
             
-            prezzo_carbone = float(self.entry_carbone.get())
+            prezzo_carbone = self._get_prezzo_carbone_norm()
             boccette_per_1b = float(self.entry_boccette_per_b.get())
             vasetti_per_1b = float(self.entry_vasetti_per_b.get())
             verdure_per_1b = float(self.entry_verdure_per_b.get())
@@ -3162,11 +1505,7 @@ class ElysiumPozioniApp:
                 prezzo_vendita=prezzo_vendita,
             )
             
-            self.label_ant_preview.config(text=f"💰 {result['preview_text']}")
-            self.text_ant_result.config(state="normal")
-            self.text_ant_result.delete("1.0", tk.END)
-            self._insert_text_with_icons(self.text_ant_result, result["output_lines"])
-            self.text_ant_result.config(state="disabled")
+            self._mostra_risultato(self.label_ant_preview, self.text_ant_result, result)
             
         except ValueError:
             messagebox.showerror("❌ Errore", "Controlla i campi degli antidoti: inserisci numeri validi.")
@@ -3175,7 +1514,7 @@ class ElysiumPozioniApp:
         try:
             num = float(self.entry_rev_num.get())
             prezzo_core = float(self.entry_core.get())
-            prezzo_carbone = float(self.entry_carbone.get())
+            prezzo_carbone = self._get_prezzo_carbone_norm()
             boccette_per_1b = float(self.entry_boccette_per_b.get())
             prezzo_revival = float(self.entry_revival.get())
             
@@ -3193,11 +1532,7 @@ class ElysiumPozioniApp:
                 prezzo_vendita=prezzo_vendita,
             )
             
-            self.label_rev_preview.config(text=f"💰 {result['preview_text']}")
-            self.text_rev_result.config(state="normal")
-            self.text_rev_result.delete("1.0", tk.END)
-            self._insert_text_with_icons(self.text_rev_result, result["output_lines"])
-            self.text_rev_result.config(state="disabled")
+            self._mostra_risultato(self.label_rev_preview, self.text_rev_result, result)
             
         except ValueError:
             messagebox.showerror("❌ Errore", "Controlla i campi Revivify: inserisci numeri validi.")
@@ -3206,7 +1541,7 @@ class ElysiumPozioniApp:
         try:
             num = float(self.entry_ext_num.get())
             prezzo_core = float(self.entry_core.get())
-            prezzo_carbone = float(self.entry_carbone.get())
+            prezzo_carbone = self._get_prezzo_carbone_norm()
             boccette_per_1b = float(self.entry_boccette_per_b.get())
             prezzo_quartz = float(self.entry_ext_quartz.get())
             
@@ -3224,11 +1559,7 @@ class ElysiumPozioniApp:
                 prezzo_vendita=prezzo_vendita,
             )
             
-            self.label_ext_preview.config(text=f"💰 {result['preview_text']}")
-            self.text_ext_result.config(state="normal")
-            self.text_ext_result.delete("1.0", tk.END)
-            self._insert_text_with_icons(self.text_ext_result, result["output_lines"])
-            self.text_ext_result.config(state="disabled")
+            self._mostra_risultato(self.label_ext_preview, self.text_ext_result, result)
             
         except ValueError:
             messagebox.showerror("❌ Errore", "Controlla i campi Extinguish: inserisci numeri validi.")
@@ -3243,7 +1574,7 @@ class ElysiumPozioniApp:
             prezzo_spidereye = float(self.entry_spidereye.get())
             prezzo_withering_dust = float(self.entry_withering_dust.get())
             prezzo_core = float(self.entry_core.get())
-            prezzo_carbone = float(self.entry_carbone.get())
+            prezzo_carbone = self._get_prezzo_carbone_norm()
             boccette_per_1b = float(self.entry_boccette_per_b.get())
             
             try:
@@ -3262,11 +1593,7 @@ class ElysiumPozioniApp:
                 prezzo_vendita=prezzo_vendita,
             )
             
-            self.label_danno_preview.config(text=f"💰 {result['preview_text']}")
-            self.text_danno_result.config(state="normal")
-            self.text_danno_result.delete("1.0", tk.END)
-            self._insert_text_with_icons(self.text_danno_result, result["output_lines"])
-            self.text_danno_result.config(state="disabled")
+            self._mostra_risultato(self.label_danno_preview, self.text_danno_result, result)
             
         except ValueError:
             messagebox.showerror("❌ Errore", "Controlla i campi Pozioni di Danno: inserisci numeri validi.")
@@ -3277,7 +1604,7 @@ class ElysiumPozioniApp:
             tipo = self.combo_el_tipo.get()
             
             prezzo_core = float(self.entry_core.get())
-            prezzo_carbone = float(self.entry_carbone.get())
+            prezzo_carbone = self._get_prezzo_carbone_norm()
             boccette_per_1b = float(self.entry_boccette_per_b.get())
             vasetti_per_1b = float(self.entry_vasetti_per_b.get())
             verdure_per_1b = float(self.entry_verdure_per_b.get())
@@ -3310,11 +1637,7 @@ class ElysiumPozioniApp:
                 price_dia=price_dia, prezzo_vendita=prezzo_vendita,
             )
             
-            self.label_el_preview.config(text=f"💰 {result['preview_text']}")
-            self.text_el_result.config(state="normal")
-            self.text_el_result.delete("1.0", tk.END)
-            self._insert_text_with_icons(self.text_el_result, result["output_lines"])
-            self.text_el_result.config(state="disabled")
+            self._mostra_risultato(self.label_el_preview, self.text_el_result, result)
             
         except ValueError:
             messagebox.showerror("❌ Errore", "Controlla i campi degli elisir: inserisci numeri validi.")
@@ -3351,7 +1674,7 @@ class ElysiumPozioniApp:
             prezzo_zucchero = float(self.entry_vel_zucchero.get())
             prezzo_blaze = float(self.entry_vel_blaze.get())
             prezzo_core = float(self.entry_core.get())
-            prezzo_carbone = float(self.entry_carbone.get())
+            prezzo_carbone = self._get_prezzo_carbone_norm()
             boccette_per_1b = float(self.entry_boccette_per_b.get())
             
             try:
@@ -3367,11 +1690,7 @@ class ElysiumPozioniApp:
                 prezzo_vendita=prezzo_vendita,
             )
             
-            self.label_vel_preview.config(text=f"💰 {result['preview_text']}")
-            self.text_vel_result.config(state="normal")
-            self.text_vel_result.delete("1.0", tk.END)
-            self._insert_text_with_icons(self.text_vel_result, result["output_lines"])
-            self.text_vel_result.config(state="disabled")
+            self._mostra_risultato(self.label_vel_preview, self.text_vel_result, result)
             
         except ValueError:
             messagebox.showerror("❌ Errore", "Controlla i campi Velocità: inserisci numeri validi.")
@@ -3384,7 +1703,7 @@ class ElysiumPozioniApp:
             prezzo_fungo = float(self.entry_rid_fungo.get())
             prezzo_slimeball = float(self.entry_slime.get())
             prezzo_core = float(self.entry_core.get())
-            prezzo_carbone = float(self.entry_carbone.get())
+            prezzo_carbone = self._get_prezzo_carbone_norm()
             boccette_per_1b = float(self.entry_boccette_per_b.get())
 
             try:
@@ -3400,14 +1719,198 @@ class ElysiumPozioniApp:
                 prezzo_vendita=prezzo_vendita,
             )
 
-            self.label_rid_preview.config(text=f"💰 {result['preview_text']}")
-            self.text_rid_result.config(state="normal")
-            self.text_rid_result.delete("1.0", tk.END)
-            self._insert_text_with_icons(self.text_rid_result, result["output_lines"])
-            self.text_rid_result.config(state="disabled")
+            self._mostra_risultato(self.label_rid_preview, self.text_rid_result, result)
 
         except ValueError:
             messagebox.showerror("❌ Errore", "Controlla i campi Riduzione: inserisci numeri validi.")
+
+    def do_genera_lista_spesa(self):
+        """Calcola la lista degli ingredienti grezzi per il mix di prodotti."""
+        import math
+        from tkinter import messagebox
+        try:
+            from calcolo_spesa import genera_lista_spesa, reagente_dettaglio
+            from ricette import get_calderone_pozioni, COMBUSTIBILI
+
+            def get_qty(entry):
+                try:
+                    v = float(entry.get())
+                    return max(v, 0.0)
+                except ValueError:
+                    return 0.0
+
+            def fmt_riga(nome, raw):
+                """Ceil all'intero, mostra avanzo solo se presente e significativo."""
+                ceil_val = math.ceil(raw)
+                excess   = ceil_val - raw
+                base = f"  • {nome:<24} {ceil_val}"
+                if excess > 0.001:
+                    return base + f"   (avanzo: {excess:.2f})"
+                return base
+
+            tipo_comb      = (self.combo_combustibile.get()
+                              if hasattr(self, "combo_combustibile") else "Carbone")
+            cbn_per_blocco = COMBUSTIBILI.get(tipo_comb, {}).get("carbonella", 12)
+
+            selezioni  = []
+            hc_details = {}   # "Reagente TX" → dettaglio HC aggregato
+
+            # --- Pozione di cura ---
+            qty = get_qty(self.entry_spesa_poz_qty)
+            if qty > 0:
+                cal  = self.combo_spesa_poz_cal.get()
+                tier = self.combo_spesa_poz_tier.get()   # tier reagente scelto dall'utente
+                selezioni.append({
+                    "tipo": "poz_cura", "qty": qty,
+                    "label": f"Pozione di cura  [{cal}]",
+                    "params": {"tier": tier, "calderone": cal},
+                })
+                # Calcola dettaglio HC per questa selezione
+                det = reagente_dettaglio(qty, tier, cal)
+                key = f"Reagente {tier}"
+                if key not in hc_details:
+                    hc_details[key] = {"n_rea": 0, "hc_prod": 0, "hc_need": 0}
+                hc_details[key]["n_rea"]   += det["n_reagenti"]
+                hc_details[key]["hc_prod"] += det["hc_produced"]
+                hc_details[key]["hc_need"] += det["hc_needed"]
+
+            # --- Antidoto ---
+            qty = get_qty(self.entry_spesa_ant_qty)
+            if qty > 0:
+                tipo = self.combo_spesa_ant_tipo.get()
+                selezioni.append({
+                    "tipo": "antidoto", "qty": qty,
+                    "label": f"Antidoto  [{tipo}]",
+                    "params": {"tipo": tipo},
+                })
+
+            # --- Revivify ---
+            qty = get_qty(self.entry_spesa_rev_qty)
+            if qty > 0:
+                selezioni.append({"tipo": "revivify", "qty": qty, "label": "Revivify"})
+
+            # --- Extinguish ---
+            qty = get_qty(self.entry_spesa_ext_qty)
+            if qty > 0:
+                selezioni.append({"tipo": "extinguish", "qty": qty, "label": "Extinguish"})
+
+            # --- Elisir ---
+            qty = get_qty(self.entry_spesa_elisir_qty)
+            if qty > 0:
+                tipo = self.combo_spesa_elisir_tipo.get()
+                selezioni.append({
+                    "tipo": "elisir", "qty": qty,
+                    "label": f"Elisir  [{tipo}]",
+                    "params": {"tipo": tipo},
+                })
+
+            # --- Velocità ---
+            qty = get_qty(self.entry_spesa_vel_qty)
+            if qty > 0:
+                tipo = self.combo_spesa_vel_tipo.get()
+                selezioni.append({
+                    "tipo": "velocita", "qty": qty,
+                    "label": f"Velocità  [{tipo}]",
+                    "params": {"tipo": tipo},
+                })
+
+            # --- Danno ---
+            qty = get_qty(self.entry_spesa_danno_qty)
+            if qty > 0:
+                tipo = self.combo_spesa_danno_tipo.get()
+                selezioni.append({
+                    "tipo": "danno", "qty": qty,
+                    "label": f"Danno  [{tipo}]",
+                    "params": {"tipo": tipo},
+                })
+
+            # --- Riduzione ---
+            qty = get_qty(self.entry_spesa_rid_qty)
+            if qty > 0:
+                tipo = self.combo_spesa_rid_tipo.get()
+                selezioni.append({
+                    "tipo": "riduzione", "qty": qty,
+                    "label": f"Riduzione  [{tipo}]",
+                    "params": {"tipo": tipo},
+                })
+
+            if not selezioni:
+                messagebox.showwarning("⚠️ Lista vuota",
+                    "Inserisci almeno un prodotto con quantità > 0.")
+                return
+
+            totale, blocchi_raw = genera_lista_spesa(selezioni, tipo_combustibile=tipo_comb)
+
+            # --- Carbonella e blocchi (nessun avanzo mostrato) ---
+            carbonella_tot = totale.get("Carbonella", 0.0)
+            blocchi_ceil   = math.ceil(blocchi_raw)
+
+            # --- Gruppi ingredienti ---
+            GENERICI    = {"Boccette", "Verdure", "Vasetti", "Core fragment"}
+            REAGENTE_PFX = "Reagente "
+            generici    = {k: v for k, v in totale.items() if k in GENERICI}
+            speciali    = {k: v for k, v in totale.items()
+                           if k not in GENERICI
+                           and k != "Carbonella"
+                           and not k.startswith(REAGENTE_PFX)}
+
+            # --- Mix prodotti ---
+            mix_lines = [f" • {s['qty']:.0f}x  {s['label']}" for s in selezioni]
+
+            lines = [
+                "Prodotti richiesti:",
+                *mix_lines,
+                "",
+                "─" * 40,
+                "🔥  COMBUSTIBILE",
+                f"  • {'Carbonella':<24} {int(carbonella_tot)}",
+                f"  → {tipo_comb}: {blocchi_ceil} blocchi",
+                "",
+                "📦  INGREDIENTI GENERICI",
+            ]
+
+            # Reagenti con dettaglio HC
+            for key, det in hc_details.items():
+                hc_avanzo = det["hc_prod"] - det["hc_need"]
+                riga = f"  • {key:<24} {det['n_rea']}"
+                if hc_avanzo > 0:
+                    riga += (f"   ({det['hc_prod']} HC prodotti,"
+                             f" {det['hc_need']} usati, avanzo: {hc_avanzo} HC)")
+                lines.append(riga)
+
+            for k in ["Boccette", "Verdure", "Vasetti", "Core fragment"]:
+                if k in generici:
+                    lines.append(fmt_riga(k, generici[k]))
+
+            if speciali:
+                lines += ["", "🧪  INGREDIENTI SPECIFICI"]
+                for k in sorted(speciali):
+                    lines.append(fmt_riga(k, speciali[k]))
+
+            preview = (f"Carbonella: {int(carbonella_tot)}  •  "
+                       f"{tipo_comb}: {blocchi_ceil} blocchi  •  "
+                       f"Boccette: {math.ceil(totale.get('Boccette', 0))}")
+
+            self.update_result_with_fade(
+                self.label_spesa_preview, self.text_spesa_result,
+                preview, lines)
+
+        except Exception as e:
+            from tkinter import messagebox
+            messagebox.showerror("❌ Errore", f"Errore nella lista spesa:\n{e}")
+
+    def _reset_lista_spesa(self):
+        """Azzera tutte le quantità nella lista spesa."""
+        for attr in (
+            "entry_spesa_poz_qty", "entry_spesa_ant_qty",
+            "entry_spesa_rev_qty", "entry_spesa_ext_qty",
+            "entry_spesa_elisir_qty", "entry_spesa_vel_qty",
+            "entry_spesa_danno_qty", "entry_spesa_rid_qty",
+        ):
+            if hasattr(self, attr):
+                e = getattr(self, attr)
+                e.delete(0, "end")
+                e.insert(0, "0")
 
     # =========================
     #   GESTIONE PROFILI
@@ -3434,7 +1937,14 @@ class ElysiumPozioniApp:
         
         self.entry_carbone.delete(0, tk.END)
         self.entry_carbone.insert(0, p.get("prezzo_carbone", "1.5"))
-        
+
+        if hasattr(self, "combo_combustibile"):
+            self.combo_combustibile.set(p.get("tipo_combustibile", "Carbone"))
+            from ricette import COMBUSTIBILI
+            carbonella = COMBUSTIBILI.get(self.combo_combustibile.get(), {}).get("carbonella", 12)
+            if hasattr(self, "_label_carbone_hint"):
+                self._label_carbone_hint.config(text=f"= {carbonella} carbonella")
+
         self.entry_verdure_per_b.delete(0, tk.END)
         self.entry_verdure_per_b.insert(0, p.get("verdure_per_1b", "3"))
         
@@ -3458,6 +1968,7 @@ class ElysiumPozioniApp:
             "prezzo_reagente": self.entry_reagente.get(),
             "prezzo_core": self.entry_core.get(),
             "prezzo_carbone": self.entry_carbone.get(),
+            "tipo_combustibile": self.combo_combustibile.get() if hasattr(self, "combo_combustibile") else "Carbone",
             "verdure_per_1b": self.entry_verdure_per_b.get(),
             "vasetti_per_1b": self.entry_vasetti_per_b.get(),
             "boccette_per_1b": self.entry_boccette_per_b.get()
@@ -3598,6 +2109,7 @@ class ElysiumPozioniApp:
             "prezzo_reagente": self.entry_reagente.get(),
             "prezzo_core": self.entry_core.get(),
             "prezzo_carbone": self.entry_carbone.get(),
+            "tipo_combustibile": self.combo_combustibile.get() if hasattr(self, "combo_combustibile") else "Carbone",
             "verdure_per_1b": self.entry_verdure_per_b.get(),
             "vasetti_per_1b": self.entry_vasetti_per_b.get(),
             "boccette_per_1b": self.entry_boccette_per_b.get(),
@@ -3691,6 +2203,12 @@ class ElysiumPozioniApp:
         load_entry("prezzo_reagente", "entry_reagente")
         load_entry("prezzo_core", "entry_core")
         load_entry("prezzo_carbone", "entry_carbone")
+        if "tipo_combustibile" in data and hasattr(self, "combo_combustibile"):
+            self.combo_combustibile.set(data["tipo_combustibile"])
+            from ricette import COMBUSTIBILI
+            carbonella = COMBUSTIBILI.get(data["tipo_combustibile"], {}).get("carbonella", 12)
+            if hasattr(self, "_label_carbone_hint"):
+                self._label_carbone_hint.config(text=f"= {carbonella} carbonella")
         load_entry("verdure_per_1b", "entry_verdure_per_b")
         load_entry("vasetti_per_1b", "entry_vasetti_per_b")
         load_entry("boccette_per_1b", "entry_boccette_per_b")

@@ -1,0 +1,256 @@
+{
+  "_commento": "Fonte unica di verita per le ricette di Elysium. Aggiorna qui se le ricette cambiano nel gioco.",
+
+  "globali": {
+    "carbonella_per_blocco": 12,
+    "pepite_per_lingotto": 9,
+    "resina": {
+      "verdure_per_batch": 2,
+      "vasetti_per_batch": 1,
+      "output_per_batch": 2
+    }
+  },
+
+  "combustibili": {
+    "Carbone":    {"carbonella": 12},
+    "Anthracite": {"carbonella": 24},
+    "Firestone":  {"carbonella": 36}
+  },
+
+  "pozioni_cura": {
+    "catalyst_per_reagente": {
+      "T1": 1,
+      "T2": 2,
+      "T3": 3
+    },
+    "boccette_per_pozione": 1,
+    "core_per_reagente": 1,
+    "resine_per_reagente": 1,
+    "calderoni": {
+      "Terracotta": {
+        "pozioni_per_catalyst": 2.0,
+        "pozioni_per_carbonella": 2.0,
+        "tier_prodotto": "T1"
+      },
+      "Rame": {
+        "pozioni_per_catalyst": 3.0,
+        "pozioni_per_carbonella": 3.0,
+        "tier_prodotto": "T1"
+      },
+      "Ferro": {
+        "pozioni_per_catalyst": 1.0,
+        "pozioni_per_carbonella": 0.5,
+        "tier_prodotto": "T2"
+      },
+      "Oro": {
+        "pozioni_per_catalyst": 1.5,
+        "pozioni_per_carbonella": 1.5,
+        "tier_prodotto": "T2"
+      },
+      "Diamante": {
+        "pozioni_per_catalyst": 0.6667,
+        "pozioni_per_carbonella": 0.6667,
+        "tier_prodotto": "T3"
+      },
+      "Smeraldo": {
+        "pozioni_per_catalyst": 1.0,
+        "pozioni_per_carbonella": 0.6667,
+        "tier_prodotto": "T3"
+      }
+    }
+  },
+
+  "antidoti": {
+    "Terracotta": {
+      "calderone": "Terracotta",
+      "per_antidoto": {
+        "brim": 1,
+        "carne_marcia": 1,
+        "carbonella": 1,
+        "boccette": 1
+      },
+      "antidoti_per_batch": 1
+    },
+    "Ferro": {
+      "calderone": "Ferro",
+      "per_batch": {
+        "resina": 1,
+        "revival_star": 1,
+        "carbonella": 2,
+        "boccette": 2
+      },
+      "antidoti_per_batch": 2
+    }
+  },
+
+  "revivify": {
+    "calderone": "Rame",
+    "per_revivify": {
+      "revival_star": 1,
+      "core": 1,
+      "carbonella": 1,
+      "boccette": 1
+    }
+  },
+
+  "extinguish": {
+    "calderone": "Rame",
+    "per_extinguish": {
+      "quarzo": 1,
+      "core": 1,
+      "carbonella": 1,
+      "boccette": 1
+    }
+  },
+
+  "elisir": {
+    "Minor mending": {
+      "calderone": "Terracotta",
+      "metallo_pepita": "Tin",
+      "ingrediente_extra": "Brim powder",
+      "carbonella_per_elisir": 1,
+      "per_elisir": {
+        "resina": 1,
+        "core": 1,
+        "pepite": 1,
+        "extra": 1,
+        "boccette": 1
+      }
+    },
+    "Inferior mending": {
+      "calderone": "Rame",
+      "metallo_pepita": "Rame",
+      "ingrediente_extra": "Occhio di ragno",
+      "carbonella_per_elisir": 1,
+      "per_elisir": {
+        "resina": 1,
+        "core": 1,
+        "pepite": 1,
+        "extra": 1,
+        "boccette": 1
+      }
+    },
+    "Lesser mending": {
+      "calderone": "Ferro",
+      "metallo_pepita": "Ferro",
+      "ingrediente_extra": "Membrana di Phantom",
+      "carbonella_per_elisir": 2,
+      "per_elisir": {
+        "resina": 1,
+        "core": 1,
+        "pepite": 1,
+        "extra": 1,
+        "boccette": 1
+      }
+    },
+    "Medium mending": {
+      "calderone": "Oro",
+      "metallo_pepita": "Oro",
+      "ingrediente_extra": "Slimeball",
+      "carbonella_per_elisir": 2,
+      "per_elisir": {
+        "resina": 1,
+        "core": 1,
+        "pepite": 1,
+        "extra": 1,
+        "boccette": 1
+      }
+    },
+    "Greater mending": {
+      "calderone": "Diamante",
+      "metallo_pepita": "Diamante",
+      "ingrediente_extra": "Lost soul",
+      "carbonella_per_elisir": 3,
+      "per_elisir": {
+        "resina": 1,
+        "core": 1,
+        "pepite": 1,
+        "extra": 1,
+        "boccette": 1
+      }
+    }
+  },
+
+  "rune": {
+    "resa_per_pepita": {
+      "Maghi": {
+        "Tin": 0,
+        "Rame": 11,
+        "Ferro": 23,
+        "Oro": 35,
+        "Argento": 47
+      },
+      "Bardi": {
+        "Tin": 23,
+        "Rame": 23,
+        "Ferro": 23,
+        "Oro": 35,
+        "Argento": 47
+      }
+    },
+    "ordine_metalli": ["Tin", "Rame", "Ferro", "Oro", "Argento"]
+  },
+
+  "velocita": {
+    "Velocita I": {
+      "calderone": "Terracotta",
+      "per_pozione": {
+        "lapis": 1,
+        "zucchero": 1,
+        "carbonella": 1,
+        "boccette": 1
+      }
+    },
+    "Velocita II": {
+      "calderone": "Ferro",
+      "dipende_da": "Velocita I",
+      "step_aggiuntivo_per_pozione": {
+        "blaze": 1,
+        "core": 1,
+        "carbonella": 2
+      }
+    }
+  },
+
+  "danno": {
+    "Danno I": {
+      "calderone": "Rame",
+      "per_pozione": {
+        "occhio_ragno": 1,
+        "core": 1,
+        "carbonella": 1,
+        "boccette": 1
+      }
+    },
+    "Danno II": {
+      "calderone": "Oro",
+      "dipende_da": "Danno I",
+      "step_aggiuntivo_per_pozione": {
+        "withering_dust": 1,
+        "core": 1,
+        "carbonella": 2
+      }
+    }
+  },
+
+  "riduzione": {
+    "Riduzione I": {
+      "calderone": "Rame",
+      "per_pozione": {
+        "fungo_marrone": 1,
+        "core": 1,
+        "carbonella": 1,
+        "boccette": 1
+      }
+    },
+    "Riduzione II": {
+      "calderone": "Oro",
+      "dipende_da": "Riduzione I",
+      "step_aggiuntivo_per_pozione": {
+        "slimeball": 1,
+        "core": 1,
+        "carbonella": 2
+      }
+    }
+  }
+}
