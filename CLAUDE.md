@@ -52,14 +52,14 @@ Avvio:
 python main.py
 ```
 
-Build dell'EXE (usare **solo** `ElysiumPozioni.spec`):
+Build dell'EXE:
 
 ```bash
 pyinstaller ElysiumPozioni.spec
 ```
 
-`Elysium Pozioni.spec` e' un residuo con `datas=[]`: produce un eseguibile che
-non trova `icon/` ne' `recipes.json`. Non usarlo.
+Lo `.spec` impacchetta `icon/` e `recipes.json` via `datas`: una nuova risorsa
+a runtime va aggiunta li', altrimenti l'EXE non la trova.
 
 ## Trappole note
 
@@ -106,7 +106,8 @@ per chiave, quindi rimuovere un campo non rompe le configurazioni esistenti.
 ## Dipendenze
 
 Tkinter (stdlib) e **Pillow**, usata in `gui_main.py` per le icone dei
-materiali. Nota: `Requirements.txt` elenca solo `tk` e omette Pillow.
+materiali. Entrambe in `Requirements.txt`; PyInstaller serve solo per il build
+ed e' elencato come commento.
 
 ## Versionamento
 

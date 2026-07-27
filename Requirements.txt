@@ -5,3 +5,9 @@
 #   brew install python-tk        (macOS)
 
 tk
+
+# Icone dei materiali nella GUI (gui_main.py: from PIL import Image, ImageTk)
+pillow>=10.0
+
+# Solo per generare l'eseguibile: pyinstaller ElysiumPozioni.spec
+# pyinstaller>=6.0
