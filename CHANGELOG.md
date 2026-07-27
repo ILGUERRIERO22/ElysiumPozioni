@@ -5,7 +5,7 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
 
 ---
 
-## [Non rilasciato] — 2026-07-27
+## [v4.1] — 2026-07-28
 ### ⚗️ Tier del reagente nel Multi-Prodotto
 - La tab **Multi-Prodotto** ora lascia scegliere il **tier del reagente**
   (T1/T2/T3) per le pozioni di cura, come già fa la tab Pozioni. Il selettore
