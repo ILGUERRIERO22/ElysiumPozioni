@@ -15,7 +15,7 @@ from config_app import (
     SECONDARY, SECONDARY_HOVER,
     SUCCESS, SUCCESS_HOVER,
     DANGER_BG, DANGER_BG_HOVER, DANGER_BG_ACTIVE,
-    GOLD, GOLD_HOVER,
+    GOLD, GOLD_HOVER, MAGIC, MAGIC_LIGHT,
     BORDER_SUBTLE, BORDER_ACCENT, INPUT_ERROR, LOSS_BG, LOSS_FG,
     TAB_SELECTED, TAB_HOVER,
     TITLE_FONT, SECTION_FONT, LABEL_FONT, BUTTON_FONT, RESULT_FONT,
@@ -255,10 +255,12 @@ class ElysiumPozioniApp:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title(f"⚗️ {APP_NAME} v{APP_VERSION}")
-        self.root.geometry("850x720")
+        # 980 di larghezza: sotto i ~950 la riga di pulsanti dei profili
+        # (Carica/Salva/Rinomina/Elimina) viene tagliata dal bordo.
+        self.root.geometry("980x760")
         self.root.configure(bg=BG_MAIN)
         self.root.resizable(True, True)
-        self.root.minsize(800, 600)
+        self.root.minsize(950, 620)
 
         # Profili in memoria
         self.profiles = load_all_profiles()
@@ -376,17 +378,18 @@ class ElysiumPozioniApp:
                        borderwidth=0,
                        padding=0,
                        relief="flat")
+        # Padding orizzontale contenuto: 11 tab con etichetta devono stare in riga
         style.configure("TNotebook.Tab",
                        background=BG_PANEL,
                        foreground=FG_SUBTLE,
-                       padding=[20, 12],  # Padding più generoso
-                       font=('Segoe UI', 10, 'bold'),
+                       padding=[11, 9],
+                       font=('Segoe UI', 9, 'bold'),
                        borderwidth=0,
                        relief="flat")
         style.map("TNotebook.Tab",
                  background=[("selected", ACCENT), ("active", TAB_HOVER)],
                  foreground=[("selected", FG_BRIGHT), ("active", FG_TEXT)],
-                 expand=[("selected", [1, 1, 1, 0])],  # Espansione per effetto rialzato
+                 expand=[("selected", [1, 1, 1, 0])],
                  borderwidth=[("selected", 0)])
 
         # Combobox - Bordi più definiti e colori migliorati
@@ -467,6 +470,15 @@ class ElysiumPozioniApp:
             bg=BG_MAIN
         )
         author_label.pack(side="right", pady=(12, 0))
+
+        # Riga a segmenti sotto l'header, coi colori delle pozioni:
+        # richiama il banner e separa l'intestazione dal contenuto.
+        strip = tk.Frame(self.root, bg=BG_MAIN, height=3)
+        strip.pack(fill="x", padx=20, pady=(6, 0))
+        strip.pack_propagate(False)
+        for col in (DANGER_BG, ACCENT, GOLD, "#60a5fa", MAGIC):
+            seg = tk.Frame(strip, bg=col, height=3)
+            seg.pack(side="left", fill="both", expand=True)
 
     def _build_main_layout(self):
         """Costruisce il layout principale con canvas scrollabile"""
@@ -551,18 +563,19 @@ class ElysiumPozioniApp:
         self.tab_multi = tk.Frame(self.notebook, bg=BG_MAIN)
         self.tab_spesa  = tk.Frame(self.notebook, bg=BG_MAIN)
 
-        # Aggiungi tabs con solo icone
-        self.notebook.add(self.tab_pozioni, text="🧪")
-        self.notebook.add(self.tab_antidoti, text="💊")
-        self.notebook.add(self.tab_revivify, text="✨")
-        self.notebook.add(self.tab_extinguish, text="🔥")
-        self.notebook.add(self.tab_danno, text="⚔️")
-        self.notebook.add(self.tab_rune, text="🔮")
-        self.notebook.add(self.tab_elisir, text="💎")
-        self.notebook.add(self.tab_velocita, text="⚡")
-        self.notebook.add(self.tab_riduzione, text="🔻")
-        self.notebook.add(self.tab_multi, text="🧮")
-        self.notebook.add(self.tab_spesa,  text="🛒")
+        # Tabs con etichetta testuale: le emoji da sole, rese in monocromia
+        # da Tk su Windows, non permettono di distinguere una tab dall'altra.
+        self.notebook.add(self.tab_pozioni,    text="Cura")
+        self.notebook.add(self.tab_antidoti,   text="Antidoti")
+        self.notebook.add(self.tab_revivify,   text="Revivify")
+        self.notebook.add(self.tab_extinguish, text="Extinguish")
+        self.notebook.add(self.tab_danno,      text="Danno")
+        self.notebook.add(self.tab_rune,       text="Rune")
+        self.notebook.add(self.tab_elisir,     text="Elisir")
+        self.notebook.add(self.tab_velocita,   text="Velocità")
+        self.notebook.add(self.tab_riduzione,  text="Riduzione")
+        self.notebook.add(self.tab_multi,      text="Multi")
+        self.notebook.add(self.tab_spesa,      text="Spesa")
 
         self.notebook.pack(fill="both", expand=True, padx=5, pady=5)
 
@@ -901,9 +914,11 @@ class ElysiumPozioniApp:
             "gold": (GOLD, GOLD_HOVER),
         }
         bg, hover = colors.get(style, colors["primary"])
-        
+
         btn_text = f"{icon} {text}" if icon else text
-        
+
+        # Bordo netto in tinta scura: richiama i pulsanti squadrati del gioco
+        # senza rinunciare alla leggibilita'.
         btn = tk.Button(
             parent,
             text=btn_text,
@@ -918,12 +933,14 @@ class ElysiumPozioniApp:
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             borderwidth=0,
+            highlightthickness=1,
+            highlightbackground=BORDER_SUBTLE,
+            highlightcolor=BORDER_SUBTLE,
         )
-        
-        # Hover effects
+
         btn.bind("<Enter>", lambda e: btn.config(bg=hover))
         btn.bind("<Leave>", lambda e: btn.config(bg=bg))
-        
+
         return btn
 
     def make_result_area(self, parent, preview_var_name, text_var_name):

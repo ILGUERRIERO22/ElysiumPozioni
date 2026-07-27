@@ -135,6 +135,21 @@ app = ElysiumPozioniApp(root)
 app.do_calcola_pozioni()
 ```
 
+## Aspetto
+
+Palette e font stanno **solo** in `config_app.py`: nessun colore va scritto a
+mano nei moduli GUI. Tema "alchimia": fondali di pietra scura, `ACCENT` verde
+pozione per le azioni primarie, `MAGIC` viola per gli elementi magici, `GOLD`
+per i valori monetari.
+
+Le tab del notebook usano **etichette testuali**, non emoji: Tk su Windows le
+rende in monocromia e diventano indistinguibili. Per lo stesso motivo il
+padding orizzontale delle tab e' contenuto (11 px) — undici etichette devono
+stare su una riga sola.
+
+La finestra parte a 980x760 con minimo 950x620: sotto i ~950 px la riga di
+pulsanti dei profili viene tagliata dal bordo.
+
 ## Dati utente
 
 `config.json` e `profiles.json` stanno in `%APPDATA%\ElysiumPozioni`, non nel

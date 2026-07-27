@@ -34,51 +34,54 @@ except Exception as e:
 CONFIG_FILE   = "config.json"
 PROFILES_FILE = "profiles.json"
 
-# === Tema / colori - Palette Moderna Migliorata ===
+# === Tema / colori - Palette "alchimia" ispirata a Minecraft ===
+# Fondali di pietra scura, accento verde pozione, viola per gli elementi magici.
 
-# Backgrounds - Gradiente più ricco e profondo
-BG_MAIN   = "#0f0f1a"      # Blu scuro quasi nero per maggiore profondità
-BG_PANEL  = "#1a1a2e"      # Blu scuro per pannelli
-BG_CARD   = "#16213e"      # Blu medio per card
-BG_RESULT = "#0a0a15"      # Nero bluastro per risultati
-BG_INPUT  = "#1f2937"      # Grigio bluastro per input
+# Backgrounds - grigi di pietra con una punta di blu
+BG_MAIN   = "#12131a"      # pietra scura, sfondo finestra
+BG_PANEL  = "#191b24"      # pannelli
+BG_CARD   = "#1e212c"      # card sopra i pannelli
+BG_RESULT = "#0c0d12"      # box risultati, il piu' scuro
+BG_INPUT  = "#252936"      # campi di input, staccati dalle card
 
-# Foreground - Testi più leggibili
-FG_TEXT   = "#e8eaf6"      # Bianco leggermente bluastro
-FG_SUBTLE = "#9ca3af"      # Grigio chiaro per testo secondario
-FG_BRIGHT = "#ffffff"      # Bianco puro per evidenziare
+# Foreground - testi
+FG_TEXT   = "#e6e8f0"      # testo normale
+FG_SUBTLE = "#8d93a6"      # etichette secondarie e suggerimenti
+FG_BRIGHT = "#ffffff"      # testo sui pulsanti
 
-# Accent Colors - Viola/Blu più vivaci e moderni
-ACCENT    = "#7c3aed"      # Viola intenso
-ACCENT_HOVER = "#9d5cff"   # Viola chiaro hover
-ACCENT_LIGHT = "#a78bfa"   # Viola pastello
-ACCENT_GLOW  = "#8b5cf6"   # Viola luminoso per effetti glow
+# Accent - verde smeraldo, il colore delle pozioni
+ACCENT       = "#2ea86a"   # accento primario
+ACCENT_HOVER = "#3dc47f"   # hover
+ACCENT_LIGHT = "#6ee7a8"   # titoli e valori evidenziati
+ACCENT_GLOW  = "#25925c"   # verde profondo, per il lampeggio dei risultati
 
-# Secondary Colors
-SECONDARY = "#374151"      # Grigio scuro moderno
-SECONDARY_HOVER = "#4b5563" # Grigio hover
+# Secondary - grigi di pietra per le azioni neutre
+SECONDARY = "#39404f"
+SECONDARY_HOVER = "#4a5263"
 
-# Status Colors - Più vivaci e distintivi
-SUCCESS = "#10b981"        # Verde smeraldo moderno
-SUCCESS_HOVER = "#34d399"  # Verde chiaro hover
-DANGER_BG = "#ef4444"      # Rosso moderno
-DANGER_BG_HOVER = "#f87171" # Rosso chiaro hover
-DANGER_BG_ACTIVE = "#dc2626" # Rosso scuro active
+# Status
+SUCCESS = "#2ea86a"        # come l'accento: l'azione principale e' "calcola"
+SUCCESS_HOVER = "#3dc47f"
+DANGER_BG = "#c0392b"      # rosso mattone, meno acceso del precedente
+DANGER_BG_HOVER = "#d94f3d"
+DANGER_BG_ACTIVE = "#a32e22"
 
-# Special Colors
-GOLD = "#fbbf24"           # Oro moderno
-GOLD_HOVER = "#fcd34d"     # Oro chiaro
+# Special
+GOLD = "#e0a63c"           # oro, per i valori monetari
+GOLD_HOVER = "#f0bd5c"
+MAGIC = "#8b5cf6"          # viola incantesimo, per gli elementi magici
+MAGIC_LIGHT = "#a78bfa"
 
-# Borders - Più sottili e definiti
-BORDER_SUBTLE = "#2d3748"  # Grigio bluastro sottile
-BORDER_ACCENT = "#7c3aed"  # Viola come accent
-INPUT_ERROR = "#8B2222"   # rosso scuro per campo numerico non valido
-LOSS_BG     = "#2d0808"   # sfondo preview vendita in perdita
-LOSS_FG     = "#ff6b6b"   # testo preview vendita in perdita
+# Borders
+BORDER_SUBTLE = "#2b303d"  # bordo delle card
+BORDER_ACCENT = "#2ea86a"
+INPUT_ERROR = "#a33a2f"    # bordo campo numerico non valido
+LOSS_BG     = "#2a0f0d"    # sfondo preview vendita in perdita
+LOSS_FG     = "#ff8a7a"    # testo preview vendita in perdita
 
-# Tab Colors
-TAB_SELECTED = "#7c3aed"   # Viola per tab selezionata
-TAB_HOVER = "#374151"      # Grigio scuro hover
+# Tab
+TAB_SELECTED = "#2ea86a"   # tab attiva
+TAB_HOVER = "#39404f"
 
 # Fonts - Leggermente più grandi e spaziati
 TITLE_FONT   = ("Segoe UI", 16, "bold")    # Più grande per titoli
@@ -89,9 +92,9 @@ RESULT_FONT  = ("Consolas", 10)            # Leggermente più piccolo per risult
 SMALL_FONT   = ("Segoe UI", 9)
 PREVIEW_FONT = ("Segoe UI", 11)            # Più grande per preview
 
-# Spacing - Più generoso per respiro visivo
-BUTTON_PADX = 24     # Più padding orizzontale
-BUTTON_PADY = 10     # Più padding verticale
-PANEL_PADX  = 24     # Più spazio nei pannelli
-PANEL_PADY  = 18     # Più spazio verticale
-ENTRY_WIDTH = 14     # Input leggermente più larghi
+# Spacing
+BUTTON_PADX = 16     # contenuto: piu' pulsanti devono stare sulla stessa riga
+BUTTON_PADY = 8
+PANEL_PADX  = 24
+PANEL_PADY  = 18
+ENTRY_WIDTH = 14
