@@ -5,6 +5,123 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
 
 ---
 
+## [Non rilasciato] — 2026-07-27
+### 🐞 Correzioni
+- **Tab Multi-Prodotto: il prezzo del reagente veniva ignorato.** Il valore
+  inserito nella tab Pozioni non arrivava al calcolo, che ripiegava sempre sul
+  default `1.5 b`. Tutte le stime sulle pozioni di cura erano falsate.
+- **Tab Multi-Prodotto: combustibili alternativi sovrastimati.** Il prezzo del
+  blocco veniva passato grezzo invece che normalizzato, mentre il modulo divide
+  sempre per la carbonella del Carbone: con Anthracite il costo risultava
+  doppio, con Firestone triplo.
+- **Tab Multi-Prodotto bloccata all'avvio.** Un solo campo prezzo vuoto in una
+  qualsiasi tab faceva fallire l'intero calcolo con
+  `could not convert string to float: ''`. Il caso si presentava sempre, perché
+  i cinque prezzi dei lingotti nascono vuoti, e bloccava anche prodotti che con
+  i lingotti non c'entrano nulla. Ora un campo vuoto vale `0`; i tre campi
+  "per 1 b", essendo divisori, usano il valore di ricetta.
+
+### 🧹 Pulizia
+- Rimosso il campo **"Sconto cliente (%)"**: veniva salvato e ricaricato, ma
+  nessun calcolo lo leggeva — lo sconto inserito non aveva alcun effetto.
+- Rimosso l'output di debug stampato a ogni calcolo Multi-Prodotto.
+- Il divisore `12.0` scritto a mano ora è `CARBONELLA_PER_BLOCCO` da
+  `recipes.json`.
+
+### 🧱 Repository
+- **Il file di ignore non era mai stato attivo**: si chiamava `.gitignore.txt`,
+  nome che Git non legge. Rinominato in `.gitignore`; le regole già presenti
+  (`__pycache__/`, `build/`, `dist/`) sono finalmente in vigore.
+- Rimossi dal versionamento 41 artefatti di build e `profiles.json`, che è un
+  file di dati utente e vive in `%APPDATA%\ElysiumPozioni`.
+
+---
+
+## [v4.0] — 2026-03-21
+### 🗂️ Ricette centralizzate
+- Introdotto **`recipes.json`** come fonte unica di verità per tutte le ricette,
+  esposto ai moduli tramite `ricette.py`. I valori non sono più sparsi nel
+  codice: per adeguarsi a un cambio di bilanciamento del gioco basta modificare
+  il JSON.
+
+### 🧩 GUI modulare
+- La costruzione dell'interfaccia è stata estratta da `gui_main.py` nel
+  pacchetto **`tabs/`**, un modulo per tab.
+
+### 🔥 Multi-combustibile
+- Aggiunta la scelta del combustibile: **Carbone** (12 carbonella per blocco),
+  **Anthracite** (24) e **Firestone** (36), con conversione automatica.
+
+### 🛒 Lista della spesa
+- Nuova tab che, dato un mix di prodotti, calcola gli **ingredienti grezzi**
+  totali da acquistare, con arrotondamento all'intero, avanzi e blocchi di
+  combustibile necessari.
+
+### ⚠️ Alert perdita
+- Se il prezzo di vendita impostato è sotto il costo di produzione, il risultato
+  viene evidenziato in rosso con l'importo perso sul lotto.
+
+---
+
+## [v3.2.1] — 2025-12-09 → 2025-12-31
+### ✨ Interfaccia
+- Grafica rinnovata con tema scuro moderno (palette viola/blu).
+- Sistema di **animazioni** per cambio tab e aggiornamento dei risultati.
+- Tab compattate a sole icone, con **tooltip** al passaggio del mouse.
+- Icone dei materiali in stile Minecraft mostrate accanto ai campi e nei
+  risultati.
+
+### 🔻 Nuovi prodotti
+- Aggiunte le **Pozioni di Riduzione** (Riduzione I e II).
+
+### 🐞 Correzioni
+- Risolto il crash e il comportamento errato dello scroll su combobox e aree di
+  testo.
+
+### 🧱 Interno
+- Aggiunti **type hints** ai moduli di calcolo.
+
+---
+
+## [v3.0] — 2025-12-08 → 2025-12-09
+### ⚔️ Pozioni di Danno
+- Aggiunta la tab **Danno**, con Danno I e Danno II (Avvizzimento).
+
+### 🧮 Calcolatrice Multi-Prodotto
+- Nuova tab che aggrega **più prodotti in un unico calcolo**: materiali totali,
+  costi e profitto complessivo.
+- Estesa progressivamente a elisir e rune; per le rune il sistema confronta i
+  metalli e **evidenzia l'opzione più economica**.
+
+---
+
+## [v2.5] — 2025-11-25
+### 🧱 Refactoring architetturale
+- Il monolite `Pozioni.py` è stato smontato in **moduli di sola logica**
+  (`calcolo_*.py`), senza alcuna dipendenza da Tkinter, separati dalla GUI
+  (`gui_main.py`) e dalla configurazione (`config_app.py`).
+- Progetto rinominato in **ElysiumPozioni**.
+
+---
+
+## [v2.0] — 2025-11-09
+### ⚗️ Nuovi prodotti
+- Aggiunte le tab **Antidoti**, **Revivify**, **Extinguish**, **Elisir di cura**,
+  **Rune** e **Pozioni di Velocità**.
+- I prezzi condivisi (core, carbone, boccette, resina) vengono propagati
+  automaticamente tra le tab.
+
+---
+
+## [v1.4.1] — 2025-11-01
+### 🐞 Correzioni
+- Risolto un problema all'avvio dell'applicazione.
+- I file `config.json` e `profiles.json` vengono ora salvati in
+  `%APPDATA%\ElysiumPozioni` invece che nella cartella del programma, con
+  migrazione automatica di quelli già esistenti.
+
+---
+
 ## [v1.4] — 2025-10-26
 ### 💰 Analisi profitto
 - Aggiunto campo "Prezzo di vendita per pozione (b)".
@@ -217,13 +334,6 @@ Questa versione è pensata per la qualità della vita degli alchimisti che gesti
   - stima materiali e prezzi
 - Interfaccia grafica base con tema scuro.
 - Output dettagliato con breakdown costi e materiali.
-
----
-
-## 🔮 In arrivo
-- Salvataggio automatico degli ultimi valori inseriti.
-- Cakderine in rame, terracotta e diamante
-
 
 ---
 
