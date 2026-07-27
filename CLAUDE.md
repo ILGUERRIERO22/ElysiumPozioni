@@ -79,13 +79,17 @@ import sys; sys.path.insert(0, r"C:\Users\dbait\Documents\ElysiumPozioni")
 con `PYTHONIOENCODING=utf-8`, altrimenti muore con `UnicodeEncodeError`.
 
 **`calcolo_multi_prodotto.py` legge le ricette da `ricette.py`**, tramite
-quattro funzioni e le tabelle di dispatch in cima al modulo: pozioni di cura
+cinque funzioni e le tabelle di dispatch in cima al modulo: pozioni di cura
 (`_materiali_pozione_cura`), prodotti a step singolo (`RICETTE_SEMPLICI`),
 prodotti a due step dove il livello II consuma un'unita' del livello I
-(`RICETTE_DUE_STEP`) ed elisir (`ELISIR_PER_TIPO`). Un nuovo prodotto si
-aggiunge inserendolo nella tabella giusta, senza scrivere quantita' a mano.
-Fanno ancora eccezione le **rune**, che hanno le rese per pepita duplicate nei
-rami `rune_maghi` / `rune_bardi` invece di leggere `RESA_PEPITA_NET`.
+(`RICETTE_DUE_STEP`), elisir (`ELISIR_PER_TIPO`) e rune (`RUNE_PER_TIPO`). Un
+nuovo prodotto si aggiunge inserendolo nella tabella giusta, senza scrivere
+quantita' a mano.
+
+Le **rune** non sono una ricetta ma una scelta: `_materiali_rune` valuta ogni
+metallo e marca con `[BEST]` l'opzione piu' economica, che e' l'unica a entrare
+nei costi (le altre restano visibili come alternative). I metalli a resa 0 — il
+Tin per i Maghi — sono esclusi, altrimenti si dividerebbe per zero.
 
 Le etichette dei materiali vengono dai nomi in `recipes.json`: aggiungendo un
 ingrediente vanno estese `INGREDIENTI` o `ETICHETTA_EXTRA_PREZZO`, che mappano

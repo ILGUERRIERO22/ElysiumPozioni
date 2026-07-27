@@ -12,6 +12,8 @@ from ricette import (
     DANNO,
     RIDUZIONE,
     VELOCITA,
+    RESA_PEPITA_NET,
+    METALLI_ORDINE,
     get_calderone_pozioni,
     get_catalyst_per_reagente,
     get_ricetta_elisir,
@@ -316,6 +318,74 @@ def _materiali_elisir(nome, qty, prezzi, costo_carb, costo_bocc, costo_resina):
     return materiali, costi
 
 
+RUNE_PER_TIPO = {
+    'rune_maghi': 'Maghi',
+    'rune_bardi': 'Bardi',
+}
+
+# Metallo delle rune -> chiave prezzo del lingotto.
+# L'argento non ha un campo prezzo dedicato: la GUI gli passa quello del diamante.
+METALLO_RUNE_PREZZO = {
+    'Tin': 'tin', 'Rame': 'copper', 'Ferro': 'iron',
+    'Oro': 'gold', 'Argento': 'silver',
+}
+
+
+def _materiali_rune(tipo_rune, qty, prezzi):
+    """Rune: confronta i metalli e segnala l'opzione piu' economica.
+
+    Non e' una ricetta a quantita' fisse: per ogni metallo si valuta quante
+    pepite servono per qty rune, arrotondate per difetto e per eccesso, e si
+    marca con [BEST] la combinazione che costa meno. Solo quella entra nei
+    costi, le altre restano visibili come alternative.
+
+    Le rese vengono da recipes.json; i metalli a resa 0 (il Tin per i Maghi)
+    non sono utilizzabili e vengono esclusi.
+    """
+    resa_per_metallo = RESA_PEPITA_NET[tipo_rune]
+
+    opzioni = []
+    for metallo in METALLI_ORDINE:
+        resa = resa_per_metallo.get(metallo, 0)
+        if not resa:
+            continue
+
+        pepite_necessarie = qty / resa
+        pepite_int_basso = int(pepite_necessarie)
+        pepite_int_alto = pepite_int_basso + 1
+
+        prezzo_pepita = prezzi.get(METALLO_RUNE_PREZZO[metallo], 0.0) / PEPITE_PER_LINGOTTO
+
+        if abs(pepite_necessarie - pepite_int_basso) > 0.001:
+            for n_pepite in (pepite_int_basso, pepite_int_alto):
+                opzioni.append({
+                    'pepite': n_pepite,
+                    'rune': n_pepite * resa,
+                    'costo': n_pepite * prezzo_pepita,
+                    'label': f'{metallo}: {n_pepite} pep',
+                })
+        else:
+            opzioni.append({
+                'pepite': pepite_necessarie,
+                'rune': qty,
+                'costo': pepite_necessarie * prezzo_pepita,
+                'label': f'{metallo}',
+            })
+
+    materiali, costi = {}, {}
+    if opzioni:
+        migliore = min(opzioni, key=lambda x: x['costo'])
+        for opz in opzioni:
+            etichetta = f"{opz['label']} -> {opz['rune']:.0f} rune"
+            if opz is migliore:
+                # Solo la migliore entra nei costi, per non gonfiare il totale
+                etichetta = f"[BEST] {etichetta}"
+                costi[etichetta] = opz['costo']
+            materiali[etichetta] = opz['pepite']
+
+    return materiali, costi
+
+
 # Ingrediente extra dell'elisir -> chiave prezzo
 ETICHETTA_EXTRA_PREZZO = {
     'Brim powder':          'brim',
@@ -358,132 +428,10 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc,
                                  costo_bocc, costo_resina)
 
     # === RUNE ===
-    # Rese: rune per pepita
-    # Maghi: Tin=0, Rame=11, Ferro=23, Oro=35, Argento=47
-    # Bardi: Tin=23, Rame=23, Ferro=23, Oro=35, Argento=47
-
-    elif tipo == 'rune_maghi':
-        rese_maghi = [
-            ('Rame', 'copper', 11),
-            ('Ferro', 'iron', 23),
-            ('Oro', 'gold', 35),
-            ('Argento', 'silver', 47)
-        ]
-
-        # Calcola tutte le opzioni e trova la più economica
-        opzioni = []
-        for nome_metallo, key_prezzo, resa in rese_maghi:
-            pepite_necessarie = qty / resa
-            pepite_int_basso = int(pepite_necessarie)
-            pepite_int_alto = pepite_int_basso + 1
-            rune_ottenute_basso = pepite_int_basso * resa
-            rune_ottenute_alto = pepite_int_alto * resa
-
-            prezzo_pepita = prezzi.get(key_prezzo, 0.0) / 9.0
-            costo_basso = pepite_int_basso * prezzo_pepita
-            costo_alto = pepite_int_alto * prezzo_pepita
-
-            # Aggiungi entrambe le opzioni (basso e alto)
-            if abs(pepite_necessarie - pepite_int_basso) > 0.001:
-                opzioni.append({
-                    'metallo': nome_metallo,
-                    'pepite': pepite_int_basso,
-                    'rune': rune_ottenute_basso,
-                    'costo': costo_basso,
-                    'label': f'{nome_metallo}: {pepite_int_basso} pep'
-                })
-                opzioni.append({
-                    'metallo': nome_metallo,
-                    'pepite': pepite_int_alto,
-                    'rune': rune_ottenute_alto,
-                    'costo': costo_alto,
-                    'label': f'{nome_metallo}: {pepite_int_alto} pep'
-                })
-            else:
-                opzioni.append({
-                    'metallo': nome_metallo,
-                    'pepite': pepite_necessarie,
-                    'rune': qty,
-                    'costo': pepite_necessarie * prezzo_pepita,
-                    'label': f'{nome_metallo}'
-                })
-
-        # Trova l'opzione più economica
-        if opzioni:
-            opzione_migliore = min(opzioni, key=lambda x: x['costo'])
-
-            # Mostra TUTTE le opzioni nei materiali, ma solo la migliore nei costi (per il totale)
-            for opz in opzioni:
-                if opz == opzione_migliore:
-                    # Evidenzia la migliore - questa va nei costi per il totale
-                    materiali[f"[BEST] {opz['label']} -> {opz['rune']:.0f} rune"] = opz['pepite']
-                    costi[f"[BEST] {opz['label']} -> {opz['rune']:.0f} rune"] = opz['costo']
-                else:
-                    # Mostra le altre solo nei materiali, NON nei costi
-                    materiali[f"{opz['label']} -> {opz['rune']:.0f} rune"] = opz['pepite']
-                    # NON aggiungo ai costi per non sommare nel totale
-
-    elif tipo == 'rune_bardi':
-        rese_bardi = [
-            ('Tin', 'tin', 23),
-            ('Rame', 'copper', 23),
-            ('Ferro', 'iron', 23),
-            ('Oro', 'gold', 35),
-            ('Argento', 'silver', 47)
-        ]
-
-        # Calcola tutte le opzioni e trova la più economica
-        opzioni = []
-        for nome_metallo, key_prezzo, resa in rese_bardi:
-            pepite_necessarie = qty / resa
-            pepite_int_basso = int(pepite_necessarie)
-            pepite_int_alto = pepite_int_basso + 1
-            rune_ottenute_basso = pepite_int_basso * resa
-            rune_ottenute_alto = pepite_int_alto * resa
-
-            prezzo_pepita = prezzi.get(key_prezzo, 0.0) / 9.0
-            costo_basso = pepite_int_basso * prezzo_pepita
-            costo_alto = pepite_int_alto * prezzo_pepita
-
-            # Aggiungi entrambe le opzioni (basso e alto)
-            if abs(pepite_necessarie - pepite_int_basso) > 0.001:
-                opzioni.append({
-                    'metallo': nome_metallo,
-                    'pepite': pepite_int_basso,
-                    'rune': rune_ottenute_basso,
-                    'costo': costo_basso,
-                    'label': f'{nome_metallo}: {pepite_int_basso} pep'
-                })
-                opzioni.append({
-                    'metallo': nome_metallo,
-                    'pepite': pepite_int_alto,
-                    'rune': rune_ottenute_alto,
-                    'costo': costo_alto,
-                    'label': f'{nome_metallo}: {pepite_int_alto} pep'
-                })
-            else:
-                opzioni.append({
-                    'metallo': nome_metallo,
-                    'pepite': pepite_necessarie,
-                    'rune': qty,
-                    'costo': pepite_necessarie * prezzo_pepita,
-                    'label': f'{nome_metallo}'
-                })
-
-        # Trova l'opzione più economica
-        if opzioni:
-            opzione_migliore = min(opzioni, key=lambda x: x['costo'])
-
-            # Mostra TUTTE le opzioni nei materiali, ma solo la migliore nei costi (per il totale)
-            for opz in opzioni:
-                if opz == opzione_migliore:
-                    # Evidenzia la migliore - questa va nei costi per il totale
-                    materiali[f"[BEST] {opz['label']} -> {opz['rune']:.0f} rune"] = opz['pepite']
-                    costi[f"[BEST] {opz['label']} -> {opz['rune']:.0f} rune"] = opz['costo']
-                else:
-                    # Mostra le altre solo nei materiali, NON nei costi
-                    materiali[f"{opz['label']} -> {opz['rune']:.0f} rune"] = opz['pepite']
-                    # NON aggiungo ai costi per non sommare nel totale
+    # Non e' una ricetta ma una scelta: per ogni metallo si valuta quante pepite
+    # servono e si evidenzia l'opzione piu' economica. Rese da recipes.json.
+    if tipo in RUNE_PER_TIPO:
+        return _materiali_rune(RUNE_PER_TIPO[tipo], qty, prezzi)
 
     return materiali, costi
 
