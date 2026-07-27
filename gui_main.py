@@ -1101,7 +1101,9 @@ class ElysiumPozioniApp:
             # Prepara prezzi base
             prezzi_base = {
                 'core': float(self.entry_core.get()),
-                'carbone': float(self.entry_carbone.get()),
+                'reagente': float(self.entry_reagente.get()),
+                # Normalizzato a equivalente Carbone: i calcoli usano sempre 12 carbonella/blocco
+                'carbone': self._get_prezzo_carbone_norm(),
                 'boccette_per_1b': float(self.entry_boccette_per_b.get()),
                 'spidereye': float(self.entry_spidereye.get()),
                 'withering_dust': float(self.entry_withering_dust.get()),

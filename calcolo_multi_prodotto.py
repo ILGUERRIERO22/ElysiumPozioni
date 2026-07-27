@@ -1,6 +1,9 @@
 # calcolo_multi_prodotto.py
 # Modulo per calcolare materiali aggregati per produzioni multiple
 
+from ricette import CARBONELLA_PER_BLOCCO
+
+
 def calcola_multi_prodotto(prodotti_lista, prezzi_base):
     """
     Calcola materiali aggregati e costi per produzioni multiple.
@@ -24,7 +27,8 @@ def calcola_multi_prodotto(prodotti_lista, prezzi_base):
         prezzi_base: Dict con tutti i prezzi necessari:
             {
                 'core': 1.0,
-                'carbone': 1.5,
+                'reagente': 1.5,
+                'carbone': 1.5,   # normalizzato a equivalente Carbone (12 carbonella/blocco)
                 'boccette_per_1b': 14,
                 'spidereye': 1.5,
                 'withering_dust': 2.0,
@@ -57,7 +61,8 @@ def calcola_multi_prodotto(prodotti_lista, prezzi_base):
     ricavo_totale = 0.0
     
     # Calcola costi base comuni
-    costo_carbonella = prezzi_base.get('carbone', 1.5) / 12.0
+    # 'carbone' arriva gia normalizzato a equivalente Carbone (vedi _get_prezzo_carbone_norm)
+    costo_carbonella = prezzi_base.get('carbone', 1.5) / CARBONELLA_PER_BLOCCO
     costo_boccetta = 1.0 / prezzi_base.get('boccette_per_1b', 14)
     costo_resina = calcola_resina(
         prezzi_base.get('verdure_per_1b', 3),
