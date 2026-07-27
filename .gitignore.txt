@@ -40,6 +40,11 @@ dist/
 *.egg-info/
 *.spec
 
+# --- Dati utente (generati a runtime in %APPDATA%\ElysiumPozioni) ---
+# Ricreati automaticamente all'avvio: non vanno versionati.
+config.json
+profiles.json
+
 # --- Backup file ---
 *.old
 *.orig
