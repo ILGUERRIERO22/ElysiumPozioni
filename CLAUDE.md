@@ -1,0 +1,116 @@
+# Elysium Pozioni
+
+Calcolatore desktop (Python + Tkinter) di costi, materiali e margini per le
+pozioni del server Minecraft *Elysium*. GUI a tab, tema scuro, profili di
+mercato multipli. Distribuito come EXE Windows via PyInstaller.
+
+Interfaccia, commenti e messaggi di commit sono **in italiano**.
+
+## Architettura
+
+```
+main.py                 avvio, chiama run_app()
+gui_main.py             classe ElysiumPozioniApp: stato, handler, persistenza
+  tabs/tab_*.py         costruzione UI di ogni tab: build(app)
+  calcolo_*.py          logica pura di calcolo, nessun Tkinter
+  ricette.py            loader di recipes.json
+  recipes.json          ricette del gioco (fonte unica di verita)
+  config_app.py         tema, font, palette, percorsi dati
+  animations.py         effetti fade/slide
+```
+
+Tre regole che reggono l'impianto — romperle e' il modo piu' rapido di fare
+danni:
+
+1. **`recipes.json` e' la fonte unica di verita' delle ricette.** Se cambia un
+   bilanciamento del gioco si modifica il JSON, mai i valori nel codice.
+2. **I moduli `calcolo_*.py` non importano Tkinter.** Ricevono numeri,
+   restituiscono un dict con `preview_text` (riga di riepilogo),
+   `output_lines` (dettaglio) e i valori numerici. Nessun widget, nessun
+   messagebox: sono eseguibili e testabili senza display. Fanno eccezione i
+   due aggregatori, `calcolo_multi_prodotto.py` e `calcolo_spesa.py`, che
+   restituiscono dati grezzi formattati poi da `gui_main.py`.
+3. **La UI di una tab si costruisce nel suo modulo `tabs/`**, tramite
+   `build(app)` che riceve l'istanza dell'app e vi aggancia i widget come
+   attributi (`app.entry_core`, ...). `gui_main.py` contiene gli handler
+   `do_calcola_*`, non il layout.
+
+### Aggiungere un nuovo prodotto
+
+1. Ricetta in `recipes.json` + accessore in `ricette.py`.
+2. `calcolo_<nome>.py` con la logica pura.
+3. `tabs/tab_<nome>.py` con `build(app)`.
+4. In `gui_main.py`: frame + `notebook.add()` in `_build_main_layout`, voce in
+   `_setup_tab_tooltips`, `build` in `_build_tabs`, handler `do_calcola_*`,
+   campi in `save_config`/`load_config`.
+
+## Comandi
+
+Avvio:
+
+```bash
+python main.py
+```
+
+Build dell'EXE (usare **solo** `ElysiumPozioni.spec`):
+
+```bash
+pyinstaller ElysiumPozioni.spec
+```
+
+`Elysium Pozioni.spec` e' un residuo con `datas=[]`: produce un eseguibile che
+non trova `icon/` ne' `recipes.json`. Non usarlo.
+
+## Trappole note
+
+**`config_app.py` fa `os.chdir()` all'import.** Sposta la working directory in
+`%APPDATA%\ElysiumPozioni`, quindi un `import gui_main` da riga di comando
+fallisce sui moduli locali. Per test e script:
+
+```python
+import sys; sys.path.insert(0, r"C:\Users\dbait\Documents\ElysiumPozioni")
+```
+
+**La console Windows e' cp1252.** Qualsiasi script che stampi emoji va lanciato
+con `PYTHONIOENCODING=utf-8`, altrimenti muore con `UnicodeEncodeError`.
+
+**`calcolo_multi_prodotto.py` non segue la regola 1**: ha tutte le ricette
+hardcoded invece di leggerle da `ricette.py`. Modificando una ricetta vanno
+aggiornati due posti. Debito noto, da rifare sopra `ricette.py`.
+
+**Il prezzo del combustibile va normalizzato.** L'utente sceglie tra Carbone
+(12 carbonella/blocco), Anthracite (24) e Firestone (36), ma tutti i moduli
+dividono per `CARBONELLA_PER_BLOCCO`. Passare sempre
+`self._get_prezzo_carbone_norm()`, mai `float(self.entry_carbone.get())`.
+
+**I campi prezzo possono essere vuoti.** Diversi campi nascono vuoti (es. i
+prezzi dei lingotti): `float()` diretto solleva `ValueError` e fa fallire il
+calcolo. Trattare il vuoto come `0`; per i campi "per 1 b", che sono
+divisori, usare il default di ricetta (14 / 3 / 15) e mai `0`.
+
+**Verificare avviando la GUI, non solo compilando.** Piu' di un bug qui vive
+nel percorso di esecuzione e passa indenne un controllo di sintassi:
+
+```python
+root = tk.Tk(); root.withdraw()
+app = ElysiumPozioniApp(root)
+app.do_calcola_pozioni()
+```
+
+## Dati utente
+
+`config.json` e `profiles.json` stanno in `%APPDATA%\ElysiumPozioni`, non nel
+repo (`config_app.py` migra automaticamente i file legacy). `load_config` legge
+per chiave, quindi rimuovere un campo non rompe le configurazioni esistenti.
+
+## Dipendenze
+
+Tkinter (stdlib) e **Pillow**, usata in `gui_main.py` per le icone dei
+materiali. Nota: `Requirements.txt` elenca solo `tk` e omette Pillow.
+
+## Versionamento
+
+`APP_VERSION` in `config_app.py`, changelog in `CHANGELOG.md`. Sono
+volutamente fuori dal repo: artefatti di build (`__pycache__/`, `build/`), dati
+utente e la configurazione locale di Claude Code. `dist/ElysiumPozioni.exe` e'
+invece tracciato.
