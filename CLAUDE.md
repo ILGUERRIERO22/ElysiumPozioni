@@ -65,6 +65,18 @@ pyinstaller ElysiumPozioni.spec
 Lo `.spec` impacchetta `icon/` e `recipes.json` via `datas`: una nuova risorsa
 a runtime va aggiunta li', altrimenti l'EXE non la trova.
 
+**L'EXE si distribuisce via GitHub Release, mai committandolo.** `dist/` e'
+ignorato dal repo. Dopo il build, verificare che l'app si avvii e che il titolo
+della finestra riporti la versione attesa, poi pubblicare:
+
+```bash
+gh release create vX.Y.Z "dist/ElysiumPozioni.exe" --title "ElysiumPozioni vX.Y.Z" --notes "..."
+```
+
+Per allegarlo a una release esistente: `gh release upload vX.Y.Z "dist/ElysiumPozioni.exe" --clobber`.
+Prima di rilasciare vanno allineati `APP_VERSION` e la sezione "Non rilasciato"
+del changelog.
+
 ## Trappole note
 
 **`config_app.py` fa `os.chdir()` all'import.** Sposta la working directory in
