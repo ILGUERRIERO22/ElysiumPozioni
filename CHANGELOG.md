@@ -6,6 +6,17 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
 ---
 
 ## [Non rilasciato] — 2026-07-27
+### ⚗️ Tier del reagente nel Multi-Prodotto
+- La tab **Multi-Prodotto** ora lascia scegliere il **tier del reagente**
+  (T1/T2/T3) per le pozioni di cura, come già fa la tab Pozioni. Il selettore
+  compare solo quando serve.
+- **I costi delle pozioni T2 e T3 erano sovrastimati**: il calcolo contava un
+  reagente per ogni catalyst, ignorando che un reagente T2 ne produce 2 e un T3
+  ne produce 3. Con i tier naturali il costo scende del 45 % circa su Ferro e
+  Oro e di oltre il 60 % su Diamante e Smeraldo. Le pozioni T1 non erano
+  interessate.
+- Le due tab ora restituiscono **numeri identici** a parità di parametri.
+
 ### 🐞 Correzioni
 - **Tab Multi-Prodotto: il prezzo del reagente veniva ignorato.** Il valore
   inserito nella tab Pozioni non arrivava al calcolo, che ripiegava sempre sul

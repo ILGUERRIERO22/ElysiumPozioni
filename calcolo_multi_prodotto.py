@@ -1,7 +1,13 @@
 # calcolo_multi_prodotto.py
 # Modulo per calcolare materiali aggregati per produzioni multiple
 
-from ricette import CARBONELLA_PER_BLOCCO
+from ricette import (
+    CARBONELLA_PER_BLOCCO,
+    POZIONI_CURA,
+    RESINA,
+    get_calderone_pozioni,
+    get_catalyst_per_reagente,
+)
 
 
 def calcola_multi_prodotto(prodotti_lista, prezzi_base):
@@ -77,7 +83,8 @@ def calcola_multi_prodotto(prodotti_lista, prezzi_base):
         
         # Calcola materiali e costi per questo prodotto
         mat_prod, costo_prod = calcola_materiali_prodotto(
-            tipo, qty, prezzi_base, costo_carbonella, costo_boccetta, costo_resina
+            tipo, qty, prezzi_base, costo_carbonella, costo_boccetta, costo_resina,
+            tier=prod.get('tier', 'T1')
         )
         
         # Aggrega materiali
@@ -131,127 +138,74 @@ def calcola_resina(verdure_per_1b, vasetti_per_1b):
     return (2.0 * costo_verdura + costo_vasetto) / 2.0
 
 
-def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc, costo_resina):
+CALDERONE_PER_TIPO = {
+    'cura_terracotta': 'Terracotta',
+    'cura_rame':       'Rame',
+    'cura_ferro':      'Ferro',
+    'cura_oro':        'Oro',
+    'cura_diamante':   'Diamante',
+    'cura_smeraldo':   'Smeraldo',
+}
+
+
+def _materiali_pozione_cura(calderone, tier, qty, prezzi, costo_carb, costo_bocc):
+    """Materiali e costi per qty pozioni di cura, secondo recipes.json.
+
+    Il tier del reagente e' indipendente dal calderone: un reagente T2 produce
+    2 catalyst e un T3 ne produce 3, quindi a parita' di pozioni servono meno
+    reagenti salendo di tier.
+    """
+    cal = get_calderone_pozioni(calderone)
+    cat_per_rea = get_catalyst_per_reagente(tier)
+
+    catalyst   = qty / cal['pozioni_per_catalyst']
+    reagenti   = catalyst / cat_per_rea
+    core       = reagenti * POZIONI_CURA['core_per_reagente']
+    resine     = reagenti * POZIONI_CURA['resine_per_reagente']
+    carbonella = qty / cal['pozioni_per_carbonella']
+    boccette   = qty * POZIONI_CURA['boccette_per_pozione']
+
+    # 1 resina = (verdure_per_batch verdure + vasetti_per_batch vasetti) / output
+    verdure = resine * RESINA['verdure_per_batch'] / RESINA['output_per_batch']
+    vasetti = resine * RESINA['vasetti_per_batch'] / RESINA['output_per_batch']
+
+    materiali = {
+        'Reagente':      reagenti,
+        'Core fragment': core,
+        'Verdura':       verdure,
+        'Vasetto':       vasetti,
+        'Carbonella':    carbonella,
+        'Boccetta':      boccette,
+    }
+    costi = {
+        'Reagente':      reagenti * prezzi.get('reagente', 1.5),
+        'Core fragment': core * prezzi.get('core', 1.0),
+        'Verdura':       verdure / prezzi.get('verdure_per_1b', 3),
+        'Vasetto':       vasetti / prezzi.get('vasetti_per_1b', 15),
+        'Carbonella':    carbonella * costo_carb,
+        'Boccetta':      boccette * costo_bocc,
+    }
+    return materiali, costi
+
+
+def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc,
+                               costo_resina, tier='T1'):
     """
     Calcola materiali e costi per un singolo tipo di prodotto.
-    
+
+    tier: tier del reagente per le pozioni di cura ("T1"/"T2"/"T3"), ignorato
+          dagli altri prodotti.
+
     Returns:
         (materiali_dict, costi_dict)
     """
     materiali = {}
     costi = {}
-    
-    # POZIONI DI CURA (5 calderoni)
-    # Catalyst = 1 reagente + 1 core + 1 resina
-    # Resina: 2 verdure + 1 vasetto = 2 resine → 1 resina = 1 verdura + 0.5 vasetti
-    # Terracotta: 1 catalyst + 1 carbonella + 2 boccette = 2 pozioni T1
-    # Rame:       1 catalyst + 1 carbonella + 3 boccette = 3 pozioni T1
-    # Ferro:      1 catalyst + 2 carbonella + 1 boccetta = 1 pozione T2
-    # Oro:        2 catalyst + 2 carbonella + 3 boccette = 3 pozioni T2
-    # Diamante:   3 catalyst + 3 carbonella + 2 boccette = 2 pozioni T3
-    
-    if tipo == 'cura_terracotta':
-        # 1 catalyst + 1 carb + 2 bocc = 2 pozioni → per qty pozioni servono qty/2 ricette
-        ricette = qty / 2.0
-        # Catalyst: 1 reagente + 1 core + 1 resina (1 verdura + 0.5 vasetti)
-        materiali['Reagente'] = ricette * 1
-        materiali['Core fragment'] = ricette * 1
-        materiali['Verdura'] = ricette * 1  # Per 1 resina
-        materiali['Vasetto'] = ricette * 0.5  # Per 1 resina
-        materiali['Carbonella'] = ricette * 1
-        materiali['Boccetta'] = ricette * 2
-        
-        costi['Reagente'] = ricette * prezzi.get('reagente', 1.5)
-        costi['Core fragment'] = ricette * prezzi.get('core', 1.0)
-        costi['Verdura'] = ricette * 1 * (1.0 / prezzi.get('verdure_per_1b', 3))
-        costi['Vasetto'] = ricette * 0.5 * (1.0 / prezzi.get('vasetti_per_1b', 15))
-        costi['Carbonella'] = ricette * costo_carb
-        costi['Boccetta'] = ricette * 2 * costo_bocc
-    
-    elif tipo == 'cura_rame':
-        # 1 catalyst + 1 carb + 3 bocc = 3 pozioni → per qty pozioni servono qty/3 ricette
-        ricette = qty / 3.0
-        materiali['Reagente'] = ricette * 1
-        materiali['Core fragment'] = ricette * 1
-        materiali['Verdura'] = ricette * 1
-        materiali['Vasetto'] = ricette * 0.5
-        materiali['Carbonella'] = ricette * 1
-        materiali['Boccetta'] = ricette * 3
-        
-        costi['Reagente'] = ricette * prezzi.get('reagente', 1.5)
-        costi['Core fragment'] = ricette * prezzi.get('core', 1.0)
-        costi['Verdura'] = ricette * 1 * (1.0 / prezzi.get('verdure_per_1b', 3))
-        costi['Vasetto'] = ricette * 0.5 * (1.0 / prezzi.get('vasetti_per_1b', 15))
-        costi['Carbonella'] = ricette * costo_carb
-        costi['Boccetta'] = ricette * 3 * costo_bocc
-    
-    elif tipo == 'cura_ferro':
-        # 1 catalyst + 2 carb + 1 bocc = 1 pozione → per qty pozioni servono qty ricette
-        ricette = qty
-        materiali['Reagente'] = ricette * 1
-        materiali['Core fragment'] = ricette * 1
-        materiali['Verdura'] = ricette * 1
-        materiali['Vasetto'] = ricette * 0.5
-        materiali['Carbonella'] = ricette * 2
-        materiali['Boccetta'] = ricette * 1
-        
-        costi['Reagente'] = ricette * prezzi.get('reagente', 1.5)
-        costi['Core fragment'] = ricette * prezzi.get('core', 1.0)
-        costi['Verdura'] = ricette * 1 * (1.0 / prezzi.get('verdure_per_1b', 3))
-        costi['Vasetto'] = ricette * 0.5 * (1.0 / prezzi.get('vasetti_per_1b', 15))
-        costi['Carbonella'] = ricette * 2 * costo_carb
-        costi['Boccetta'] = ricette * costo_bocc
-    
-    elif tipo == 'cura_oro':
-        # 2 catalyst + 2 carb + 3 bocc = 3 pozioni → per qty pozioni servono qty/3 ricette
-        ricette = qty / 3.0
-        materiali['Reagente'] = ricette * 2
-        materiali['Core fragment'] = ricette * 2
-        materiali['Verdura'] = ricette * 2  # 2 catalyst × 1 verdura
-        materiali['Vasetto'] = ricette * 1  # 2 catalyst × 0.5 vasetti
-        materiali['Carbonella'] = ricette * 2
-        materiali['Boccetta'] = ricette * 3
-        
-        costi['Reagente'] = ricette * 2 * prezzi.get('reagente', 1.5)
-        costi['Core fragment'] = ricette * 2 * prezzi.get('core', 1.0)
-        costi['Verdura'] = ricette * 2 * (1.0 / prezzi.get('verdure_per_1b', 3))
-        costi['Vasetto'] = ricette * 1 * (1.0 / prezzi.get('vasetti_per_1b', 15))
-        costi['Carbonella'] = ricette * 2 * costo_carb
-        costi['Boccetta'] = ricette * 3 * costo_bocc
-    
-    elif tipo == 'cura_diamante':
-        # 3 catalyst + 3 carb + 2 bocc = 2 pozioni → per qty pozioni servono qty/2 ricette
-        ricette = qty / 2.0
-        materiali['Reagente'] = ricette * 3
-        materiali['Core fragment'] = ricette * 3
-        materiali['Verdura'] = ricette * 3  # 3 catalyst × 1 verdura
-        materiali['Vasetto'] = ricette * 1.5  # 3 catalyst × 0.5 vasetti
-        materiali['Carbonella'] = ricette * 3
-        materiali['Boccetta'] = ricette * 2
 
-        costi['Reagente'] = ricette * 3 * prezzi.get('reagente', 1.5)
-        costi['Core fragment'] = ricette * 3 * prezzi.get('core', 1.0)
-        costi['Verdura'] = ricette * 3 * (1.0 / prezzi.get('verdure_per_1b', 3))
-        costi['Vasetto'] = ricette * 1.5 * (1.0 / prezzi.get('vasetti_per_1b', 15))
-        costi['Carbonella'] = ricette * 3 * costo_carb
-        costi['Boccetta'] = ricette * 2 * costo_bocc
-
-    elif tipo == 'cura_smeraldo':
-        # 2 catalyst + 3 carb + 2 bocc = 2 pozioni T3 → per qty pozioni servono qty/2 ricette
-        ricette = qty / 2.0
-        materiali['Reagente'] = ricette * 2
-        materiali['Core fragment'] = ricette * 2
-        materiali['Verdura'] = ricette * 2  # 2 catalyst × 1 verdura
-        materiali['Vasetto'] = ricette * 1.0  # 2 catalyst × 0.5 vasetti
-        materiali['Carbonella'] = ricette * 3
-        materiali['Boccetta'] = ricette * 2
-
-        costi['Reagente'] = ricette * 2 * prezzi.get('reagente', 1.5)
-        costi['Core fragment'] = ricette * 2 * prezzi.get('core', 1.0)
-        costi['Verdura'] = ricette * 2 * (1.0 / prezzi.get('verdure_per_1b', 3))
-        costi['Vasetto'] = ricette * 1.0 * (1.0 / prezzi.get('vasetti_per_1b', 15))
-        costi['Carbonella'] = ricette * 3 * costo_carb
-        costi['Boccetta'] = ricette * 2 * costo_bocc
+    # POZIONI DI CURA: ricette e rese dei calderoni da recipes.json
+    if tipo in CALDERONE_PER_TIPO:
+        return _materiali_pozione_cura(
+            CALDERONE_PER_TIPO[tipo], tier, qty, prezzi, costo_carb, costo_bocc)
 
     elif tipo == 'danno_i':
         # 1 Occhio ragno + 1 Core + 1 Carbonella + 1 Boccetta

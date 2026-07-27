@@ -78,9 +78,16 @@ import sys; sys.path.insert(0, r"C:\Users\dbait\Documents\ElysiumPozioni")
 **La console Windows e' cp1252.** Qualsiasi script che stampi emoji va lanciato
 con `PYTHONIOENCODING=utf-8`, altrimenti muore con `UnicodeEncodeError`.
 
-**`calcolo_multi_prodotto.py` non segue la regola 1**: ha tutte le ricette
-hardcoded invece di leggerle da `ricette.py`. Modificando una ricetta vanno
-aggiornati due posti. Debito noto, da rifare sopra `ricette.py`.
+**`calcolo_multi_prodotto.py` segue la regola 1 solo a meta'.** Le pozioni di
+cura leggono rese e ricette da `ricette.py` (`_materiali_pozione_cura`), gli
+altri prodotti hanno ancora quantita' hardcoded nei rami `elif`. Cambiando una
+ricetta non di cura vanno aggiornati due posti.
+
+**Il tier del reagente e' indipendente dal calderone.** Un reagente T2 produce
+2 catalyst e un T3 ne produce 3 (`catalyst_per_reagente`), quindi salendo di
+tier servono meno reagenti per le stesse pozioni. Usare un T1 in un calderone
+Diamante e' legittimo. Sia la tab Pozioni sia la tab Multi-Prodotto lasciano
+scegliere il tier: non dedurlo mai dal calderone.
 
 **Il prezzo del combustibile va normalizzato.** L'utente sceglie tra Carbone
 (12 carbonella/blocco), Anthracite (24) e Firestone (36), ma tutti i moduli

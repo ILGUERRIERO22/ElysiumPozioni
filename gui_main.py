@@ -1050,6 +1050,9 @@ class ElysiumPozioniApp:
                 'quantita': qty,
                 'prezzo_vendita': prezzo
             }
+            # Il tier del reagente vale solo per le pozioni di cura
+            if tipo_code.startswith('cura_'):
+                prodotto['tier'] = self.combo_multi_tier.get()
             self.multi_prodotti_lista.append(prodotto)
             
             # Aggiorna visualizzazione
@@ -1086,7 +1089,8 @@ class ElysiumPozioniApp:
         else:
             for i, prod in enumerate(self.multi_prodotti_lista, 1):
                 prezzo_str = f" (vendita: {prod['prezzo_vendita']}b)" if prod['prezzo_vendita'] else ""
-                line = f"{i}. {prod['quantita']:.0f}x {prod['nome']}{prezzo_str}\n"
+                tier_str = f" [reagente {prod['tier']}]" if prod.get('tier') else ""
+                line = f"{i}. {prod['quantita']:.0f}x {prod['nome']}{tier_str}{prezzo_str}\n"
                 self.multi_lista_text.insert(tk.END, line)
         
         self.multi_lista_text.config(state="disabled")
