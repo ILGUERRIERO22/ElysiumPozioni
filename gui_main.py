@@ -1098,40 +1098,52 @@ class ElysiumPozioniApp:
             return
         
         try:
+            def prezzo(nome_entry, default=0.0):
+                """Legge un campo prezzo da un'altra tab.
+
+                Un campo vuoto vale 0: i prodotti che non usano quel materiale
+                non devono far fallire l'intero calcolo aggregato.
+                """
+                entry = getattr(self, nome_entry, None)
+                if entry is None:
+                    return default
+                return float(entry.get().strip() or default)
+
             # Prepara prezzi base
             prezzi_base = {
-                'core': float(self.entry_core.get()),
-                'reagente': float(self.entry_reagente.get()),
+                'core': prezzo('entry_core'),
+                'reagente': prezzo('entry_reagente'),
                 # Normalizzato a equivalente Carbone: i calcoli usano sempre 12 carbonella/blocco
                 'carbone': self._get_prezzo_carbone_norm(),
-                'boccette_per_1b': float(self.entry_boccette_per_b.get()),
-                'spidereye': float(self.entry_spidereye.get()),
-                'withering_dust': float(self.entry_withering_dust.get()),
-                'brim': float(self.entry_brim.get()),
-                'rotten': float(self.entry_rotten.get()),
-                'revival': float(self.entry_revival.get()),
-                'verdure_per_1b': float(self.entry_verdure_per_b.get()),
-                'vasetti_per_1b': float(self.entry_vasetti_per_b.get()),
-                'quartz': float(self.entry_ext_quartz.get()),
-                'lapis': float(self.entry_vel_lapis.get()),
-                'zucchero': float(self.entry_vel_zucchero.get()),
-                'blaze': float(self.entry_vel_blaze.get()),
+                # I "per 1b" sono divisori: se vuoti usano il default, mai 0
+                'boccette_per_1b': prezzo('entry_boccette_per_b', 14),
+                'spidereye': prezzo('entry_spidereye'),
+                'withering_dust': prezzo('entry_withering_dust'),
+                'brim': prezzo('entry_brim'),
+                'rotten': prezzo('entry_rotten'),
+                'revival': prezzo('entry_revival'),
+                'verdure_per_1b': prezzo('entry_verdure_per_b', 3),
+                'vasetti_per_1b': prezzo('entry_vasetti_per_b', 15),
+                'quartz': prezzo('entry_ext_quartz'),
+                'lapis': prezzo('entry_vel_lapis'),
+                'zucchero': prezzo('entry_vel_zucchero'),
+                'blaze': prezzo('entry_vel_blaze'),
                 # Riduzione
-                'fungo_marrone': float(self.entry_rid_fungo.get() if hasattr(self, 'entry_rid_fungo') else 0),
+                'fungo_marrone': prezzo('entry_rid_fungo'),
                 # Prezzi elisir (lingotti)
-                'tin': float(self.entry_price_tin.get() if hasattr(self, 'entry_price_tin') else 0),
-                'copper': float(self.entry_price_cu.get() if hasattr(self, 'entry_price_cu') else 0),
-                'iron': float(self.entry_price_fe.get() if hasattr(self, 'entry_price_fe') else 0),
-                'gold': float(self.entry_price_au.get() if hasattr(self, 'entry_price_au') else 0),
-                'diamond': float(self.entry_price_dia.get() if hasattr(self, 'entry_price_dia') else 0),
+                'tin': prezzo('entry_price_tin'),
+                'copper': prezzo('entry_price_cu'),
+                'iron': prezzo('entry_price_fe'),
+                'gold': prezzo('entry_price_au'),
+                'diamond': prezzo('entry_price_dia'),
                 # Ingredienti speciali elisir
-                'membrana': float(self.entry_membrana.get() if hasattr(self, 'entry_membrana') else 0),
-                'slime': float(self.entry_slime.get() if hasattr(self, 'entry_slime') else 0),
-                'lost_soul': float(self.entry_lost_soul.get() if hasattr(self, 'entry_lost_soul') else 0),
+                'membrana': prezzo('entry_membrana'),
+                'slime': prezzo('entry_slime'),
+                'lost_soul': prezzo('entry_lost_soul'),
                 # Argento per rune (stesso prezzo del diamante)
-                'silver': float(self.entry_price_dia.get() if hasattr(self, 'entry_price_dia') else 0),
+                'silver': prezzo('entry_price_dia'),
             }
-            
+
             # Calcola
             risultato = core_multi_prod(self.multi_prodotti_lista, prezzi_base)
 
