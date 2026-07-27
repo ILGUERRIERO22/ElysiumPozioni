@@ -2116,7 +2116,6 @@ class ElysiumPozioniApp:
             "vasetti_per_1b": self.entry_vasetti_per_b.get(),
             "boccette_per_1b": self.entry_boccette_per_b.get(),
             "prezzo_vendita_pozioni": self.entry_prezzo_vendita.get(),
-            "sconto_pozioni": self.entry_sconto_perc.get(),
             
             # Antidoti
             "ant_num": getattr(self, 'entry_ant_num', tk.Entry()).get() if hasattr(self, 'entry_ant_num') else "",
@@ -2215,7 +2214,6 @@ class ElysiumPozioniApp:
         load_entry("vasetti_per_1b", "entry_vasetti_per_b")
         load_entry("boccette_per_1b", "entry_boccette_per_b")
         load_entry("prezzo_vendita_pozioni", "entry_prezzo_vendita")
-        load_entry("sconto_pozioni", "entry_sconto_perc")
         
         # Antidoti
         load_entry("ant_num", "entry_ant_num")

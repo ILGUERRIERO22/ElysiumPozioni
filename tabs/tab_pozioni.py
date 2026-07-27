@@ -153,7 +153,6 @@ def build(app):
 
     self.entry_prezzo_vendita = self.make_labeled_entry(
         sale_inner, "Prezzo vendita/poz (b):", "", row=0, hint_text="Lascia vuoto per solo costo", allow_empty=True)
-    self.entry_sconto_perc = self.make_labeled_entry(sale_inner, "Sconto cliente (%):", "0", row=1)
 
     panel_sale.pack(padx=0, pady=(0, 8), fill="x")
 
