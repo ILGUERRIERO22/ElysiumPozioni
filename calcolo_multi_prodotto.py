@@ -3,10 +3,18 @@
 
 from ricette import (
     CARBONELLA_PER_BLOCCO,
+    PEPITE_PER_LINGOTTO,
     POZIONI_CURA,
     RESINA,
+    ANTIDOTI,
+    REVIVIFY,
+    EXTINGUISH,
+    DANNO,
+    RIDUZIONE,
+    VELOCITA,
     get_calderone_pozioni,
     get_catalyst_per_reagente,
+    get_ricetta_elisir,
 )
 
 
@@ -188,6 +196,136 @@ def _materiali_pozione_cura(calderone, tier, qty, prezzi, costo_carb, costo_bocc
     return materiali, costi
 
 
+# Mappa ingrediente di ricetta -> (etichetta mostrata, chiave prezzo).
+# La chiave "resina" e "carbonella" e "boccette" sono trattate a parte perche'
+# il loro costo unitario e' gia' calcolato a monte.
+INGREDIENTI = {
+    'occhio_ragno':   ('Occhio di ragno', 'spidereye'),
+    'withering_dust': ('Withering dust',  'withering_dust'),
+    'fungo_marrone':  ('Fungo marrone',   'fungo_marrone'),
+    'slimeball':      ('Slimeball',       'slime'),
+    'core':           ('Core fragment',   'core'),
+    'brim':           ('Brim powder',     'brim'),
+    'carne_marcia':   ('Carne marcia',    'rotten'),
+    'revival_star':   ('Revival star',    'revival'),
+    'quarzo':         ('Quarzo',          'quartz'),
+    'lapis':          ('Lapis',           'lapis'),
+    'zucchero':       ('Zucchero',        'zucchero'),
+    'blaze':          ('Blaze',           'blaze'),
+}
+
+# Prodotti a step singolo: (sezione di recipes.json, chiave ricetta, campo)
+RICETTE_SEMPLICI = {
+    'danno_i':             (DANNO,      'Danno I',      'per_pozione'),
+    'riduzione_i':         (RIDUZIONE,  'Riduzione I',  'per_pozione'),
+    'velocita_i':          (VELOCITA,   'Velocita I',   'per_pozione'),
+    'revivify':            (REVIVIFY,   None,           'per_revivify'),
+    'extinguish':          (EXTINGUISH, None,           'per_extinguish'),
+    'antidoto_terracotta': (ANTIDOTI,   'Terracotta',   'per_antidoto'),
+    'antidoto_ferro':      (ANTIDOTI,   'Ferro',        'per_batch'),
+}
+
+# Prodotti a due step: il livello II include un'unita' del livello I.
+RICETTE_DUE_STEP = {
+    'danno_ii':     (DANNO,     'Danno I',     'Danno II'),
+    'riduzione_ii': (RIDUZIONE, 'Riduzione I', 'Riduzione II'),
+    'velocita_ii':  (VELOCITA,  'Velocita I',  'Velocita II'),
+}
+
+ELISIR_PER_TIPO = {
+    'elisir_minor':    'Minor mending',
+    'elisir_inferior': 'Inferior mending',
+    'elisir_lesser':   'Lesser mending',
+    'elisir_medium':   'Medium mending',
+    'elisir_greater':  'Greater mending',
+}
+
+# Etichette delle pepite e chiave prezzo del lingotto corrispondente
+PEPITE_PREZZO = {
+    'Tin': 'tin', 'Rame': 'copper', 'Ferro': 'iron',
+    'Oro': 'gold', 'Diamante': 'diamond',
+}
+
+
+def _applica_ricetta(per_unita, n, materiali, costi, prezzi, costo_carb,
+                     costo_bocc, costo_resina):
+    """Somma in materiali/costi gli ingredienti di una ricetta, per n unita'."""
+    for ing, quanti in per_unita.items():
+        tot = n * quanti
+        if ing == 'carbonella':
+            etichetta, costo_unit = 'Carbonella', costo_carb
+        elif ing == 'boccette':
+            etichetta, costo_unit = 'Boccetta', costo_bocc
+        elif ing == 'resina':
+            etichetta, costo_unit = 'Resina', costo_resina
+        else:
+            etichetta, chiave = INGREDIENTI[ing]
+            costo_unit = prezzi.get(chiave, 1.0)
+        materiali[etichetta] = materiali.get(etichetta, 0.0) + tot
+        costi[etichetta] = costi.get(etichetta, 0.0) + tot * costo_unit
+    return materiali, costi
+
+
+def _materiali_semplice(tipo, qty, prezzi, costo_carb, costo_bocc, costo_resina):
+    """Prodotto con una sola fase di preparazione."""
+    sezione, chiave, campo = RICETTE_SEMPLICI[tipo]
+    ricetta = sezione[chiave] if chiave else sezione
+    # Le ricette a lotto (es. antidoto Ferro: 2 per batch) vanno divise
+    per_batch = ricetta.get('antidoti_per_batch', 1)
+    return _applica_ricetta(ricetta[campo], qty / per_batch, {}, {}, prezzi,
+                            costo_carb, costo_bocc, costo_resina)
+
+
+def _materiali_due_step(tipo, qty, prezzi, costo_carb, costo_bocc):
+    """Prodotto di livello II: consuma un'unita' del livello I piu' l'upgrade."""
+    sezione, chiave_base, chiave_up = RICETTE_DUE_STEP[tipo]
+    materiali, costi = _applica_ricetta(
+        sezione[chiave_base]['per_pozione'], qty, {}, {}, prezzi,
+        costo_carb, costo_bocc, 0.0)
+    return _applica_ricetta(
+        sezione[chiave_up]['step_aggiuntivo_per_pozione'], qty, materiali, costi,
+        prezzi, costo_carb, costo_bocc, 0.0)
+
+
+def _materiali_elisir(nome, qty, prezzi, costo_carb, costo_bocc, costo_resina):
+    """Elisir: ricetta comune + pepita del metallo e ingrediente extra."""
+    ricetta = get_ricetta_elisir(nome)
+    per_el = ricetta['per_elisir']
+    metallo = ricetta['metallo_pepita']
+
+    materiali, costi = {}, {}
+    for ing in ('resina', 'core', 'boccette'):
+        _applica_ricetta({ing: per_el[ing]}, qty, materiali, costi, prezzi,
+                         costo_carb, costo_bocc, costo_resina)
+
+    # Carbonella: quantita' specifica dell'elisir, non in per_elisir
+    _applica_ricetta({'carbonella': ricetta['carbonella_per_elisir']}, qty,
+                     materiali, costi, prezzi, costo_carb, costo_bocc, costo_resina)
+
+    n_pepite = qty * per_el['pepite']
+    materiali[f'Pepita {metallo}'] = n_pepite
+    costi[f'Pepita {metallo}'] = n_pepite * (
+        prezzi.get(PEPITE_PREZZO[metallo], 0.0) / PEPITE_PER_LINGOTTO)
+
+    extra = ricetta['ingrediente_extra']
+    chiave_extra = ETICHETTA_EXTRA_PREZZO[extra]
+    n_extra = qty * per_el['extra']
+    materiali[extra] = n_extra
+    costi[extra] = n_extra * prezzi.get(chiave_extra, 1.0)
+
+    return materiali, costi
+
+
+# Ingrediente extra dell'elisir -> chiave prezzo
+ETICHETTA_EXTRA_PREZZO = {
+    'Brim powder':          'brim',
+    'Occhio di ragno':      'spidereye',
+    'Membrana di Phantom':  'membrana',
+    'Slimeball':            'slime',
+    'Lost soul':            'lost_soul',
+}
+
+
 def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc,
                                costo_resina, tier='T1'):
     """
@@ -207,222 +345,17 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc,
         return _materiali_pozione_cura(
             CALDERONE_PER_TIPO[tipo], tier, qty, prezzi, costo_carb, costo_bocc)
 
-    elif tipo == 'danno_i':
-        # 1 Occhio ragno + 1 Core + 1 Carbonella + 1 Boccetta
-        materiali['Occhio di ragno'] = qty * 1
-        materiali['Core fragment'] = qty * 1
-        materiali['Carbonella'] = qty * 1
-        materiali['Boccetta'] = qty * 1
-        
-        costi['Occhio di ragno'] = qty * prezzi.get('spidereye', 1.0)
-        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
-        costi['Carbonella'] = qty * costo_carb
-        costi['Boccetta'] = qty * costo_bocc
-    
-    elif tipo == 'danno_ii':
-        # 1 Withering dust + 1 Core + 2 Carbonella + 1 Danno I
-        materiali['Withering dust'] = qty * 1
-        materiali['Core fragment'] = qty * 2  # 1 per Danno II + 1 per Danno I
-        materiali['Carbonella'] = qty * 3  # 2 per Danno II + 1 per Danno I
-        materiali['Boccetta'] = qty * 1  # Per Danno I
-        materiali['Occhio di ragno'] = qty * 1  # Per Danno I
-        
-        costi['Withering dust'] = qty * prezzi.get('withering_dust', 2.0)
-        costi['Core fragment'] = qty * 2 * prezzi.get('core', 1.0)
-        costi['Carbonella'] = qty * 3 * costo_carb
-        costi['Boccetta'] = qty * costo_bocc
-        costi['Occhio di ragno'] = qty * prezzi.get('spidereye', 1.0)
-    
-    elif tipo == 'antidoto_terracotta':
-        # 1 Brim + 1 Carne marcia + 1 Carbonella + 1 Boccetta
-        materiali['Brim powder'] = qty * 1
-        materiali['Carne marcia'] = qty * 1
-        materiali['Carbonella'] = qty * 1
-        materiali['Boccetta'] = qty * 1
-        
-        costi['Brim powder'] = qty * prezzi.get('brim', 1.0)
-        costi['Carne marcia'] = qty * prezzi.get('rotten', 1.0)
-        costi['Carbonella'] = qty * costo_carb
-        costi['Boccetta'] = qty * costo_bocc
-    
-    elif tipo == 'antidoto_ferro':
-        # 1 Resina + 1 Revival star + 2 Carbonella + 2 Boccette = 2 antidoti
-        # Quindi per qty antidoti servono: qty/2 ricette
-        ricette_necessarie = qty / 2.0
-        
-        materiali['Resina'] = ricette_necessarie * 1
-        materiali['Revival star'] = ricette_necessarie * 1
-        materiali['Carbonella'] = ricette_necessarie * 2
-        materiali['Boccetta'] = ricette_necessarie * 2
-        
-        costi['Resina'] = ricette_necessarie * costo_resina
-        costi['Revival star'] = ricette_necessarie * prezzi.get('revival', 2.0)
-        costi['Carbonella'] = ricette_necessarie * 2 * costo_carb
-        costi['Boccetta'] = ricette_necessarie * 2 * costo_bocc
-    
-    elif tipo == 'revivify':
-        # 1 Revival star + 1 Core + 1 Carbonella + 1 Boccetta
-        materiali['Revival star'] = qty * 1
-        materiali['Core fragment'] = qty * 1
-        materiali['Carbonella'] = qty * 1
-        materiali['Boccetta'] = qty * 1
-        
-        costi['Revival star'] = qty * prezzi.get('revival', 2.0)
-        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
-        costi['Carbonella'] = qty * costo_carb
-        costi['Boccetta'] = qty * costo_bocc
-    
-    elif tipo == 'extinguish':
-        # 1 Quarzo + 1 Core + 1 Carbonella + 1 Boccetta
-        materiali['Quarzo'] = qty * 1
-        materiali['Core fragment'] = qty * 1
-        materiali['Carbonella'] = qty * 1
-        materiali['Boccetta'] = qty * 1
-        
-        costi['Quarzo'] = qty * prezzi.get('quartz', 1.0)
-        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
-        costi['Carbonella'] = qty * costo_carb
-        costi['Boccetta'] = qty * costo_bocc
-    
-    elif tipo == 'velocita_i':
-        # 1 Lapis + 1 Zucchero + 1 Core + 1 Carbonella + 1 Boccetta
-        materiali['Lapis'] = qty * 1
-        materiali['Zucchero'] = qty * 1
-        materiali['Core fragment'] = qty * 1
-        materiali['Carbonella'] = qty * 1
-        materiali['Boccetta'] = qty * 1
-        
-        costi['Lapis'] = qty * prezzi.get('lapis', 1.0)
-        costi['Zucchero'] = qty * prezzi.get('zucchero', 1.0)
-        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
-        costi['Carbonella'] = qty * costo_carb
-        costi['Boccetta'] = qty * costo_bocc
-    
-    elif tipo == 'velocita_ii':
-        # 1 Blaze + 1 Core + 2 Carbonella + 1 Velocità I
-        # Velocità I = 1 Lapis + 1 Zucchero + 1 Core + 1 Carb + 1 Bocc
-        materiali['Blaze'] = qty * 1
-        materiali['Core fragment'] = qty * 2  # 1 per Vel II + 1 per Vel I
-        materiali['Carbonella'] = qty * 3  # 2 per Vel II + 1 per Vel I
-        materiali['Boccetta'] = qty * 1  # Per Vel I
-        materiali['Lapis'] = qty * 1  # Per Vel I
-        materiali['Zucchero'] = qty * 1  # Per Vel I
+    # --- Prodotti a step singolo e a due step, da recipes.json ---
+    if tipo in RICETTE_SEMPLICI:
+        return _materiali_semplice(tipo, qty, prezzi, costo_carb, costo_bocc,
+                                   costo_resina)
 
-        costi['Blaze'] = qty * prezzi.get('blaze', 1.0)
-        costi['Core fragment'] = qty * 2 * prezzi.get('core', 1.0)
-        costi['Carbonella'] = qty * 3 * costo_carb
-        costi['Boccetta'] = qty * costo_bocc
-        costi['Lapis'] = qty * prezzi.get('lapis', 1.0)
-        costi['Zucchero'] = qty * prezzi.get('zucchero', 1.0)
+    if tipo in RICETTE_DUE_STEP:
+        return _materiali_due_step(tipo, qty, prezzi, costo_carb, costo_bocc)
 
-    # === RIDUZIONE ===
-    elif tipo == 'riduzione_i':
-        # 1 Fungo marrone + 1 Core + 1 Carbonella + 1 Boccetta
-        materiali['Fungo marrone'] = qty * 1
-        materiali['Core fragment'] = qty * 1
-        materiali['Carbonella'] = qty * 1
-        materiali['Boccetta'] = qty * 1
-
-        costi['Fungo marrone'] = qty * prezzi.get('fungo_marrone', 1.0)
-        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
-        costi['Carbonella'] = qty * costo_carb
-        costi['Boccetta'] = qty * costo_bocc
-
-    elif tipo == 'riduzione_ii':
-        # 1 Slimeball + 1 Core + 2 Carbonella + 1 Riduzione I
-        # Riduzione I = 1 Fungo + 1 Core + 1 Carb + 1 Bocc
-        materiali['Slimeball'] = qty * 1
-        materiali['Core fragment'] = qty * 2  # 1 per Rid II + 1 per Rid I
-        materiali['Carbonella'] = qty * 3  # 2 per Rid II + 1 per Rid I
-        materiali['Boccetta'] = qty * 1  # Per Rid I
-        materiali['Fungo marrone'] = qty * 1  # Per Rid I
-
-        costi['Slimeball'] = qty * prezzi.get('slime', 1.0)
-        costi['Core fragment'] = qty * 2 * prezzi.get('core', 1.0)
-        costi['Carbonella'] = qty * 3 * costo_carb
-        costi['Boccetta'] = qty * costo_bocc
-        costi['Fungo marrone'] = qty * prezzi.get('fungo_marrone', 1.0)
-
-    # === ELISIR ===
-    elif tipo == 'elisir_minor':
-        # Minor mending (Terracotta): 1 Resina + 1 Core + 1 pepita Tin + 1 Brim + 1 Carbonella + 1 Boccetta
-        materiali['Resina'] = qty * 1
-        materiali['Core fragment'] = qty * 1
-        materiali['Pepita Tin'] = qty * 1
-        materiali['Brim powder'] = qty * 1
-        materiali['Carbonella'] = qty * 1
-        materiali['Boccetta'] = qty * 1
-
-        costi['Resina'] = qty * costo_resina
-        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
-        costi['Pepita Tin'] = qty * (prezzi.get('tin', 0.0) / 9.0)
-        costi['Brim powder'] = qty * prezzi.get('brim', 1.0)
-        costi['Carbonella'] = qty * costo_carb
-        costi['Boccetta'] = qty * costo_bocc
-
-    elif tipo == 'elisir_inferior':
-        # Inferior mending (Rame): 1 Resina + 1 Core + 1 pepita Rame + 1 Occhio di ragno + 1 Carbonella + 1 Boccetta
-        materiali['Resina'] = qty * 1
-        materiali['Core fragment'] = qty * 1
-        materiali['Pepita Rame'] = qty * 1
-        materiali['Occhio di ragno'] = qty * 1
-        materiali['Carbonella'] = qty * 1
-        materiali['Boccetta'] = qty * 1
-
-        costi['Resina'] = qty * costo_resina
-        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
-        costi['Pepita Rame'] = qty * (prezzi.get('copper', 0.0) / 9.0)
-        costi['Occhio di ragno'] = qty * prezzi.get('spidereye', 1.0)
-        costi['Carbonella'] = qty * costo_carb
-        costi['Boccetta'] = qty * costo_bocc
-
-    elif tipo == 'elisir_lesser':
-        # Lesser mending (Ferro): 1 Resina + 1 Core + 1 pepita Ferro + 1 Membrana Phantom + 2 Carbonella + 1 Boccetta
-        materiali['Resina'] = qty * 1
-        materiali['Core fragment'] = qty * 1
-        materiali['Pepita Ferro'] = qty * 1
-        materiali['Membrana Phantom'] = qty * 1
-        materiali['Carbonella'] = qty * 2
-        materiali['Boccetta'] = qty * 1
-
-        costi['Resina'] = qty * costo_resina
-        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
-        costi['Pepita Ferro'] = qty * (prezzi.get('iron', 0.0) / 9.0)
-        costi['Membrana Phantom'] = qty * prezzi.get('membrana', 1.0)
-        costi['Carbonella'] = qty * 2 * costo_carb
-        costi['Boccetta'] = qty * costo_bocc
-
-    elif tipo == 'elisir_medium':
-        # Medium mending (Oro): 1 Resina + 1 Core + 1 pepita Oro + 1 Slimeball + 2 Carbonella + 1 Boccetta
-        materiali['Resina'] = qty * 1
-        materiali['Core fragment'] = qty * 1
-        materiali['Pepita Oro'] = qty * 1
-        materiali['Slimeball'] = qty * 1
-        materiali['Carbonella'] = qty * 2
-        materiali['Boccetta'] = qty * 1
-
-        costi['Resina'] = qty * costo_resina
-        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
-        costi['Pepita Oro'] = qty * (prezzi.get('gold', 0.0) / 9.0)
-        costi['Slimeball'] = qty * prezzi.get('slime', 1.0)
-        costi['Carbonella'] = qty * 2 * costo_carb
-        costi['Boccetta'] = qty * costo_bocc
-
-    elif tipo == 'elisir_greater':
-        # Greater mending (Diamante): 1 Resina + 1 Core + 1 pepita Diamante + 1 Lost soul + 3 Carbonella + 1 Boccetta
-        materiali['Resina'] = qty * 1
-        materiali['Core fragment'] = qty * 1
-        materiali['Pepita Diamante'] = qty * 1
-        materiali['Lost soul'] = qty * 1
-        materiali['Carbonella'] = qty * 3
-        materiali['Boccetta'] = qty * 1
-
-        costi['Resina'] = qty * costo_resina
-        costi['Core fragment'] = qty * prezzi.get('core', 1.0)
-        costi['Pepita Diamante'] = qty * (prezzi.get('diamond', 0.0) / 9.0)
-        costi['Lost soul'] = qty * prezzi.get('lost_soul', 1.0)
-        costi['Carbonella'] = qty * 3 * costo_carb
-        costi['Boccetta'] = qty * costo_bocc
+    if tipo in ELISIR_PER_TIPO:
+        return _materiali_elisir(ELISIR_PER_TIPO[tipo], qty, prezzi, costo_carb,
+                                 costo_bocc, costo_resina)
 
     # === RUNE ===
     # Rese: rune per pepita

@@ -78,10 +78,18 @@ import sys; sys.path.insert(0, r"C:\Users\dbait\Documents\ElysiumPozioni")
 **La console Windows e' cp1252.** Qualsiasi script che stampi emoji va lanciato
 con `PYTHONIOENCODING=utf-8`, altrimenti muore con `UnicodeEncodeError`.
 
-**`calcolo_multi_prodotto.py` segue la regola 1 solo a meta'.** Le pozioni di
-cura leggono rese e ricette da `ricette.py` (`_materiali_pozione_cura`), gli
-altri prodotti hanno ancora quantita' hardcoded nei rami `elif`. Cambiando una
-ricetta non di cura vanno aggiornati due posti.
+**`calcolo_multi_prodotto.py` legge le ricette da `ricette.py`**, tramite
+quattro funzioni e le tabelle di dispatch in cima al modulo: pozioni di cura
+(`_materiali_pozione_cura`), prodotti a step singolo (`RICETTE_SEMPLICI`),
+prodotti a due step dove il livello II consuma un'unita' del livello I
+(`RICETTE_DUE_STEP`) ed elisir (`ELISIR_PER_TIPO`). Un nuovo prodotto si
+aggiunge inserendolo nella tabella giusta, senza scrivere quantita' a mano.
+Fanno ancora eccezione le **rune**, che hanno le rese per pepita duplicate nei
+rami `rune_maghi` / `rune_bardi` invece di leggere `RESA_PEPITA_NET`.
+
+Le etichette dei materiali vengono dai nomi in `recipes.json`: aggiungendo un
+ingrediente vanno estese `INGREDIENTI` o `ETICHETTA_EXTRA_PREZZO`, che mappano
+la chiave di ricetta sull'etichetta mostrata e sulla chiave prezzo.
 
 **Il tier del reagente e' indipendente dal calderone.** Un reagente T2 produce
 2 catalyst e un T3 ne produce 3 (`catalyst_per_reagente`), quindi salendo di

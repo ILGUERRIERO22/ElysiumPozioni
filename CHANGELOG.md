@@ -18,6 +18,10 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
 - Le due tab ora restituiscono **numeri identici** a parità di parametri.
 
 ### 🐞 Correzioni
+- **Pozioni di Velocità sovrastimate nel Multi-Prodotto**: il calcolo
+  aggiungeva 1 Core fragment a Velocità I, che la ricetta non prevede. Il costo
+  scende di conseguenza, anche per Velocità II che include la pozione base. La
+  tab Velocità ha sempre dato il numero giusto.
 - **Tab Multi-Prodotto: il prezzo del reagente veniva ignorato.** Il valore
   inserito nella tab Pozioni non arrivava al calcolo, che ripiegava sempre sul
   default `1.5 b`. Tutte le stime sulle pozioni di cura erano falsate.
