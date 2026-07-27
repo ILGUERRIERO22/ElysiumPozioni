@@ -11,13 +11,17 @@ Interfaccia, commenti e messaggi di commit sono **in italiano**.
 ```
 main.py                 avvio, chiama run_app()
 gui_main.py             classe ElysiumPozioniApp: stato, handler, persistenza
-  tabs/tab_*.py         costruzione UI di ogni tab: build(app)
-  calcolo_*.py          logica pura di calcolo, nessun Tkinter
+  tabs/tab_*.py         costruzione UI delle 11 tab: build(app)
+  calcolo_*.py          logica pura di calcolo (11 moduli), nessun Tkinter
   ricette.py            loader di recipes.json
   recipes.json          ricette del gioco (fonte unica di verita)
   config_app.py         tema, font, palette, percorsi dati
   animations.py         effetti fade/slide
 ```
+
+Le 11 tab: Pozioni di cura, Antidoti, Revivify, Extinguish, Danno, Rune,
+Elisir, Velocita, Riduzione, Multi-Prodotto, Lista della spesa. Le ultime due
+sono aggregatori: combinano piu' prodotti in un unico calcolo.
 
 Tre regole che reggono l'impianto — romperle e' il modo piu' rapido di fare
 danni:
@@ -85,8 +89,11 @@ dividono per `CARBONELLA_PER_BLOCCO`. Passare sempre
 
 **I campi prezzo possono essere vuoti.** Diversi campi nascono vuoti (es. i
 prezzi dei lingotti): `float()` diretto solleva `ValueError` e fa fallire il
-calcolo. Trattare il vuoto come `0`; per i campi "per 1 b", che sono
-divisori, usare il default di ricetta (14 / 3 / 15) e mai `0`.
+calcolo. In `do_calcola_multi` c'e' gia' l'helper `prezzo(nome_entry, default)`
+che tratta il vuoto come `0` — usarlo invece di riscrivere la conversione. Per
+i campi "per 1 b", che sono divisori, il default e' il valore di ricetta
+(14 / 3 / 15) e mai `0`, altrimenti si scambia un `ValueError` con una
+`ZeroDivisionError`.
 
 **Verificare avviando la GUI, non solo compilando.** Piu' di un bug qui vive
 nel percorso di esecuzione e passa indenne un controllo di sintassi:
@@ -111,7 +118,14 @@ ed e' elencato come commento.
 
 ## Versionamento
 
-`APP_VERSION` in `config_app.py`, changelog in `CHANGELOG.md`. Sono
-volutamente fuori dal repo: artefatti di build (`__pycache__/`, `build/`), dati
-utente e la configurazione locale di Claude Code. `dist/ElysiumPozioni.exe` e'
-invece tracciato.
+`APP_VERSION` in `config_app.py`, changelog in `CHANGELOG.md` (formato Keep a
+Changelog, in italiano). Il lavoro non ancora rilasciato si accumula nella
+sezione **"Non rilasciato"** in cima al changelog: al rilascio va rinominata
+con il numero di versione e `APP_VERSION` allineato.
+
+Sono volutamente fuori dal repo: artefatti di build (`__pycache__/`, `build/`),
+dati utente (`config.json`, `profiles.json`) e la configurazione locale di
+Claude Code (`.claude/`). `dist/ElysiumPozioni.exe` e' invece tracciato.
+
+Il file di ignore e' `.gitignore` — fino al 2026-07-27 si chiamava
+`.gitignore.txt` e quindi non veniva letto da Git.
