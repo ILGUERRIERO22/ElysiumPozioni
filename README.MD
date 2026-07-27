@@ -31,6 +31,13 @@ L’app raccoglie in un’unica interfaccia:
 - elisir di cura
 - rune
 - pozioni di velocità (Velocità I e Velocità II)
+- pozioni di danno (Danno I e Danno II – Avvizzimento)
+- pozioni di riduzione (Riduzione I e Riduzione II)
+
+Più due strumenti di pianificazione:
+
+- **Multi-Prodotto** — costi e profitti di più produzioni in un unico calcolo
+- **Lista della spesa** — gli ingredienti grezzi da comprare per un mix di prodotti
 
 Il tutto con tema scuro, profili di mercato multipli e salvataggio automatico delle impostazioni.
 
@@ -50,6 +57,7 @@ Tab **“Pozioni di cura”**
   - ⚙️ Ferro → pozioni T2  
   - 🟡 Oro → pozioni T2  
   - 💎 Diamante → pozioni T3  
+  - 💚 Smeraldo → pozioni T3  
 - Breakdown dettagliato di:
   - catalyst necessari
   - core fragment
@@ -150,6 +158,71 @@ L’app calcola automaticamente:
 - costo unitario
 - margine e ricarico se inserisci il prezzo di vendita
 
+### 🔹 Pozioni di Danno
+
+Tab **“Danno”**
+
+- **Danno I** (calderone in Rame)
+  - Ricetta: 1 Occhio di ragno + 1 Core fragment + 1 Carbonella + 1 Boccetta
+- **Danno II — Avvizzimento** (calderone in Oro)
+  - Ricetta: 1 Withering dust + 1 Core fragment + 2 Carbonella + 1 pozione di Danno I
+
+Come per la velocità, il costo di Danno II comprende automaticamente quello
+della pozione di base.
+
+### 🔹 Pozioni di Riduzione
+
+Tab **“Riduzione”**
+
+- **Riduzione I** (calderone in Rame)
+  - Ricetta: 1 Fungo marrone + 1 Core fragment + 1 Carbonella + 1 Boccetta
+- **Riduzione II** (calderone in Oro)
+  - Ricetta: 1 Slimeball + 1 Core fragment + 2 Carbonella + 1 pozione di Riduzione I
+
+### 🔹 Multi-Prodotto
+
+Tab **“Multi-Prodotto”**
+
+Serve a pianificare **più produzioni in un colpo solo**:
+
+- componi una lista di prodotti (tipo + quantità + prezzo di vendita)
+- il tool calcola i **materiali aggregati** su tutta la lista, evitando di
+  sommare a mano
+- mostra costo totale, ricavo, profitto netto e margine percentuale
+- per ogni prodotto vedi anche il breakdown di costo e profitto
+- per le rune confronta i metalli e **evidenzia l’opzione più economica**
+
+I prezzi vengono presi automaticamente dalle altre tab.
+
+### 🔹 Lista della spesa
+
+Tab **“Lista della spesa”**
+
+Risponde alla domanda *“cosa devo comprare per produrre tutto questo?”*:
+
+- inserisci le quantità dei prodotti che vuoi ottenere
+- ricevi la lista degli **ingredienti grezzi** da acquistare, arrotondati
+  all’intero, con l’indicazione di quanto avanza
+- i reagenti mostrano quanti **HC** vengono prodotti, quanti servono davvero e
+  quanti restano
+- la carbonella viene convertita nei **blocchi di combustibile** necessari
+
+---
+
+## 🔥 Combustibile
+
+Nella tab “Pozioni di cura” puoi scegliere con cosa alimentare i calderoni:
+
+| Combustibile | Carbonella per blocco |
+|--------------|----------------------|
+| Carbone      | 12                   |
+| Anthracite   | 24                   |
+| Firestone    | 36                   |
+
+Inserisci il prezzo di **un blocco** del combustibile scelto: l’app normalizza
+automaticamente il costo per carbonella, così i confronti restano corretti in
+tutte le tab.
+
 ---
 
 ## 💼 Profili di mercato
@@ -182,3 +255,44 @@ Entrambi i file (`config.json` e `profiles.json`) vengono salvati in:
 
 ```text
 %APPDATA%\ElysiumPozioni
+```
+
+Se avevi una versione precedente che li teneva nella cartella del programma,
+vengono spostati automaticamente al primo avvio.
+
+---
+
+## 🚀 Installazione
+
+### Eseguibile (consigliato)
+
+Scarica `ElysiumPozioni.exe` dalla sezione
+[Releases](https://github.com/ILGUERRIERO22/ElysiumPozioni/releases) e avvialo:
+non serve installare Python.
+
+### Da sorgente
+
+Richiede **Python 3.10+**.
+
+```bash
+git clone https://github.com/ILGUERRIERO22/ElysiumPozioni.git
+cd ElysiumPozioni
+pip install -r Requirements.txt
+python main.py
+```
+
+### Compilare l’eseguibile
+
+```bash
+pip install pyinstaller
+pyinstaller ElysiumPozioni.spec
+```
+
+L’eseguibile viene creato in `dist/`.
+
+---
+
+## 📜 Licenza
+
+Distribuito con licenza MIT. Vedi il changelog in
+[CHANGELOG.md](CHANGELOG.md) per la cronologia delle versioni.
