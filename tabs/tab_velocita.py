@@ -13,16 +13,19 @@ def build(app):
     """Costruisce la tab Velocità nell'app."""
     self = app
 
-    container = tk.Frame(self.tab_velocita, bg=BG_MAIN)
-    container.pack(fill="both", expand=True, padx=10, pady=10)
+    outer = tk.Frame(self.tab_velocita, bg=BG_MAIN)
+    outer.pack(fill="both", expand=True, padx=10, pady=10)
 
     # Info header
-    info_frame = tk.Frame(container, bg=BG_CARD, padx=15, pady=10)
+    info_frame = tk.Frame(outer, bg=BG_CARD, padx=15, pady=10)
     info_frame.pack(fill="x", pady=(0, 10))
     tk.Label(info_frame, text="⚡ Pozioni di Velocità",
              font=SECTION_FONT, bg=BG_CARD, fg=GOLD).pack(anchor="w")
     tk.Label(info_frame, text="Velocità I: Terracotta | Velocità II: Ferro (upgrade da Vel I)",
              font=SMALL_FONT, bg=BG_CARD, fg=FG_SUBTLE).pack(anchor="w", pady=(4, 0))
+
+    # Input a sinistra, risultati a destra: restano visibili insieme.
+    container, col_out = self.make_split(outer)
 
     # === PRODUZIONE ===
     panel_prod, prod_inner = self.make_panel(container, "Produzione", "🏭")
@@ -90,7 +93,7 @@ def build(app):
     calc_btn.pack()
 
     # === RISULTATI ===
-    self.make_result_area(container, "label_vel_preview", "text_vel_result")
+    self.make_result_area(col_out, "label_vel_preview", "text_vel_result")
 
     try:
         self._aggiorna_prezzi_velocita()

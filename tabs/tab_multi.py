@@ -14,16 +14,19 @@ def build(app):
     """Costruisce la tab Multi-Prodotto nell'app."""
     self = app
 
-    container = tk.Frame(self.tab_multi, bg=BG_MAIN)
-    container.pack(fill="both", expand=True, padx=10, pady=10)
+    outer = tk.Frame(self.tab_multi, bg=BG_MAIN)
+    outer.pack(fill="both", expand=True, padx=10, pady=10)
 
     # Info header
-    info_frame = tk.Frame(container, bg=BG_CARD, padx=15, pady=10)
+    info_frame = tk.Frame(outer, bg=BG_CARD, padx=15, pady=10)
     info_frame.pack(fill="x", pady=(0, 10))
     tk.Label(info_frame, text="🧮 Calcolatrice Multi-Prodotto",
              font=SECTION_FONT, bg=BG_CARD, fg=ACCENT_LIGHT).pack(anchor="w")
     tk.Label(info_frame, text="Calcola materiali aggregati per produzioni multiple",
              font=SMALL_FONT, bg=BG_CARD, fg=FG_SUBTLE).pack(anchor="w", pady=(4, 0))
+
+    # Input a sinistra, risultati a destra: restano visibili insieme.
+    container, col_out = self.make_split(outer)
 
     # === AGGIUNGI PRODOTTO ===
     panel_add, add_inner = self.make_panel(container, "Aggiungi Prodotto", "➕")
@@ -107,7 +110,7 @@ def build(app):
     panel_lista.pack(padx=0, pady=(0, 8), fill="both", expand=True)
 
     # === RISULTATI ===
-    self.make_result_area(container, "label_multi_preview", "text_multi_result")
+    self.make_result_area(col_out, "label_multi_preview", "text_multi_result")
 
     # Inizializza lista
     self.multi_prodotti_lista = []

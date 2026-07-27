@@ -14,8 +14,11 @@ def build(app):
     """Costruisce la tab Antidoti nell'app."""
     self = app
 
-    container = tk.Frame(self.tab_antidoti, bg=BG_MAIN)
-    container.pack(fill="both", expand=True, padx=10, pady=10)
+    outer = tk.Frame(self.tab_antidoti, bg=BG_MAIN)
+    outer.pack(fill="both", expand=True, padx=10, pady=10)
+
+    # Input a sinistra, risultati a destra: restano visibili insieme.
+    container, col_out = self.make_split(outer)
 
     # === PRODUZIONE ===
     panel_prod, prod_inner = self.make_panel(container, "Produzione Antidoti", "🏭")
@@ -106,7 +109,7 @@ def build(app):
     calc_btn.pack()
 
     # === RISULTATI ===
-    self.make_result_area(container, "label_ant_preview", "text_ant_result")
+    self.make_result_area(col_out, "label_ant_preview", "text_ant_result")
 
     # Inizializzazioni
     self._aggiorna_resina_da_pozioni()

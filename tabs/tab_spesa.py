@@ -15,8 +15,11 @@ def build(app):
     """Costruisce la tab Lista della Spesa nell'app."""
     self = app
 
-    container = tk.Frame(self.tab_spesa, bg=BG_MAIN)
-    container.pack(fill="both", expand=True, padx=10, pady=10)
+    outer = tk.Frame(self.tab_spesa, bg=BG_MAIN)
+    outer.pack(fill="both", expand=True, padx=10, pady=10)
+
+    # Input a sinistra, risultati a destra: restano visibili insieme.
+    container, col_out = self.make_split(outer)
 
     # === PRODOTTI ===
     panel_prod, prod_inner = self.make_panel(container, "Prodotti da produrre", "🛒")
@@ -111,4 +114,4 @@ def build(app):
     reset_btn.pack(side="left", padx=4)
 
     # === RISULTATI ===
-    self.make_result_area(container, "label_spesa_preview", "text_spesa_result")
+    self.make_result_area(col_out, "label_spesa_preview", "text_spesa_result")

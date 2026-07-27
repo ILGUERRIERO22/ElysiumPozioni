@@ -13,14 +13,17 @@ def build(app):
     """Costruisce la tab Rune nell'app."""
     self = app
 
-    container = tk.Frame(self.tab_rune, bg=BG_MAIN)
-    container.pack(fill="both", expand=True, padx=10, pady=10)
+    outer = tk.Frame(self.tab_rune, bg=BG_MAIN)
+    outer.pack(fill="both", expand=True, padx=10, pady=10)
 
     # Info header
-    info_frame = tk.Frame(container, bg=BG_CARD, padx=15, pady=10)
+    info_frame = tk.Frame(outer, bg=BG_CARD, padx=15, pady=10)
     info_frame.pack(fill="x", pady=(0, 10))
     tk.Label(info_frame, text="🔮 Calcolo Rune - Altare delle Rune",
              font=SECTION_FONT, bg=BG_CARD, fg=ACCENT_LIGHT).pack(anchor="w")
+
+    # Input a sinistra, risultati a destra: restano visibili insieme.
+    container, col_out = self.make_split(outer)
 
     # === TIPO RUNE ===
     panel_tipo, tipo_inner = self.make_panel(container, "Tipo di rune", "⚔️")
@@ -55,4 +58,4 @@ def build(app):
     calc_btn.pack()
 
     # === RISULTATI ===
-    self.make_result_area(container, "label_rune_preview", "text_rune_result")
+    self.make_result_area(col_out, "label_rune_preview", "text_rune_result")

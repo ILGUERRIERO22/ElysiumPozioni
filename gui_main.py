@@ -943,6 +943,27 @@ class ElysiumPozioniApp:
 
         return btn
 
+    def make_split(self, parent, peso_sinistra=3, peso_destra=2):
+        """Divide una tab in due colonne: input a sinistra, risultati a destra.
+
+        Ritorna (col_input, col_risultati). La colonna dei risultati resta
+        visibile mentre si compilano i campi, senza dover scorrere: e' il
+        motivo per cui esiste questo layout.
+        """
+        split = tk.Frame(parent, bg=BG_MAIN)
+        split.pack(fill="both", expand=True)
+        split.grid_columnconfigure(0, weight=peso_sinistra, uniform="col")
+        split.grid_columnconfigure(1, weight=peso_destra, uniform="col")
+        split.grid_rowconfigure(0, weight=1)
+
+        sinistra = tk.Frame(split, bg=BG_MAIN)
+        sinistra.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
+
+        destra = tk.Frame(split, bg=BG_MAIN)
+        destra.grid(row=0, column=1, sticky="nsew", padx=(6, 0))
+
+        return sinistra, destra
+
     def make_result_area(self, parent, preview_var_name, text_var_name):
         """Crea l'area risultati con preview e dettaglio"""
         # Preview box

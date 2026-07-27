@@ -15,11 +15,11 @@ def build(app):
     """Costruisce la tab Pozioni di cura nell'app."""
     self = app  # alias per usare il codice originale invariato
 
-    container = tk.Frame(self.tab_pozioni, bg=BG_MAIN)
-    container.pack(fill="both", expand=True, padx=10, pady=10)
+    outer = tk.Frame(self.tab_pozioni, bg=BG_MAIN)
+    outer.pack(fill="both", expand=True, padx=10, pady=10)
 
-    # === PROFILO PREZZI ===
-    panel_prof, prof_inner = self.make_panel(container, "Gestione Profili", "👤")
+    # === PROFILO PREZZI (a tutta larghezza: riguarda l'intera tab) ===
+    panel_prof, prof_inner = self.make_panel(outer, "Gestione Profili", "👤")
 
     tk.Label(
         prof_inner, text="Profilo:", font=LABEL_FONT, bg=BG_CARD, fg=FG_TEXT
@@ -38,6 +38,10 @@ def build(app):
     self.make_action_button(btn_frame, "Elimina",  self.delete_profile, "danger",    "🗑️").pack(side="left", padx=2)
 
     panel_prof.pack(padx=0, pady=(0, 8), fill="x")
+
+    # Input a sinistra, risultati a destra: restano visibili insieme,
+    # senza dover scorrere per vedere l'effetto di una modifica.
+    container, col_out = self.make_split(outer)
 
     # === PRODUZIONE ===
     panel_prod, prod_inner = self.make_panel(container, "Produzione", "🏭")
@@ -164,8 +168,8 @@ def build(app):
     calc_btn.config(font=("Segoe UI", 12, "bold"), padx=24, pady=10)
     calc_btn.pack()
 
-    # === RISULTATI ===
-    self.make_result_area(container, "label_preview", "text_result")
+    # === RISULTATI (colonna di destra) ===
+    self.make_result_area(col_out, "label_preview", "text_result")
 
     # Inizializza combobox profili
     self.combo_profile["values"] = list(self.profiles.keys())

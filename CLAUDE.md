@@ -150,6 +150,13 @@ stare su una riga sola.
 La finestra parte a 980x760 con minimo 950x620: sotto i ~950 px la riga di
 pulsanti dei profili viene tagliata dal bordo.
 
+Ogni tab e' divisa in due colonne da `make_split(outer)`, che ritorna
+`(container, col_out)`: gli input vanno in `container`, i risultati in
+`col_out`, cosi restano visibili mentre si compilano i campi. Header
+informativi e pannelli con molti pulsanti in riga (la gestione profili) vanno
+invece agganciati a `outer`, a tutta larghezza: nella colonna stretta
+verrebbero tagliati.
+
 ## Dati utente
 
 `config.json` e `profiles.json` stanno in `%APPDATA%\ElysiumPozioni`, non nel
