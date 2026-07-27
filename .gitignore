@@ -30,6 +30,10 @@ ENV/
 *.sublime-project
 *.sublime-workspace
 
+# --- Claude Code (configurazione locale, non di progetto) ---
+.claude/settings.local.json
+.claude/launch.json
+
 # --- Dati di sistema ---
 Thumbs.db
 desktop.ini
