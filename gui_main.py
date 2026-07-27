@@ -1135,13 +1135,6 @@ class ElysiumPozioniApp:
             # Calcola
             risultato = core_multi_prod(self.multi_prodotti_lista, prezzi_base)
 
-            # DEBUG: Stampa risultato per diagnosi
-            print("=== DEBUG MULTI-PRODOTTO ===")
-            print(f"Materiali aggregati: {risultato['materiali_aggregati']}")
-            print(f"Costi materiali: {risultato['costi_materiali']}")
-            print(f"Costo totale: {risultato['costo_totale']}")
-            print("============================")
-
             # Mostra preview
             preview = f"Totale: {risultato['costo_totale']:.2f}b"
             if risultato['profitto_netto']:
