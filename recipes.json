@@ -90,6 +90,30 @@
       "core": 1,
       "carbonella": 1,
       "boccette": 1
+    },
+    "_commento_supportive": "Due ricette alternative per lo stesso prodotto. Entrambe consumano una Revivify base, che fa da contenitore al posto delle boccette.",
+    "supportive": {
+      "Oro": {
+        "calderone": "Oro",
+        "per_batch": {
+          "healing_catalyst": 1,
+          "core": 1,
+          "carbonella": 2,
+          "revivify_base": 1
+        },
+        "supportive_per_batch": 1
+      },
+      "Smeraldo": {
+        "calderone": "Smeraldo",
+        "per_batch": {
+          "demonic_slab": 1,
+          "end_shard": 1,
+          "core": 1,
+          "carbonella": 3,
+          "revivify_base": 1
+        },
+        "supportive_per_batch": 2
+      }
     }
   },
 

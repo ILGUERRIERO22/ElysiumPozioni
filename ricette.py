@@ -60,6 +60,13 @@ def get_ricetta_antidoto(tipo: str) -> dict:
 
 # === REVIVIFY ===
 REVIVIFY: dict = _data["revivify"]
+SUPPORTIVE: dict = REVIVIFY["supportive"]
+
+def get_ricetta_supportive(calderone: str) -> dict:
+    """Ricetta della Supportive Revivify per il calderone dato (Oro o Smeraldo)."""
+    if calderone not in SUPPORTIVE:
+        raise ValueError(f"Calderone supportive non valido: {calderone!r}")
+    return SUPPORTIVE[calderone]
 
 # === EXTINGUISH ===
 EXTINGUISH: dict = _data["extinguish"]

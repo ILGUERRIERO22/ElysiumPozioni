@@ -28,7 +28,10 @@ from animations import AnimationManager
 
 from calcolo_pozioni import calcola_pozioni
 from calcolo_antidoti import calcola_antidoti as core_calcola_antidoti
-from calcolo_revivify import calcola_revivify as core_calcola_revivify
+from calcolo_revivify import (
+    calcola_revivify as core_calcola_revivify,
+    calcola_supportive_revivify as core_calcola_supportive,
+)
 from calcolo_extinguish import calcola_extinguish as core_calcola_extinguish
 from calcolo_rune import (
     calcola_rune_diretto as core_rune_diretto,
@@ -1438,6 +1441,14 @@ class ElysiumPozioniApp:
                 val = ""
             self.label_rev_carbone.config(text=val or "-")
 
+        # Reagente dalla tab Pozioni (per l'healing catalyst della Supportive)
+        if hasattr(self, "label_rev_reagente"):
+            try:
+                val = self.entry_reagente.get()
+            except Exception:
+                val = ""
+            self.label_rev_reagente.config(text=val or "-")
+
         # Boccette dalla tab Pozioni
         if hasattr(self, "label_rev_boccette"):
             try:
@@ -1582,28 +1593,48 @@ class ElysiumPozioniApp:
 
     def do_calcola_revivify(self):
         try:
+            self._aggiorna_prezzi_revivify()
+
             num = float(self.entry_rev_num.get())
+            tipo = self.combo_rev_tipo.get() if hasattr(self, "combo_rev_tipo") else "Revivify"
             prezzo_core = float(self.entry_core.get())
             prezzo_carbone = self._get_prezzo_carbone_norm()
             boccette_per_1b = float(self.entry_boccette_per_b.get())
             prezzo_revival = float(self.entry_revival.get())
-            
+
             try:
                 prezzo_vendita = float(self.entry_rev_prezzo_vendita.get())
             except ValueError:
                 prezzo_vendita = None
-            
-            result = core_calcola_revivify(
-                num=num,
-                prezzo_core=prezzo_core,
-                prezzo_carbone=prezzo_carbone,
-                boccette_per_1b=boccette_per_1b,
-                prezzo_revival=prezzo_revival,
-                prezzo_vendita=prezzo_vendita,
-            )
-            
+
+            if tipo == "Revivify":
+                result = core_calcola_revivify(
+                    num=num,
+                    prezzo_core=prezzo_core,
+                    prezzo_carbone=prezzo_carbone,
+                    boccette_per_1b=boccette_per_1b,
+                    prezzo_revival=prezzo_revival,
+                    prezzo_vendita=prezzo_vendita,
+                )
+            else:
+                # "Supportive (Oro)" / "Supportive (Smeraldo)" -> nome del calderone
+                calderone = tipo.split("(")[1].rstrip(")")
+                result = core_calcola_supportive(
+                    num=num,
+                    calderone=calderone,
+                    prezzo_core=prezzo_core,
+                    prezzo_carbone=prezzo_carbone,
+                    boccette_per_1b=boccette_per_1b,
+                    prezzo_revival=prezzo_revival,
+                    prezzo_reagente=float(self.entry_reagente.get() or 0),
+                    tier_reagente=self.combo_rev_tier.get(),
+                    prezzo_demonic_slab=float(self.entry_rev_slab.get() or 0),
+                    prezzo_end_shard=float(self.entry_rev_shard.get() or 0),
+                    prezzo_vendita=prezzo_vendita,
+                )
+
             self._mostra_risultato(self.label_rev_preview, self.text_rev_result, result)
-            
+
         except ValueError:
             messagebox.showerror("❌ Errore", "Controlla i campi Revivify: inserisci numeri validi.")
 
@@ -2225,6 +2256,10 @@ class ElysiumPozioniApp:
             # Revivify
             "rev_num": self.entry_rev_num.get() if hasattr(self, 'entry_rev_num') else "",
             "rev_prezzo_vendita": self.entry_rev_prezzo_vendita.get() if hasattr(self, 'entry_rev_prezzo_vendita') else "",
+            "rev_tipo": self.combo_rev_tipo.get() if hasattr(self, 'combo_rev_tipo') else "",
+            "rev_tier": self.combo_rev_tier.get() if hasattr(self, 'combo_rev_tier') else "",
+            "rev_slab": self.entry_rev_slab.get() if hasattr(self, 'entry_rev_slab') else "",
+            "rev_shard": self.entry_rev_shard.get() if hasattr(self, 'entry_rev_shard') else "",
             
             # Extinguish
             "ext_num": self.entry_ext_num.get() if hasattr(self, 'entry_ext_num') else "",
@@ -2329,6 +2364,14 @@ class ElysiumPozioniApp:
         # Revivify
         load_entry("rev_num", "entry_rev_num")
         load_entry("rev_prezzo_vendita", "entry_rev_prezzo_vendita")
+        if "rev_tipo" in data and hasattr(self, 'combo_rev_tipo'):
+            self.combo_rev_tipo.set(data["rev_tipo"])
+            if hasattr(self, "_toggle_rev_campi"):
+                self._toggle_rev_campi()
+        if "rev_tier" in data and hasattr(self, 'combo_rev_tier'):
+            self.combo_rev_tier.set(data["rev_tier"])
+        load_entry("rev_slab", "entry_rev_slab")
+        load_entry("rev_shard", "entry_rev_shard")
         
         # Extinguish
         load_entry("ext_num", "entry_ext_num")

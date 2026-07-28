@@ -107,6 +107,14 @@ Le etichette dei materiali vengono dai nomi in `recipes.json`: aggiungendo un
 ingrediente vanno estese `INGREDIENTI` o `ETICHETTA_EXTRA_PREZZO`, che mappano
 la chiave di ricetta sull'etichetta mostrata e sulla chiave prezzo.
 
+**La Supportive Revivify ha due ricette alternative** (`revivify.supportive` in
+`recipes.json`): una in Oro che rende 1 pozione e una in Smeraldo che ne rende
+2. Entrambe consumano una **Revivify base**, che fa da contenitore al posto
+delle boccette: il suo costo non si chiede all'utente ma si ricava chiamando
+`calcola_revivify`. L'**healing catalyst** della ricetta in Oro e' quello dei
+reagenti, quindi costa `prezzo_reagente / catalyst_per_reagente[tier]`, non ha
+un prezzo proprio.
+
 **Il tier del reagente e' indipendente dal calderone.** Un reagente T2 produce
 2 catalyst e un T3 ne produce 3 (`catalyst_per_reagente`), quindi salendo di
 tier servono meno reagenti per le stesse pozioni. Usare un T1 in un calderone

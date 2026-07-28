@@ -104,6 +104,7 @@ const PREZZI = {
   zucchero:{et:'Zucchero (1x)',v:'1.0'},        blaze:{et:'Blaze (1x)',v:'1.5'},
   revival_star:{et:'Revival star (1x)',v:'2.0'},quarzo:{et:'Quarzo (1x)',v:'1.0'},
   anthracite:{et:'Anthracite (1x)',v:'3.0'},
+  demonic_slab:{et:'Demonic slab (1x)',v:'5.0'}, end_shard:{et:'End shard (1x)',v:'4.0'},
   brim:{et:'Brim powder (1x)',v:'1.0'},         carne_marcia:{et:'Carne marcia (1x)',v:'1.0'},
   membrana:{et:'Membrana Phantom (1x)',v:'1.0'},lost_soul:{et:'Lost soul (1x)',v:'1.0'},
   tin:{et:'Lingotto Tin',v:'9'},   copper:{et:'Lingotto Rame',v:'9'},
@@ -121,7 +122,7 @@ const METALLO = {Tin:'tin',Rame:'copper',Ferro:'iron',Oro:'gold',
 // Gli aggregatori usano i prezzi di tutti i prodotti insieme.
 const TUTTI_I_PREZZI = ['reagente','core','carbone','verdure','vasetti','boccette',
   'occhio_ragno','withering_dust','fungo_marrone','slimeball','lapis','zucchero',
-  'blaze','revival_star','quarzo','anthracite','brim','carne_marcia','membrana','lost_soul',
+  'blaze','revival_star','quarzo','anthracite','demonic_slab','end_shard','brim','carne_marcia','membrana','lost_soul',
   'tin','copper','iron','gold','diamond','silver'];
 
 // --- definizione delle schede ---
@@ -134,6 +135,9 @@ const TABS = () => ({
               prezzi:['brim','carne_marcia','revival_star','carbone','verdure','vasetti','boccette']},
   revivify:  {nome:'Revivify',   tipo:'singolo', sez:'revivify', campo:'per_revivify',
               unita:'pozione', prezzi:['revival_star','core','carbone','boccette']},
+  supportive:{nome:'Supportive', tipo:'supportive', unita:'pozione',
+              prezzi:['reagente','demonic_slab','end_shard','revival_star','core',
+                      'carbone','boccette']},
   extinguish:{nome:'Extinguish', tipo:'singolo', sez:'extinguish', campo:'per_extinguish',
               unita:'pozione', prezzi:['quarzo','core','carbone','boccette']},
   danno:     {nome:'Danno',      tipo:'livelli', sez:'danno', unita:'pozione',
@@ -257,6 +261,17 @@ function disegna(){
              <select id="v_tier">${tier}</select><span class="hint" id="h_tier"></span></div>
            <div class="row"><label for="v_cal">Calderone:</label>
              <select id="v_cal">${cald}</select></div>`;
+  } else if (cfg.tipo === 'supportive') {
+    const cald = Object.keys(R.revivify.supportive)
+      .map(k => `<option value="${k}">${k}</option>`).join('');
+    const tier = Object.keys(R.pozioni_cura.catalyst_per_reagente)
+      .map(k => `<option value="${k}">${k}</option>`).join('');
+    sel = `<div class="row"><label for="v_var">Calderone:</label>
+             <select id="v_var">${cald}</select></div>
+           <div class="row"><label for="v_tier">Tipo reagente:</label>
+             <select id="v_tier">${tier}</select>
+             <span class="hint">per l'healing catalyst</span></div>`;
+
   } else if (cfg.tipo !== 'cura' && cfg.tipo !== 'singolo') {
     const voci = cfg.tipo === 'rune' ? Object.keys(R.rune.resa_per_pepita)
                : Object.keys(R[cfg.sez]);
@@ -559,6 +574,27 @@ function calcola(){
       extra = [`Include ${n} pozioni di ${base}, consumate dall'upgrade`];
     }
     titolo = `${v} — calderone ${ric.calderone}`;
+
+  } else if (cfg.tipo === 'supportive') {
+    const v = $('v_var').value, ric = R.revivify.supportive[v];
+    const batch = n / ric.supportive_per_batch;
+    // la Revivify base viene prodotta, non comprata: ne riusiamo il costo
+    const b = {}, bc = {};
+    applica(R.revivify.per_revivify, 1, b, bc);
+    const costoBase = Object.values(bc).reduce((a,x) => a+x, 0);
+    for (const ing in ric.per_batch){
+      const q = batch * ric.per_batch[ing];
+      let et, cu;
+      if (ing === 'carbonella')          { et='Carbonella';       cu=costoCarbonella(); }
+      else if (ing === 'revivify_base')  { et='Revivify base';    cu=costoBase; }
+      else if (ing === 'healing_catalyst'){ et='Healing catalyst';
+        cu = pz('reagente') / R.pozioni_cura.catalyst_per_reagente[$('v_tier').value]; }
+      else { et = PREZZI[ing] ? PREZZI[ing].et.replace(/ \(1x\)$/,'') : ing; cu = pz(ing); }
+      mat[et] = (mat[et]||0) + q;  cos[et] = (cos[et]||0) + q*cu;
+    }
+    titolo = `Supportive Revivify — calderone ${v}`;
+    extra = [`1 preparazione produce ${ric.supportive_per_batch} Supportive`,
+             `Revivify base: ${f2(costoBase)} b (prodotta, non comprata)`];
 
   } else if (cfg.tipo === 'elisir') {
     const v = $('v_var').value, ric = R.elisir[v], p = ric.per_elisir;

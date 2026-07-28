@@ -13,6 +13,19 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
   calderone, e ha un campo prezzo dedicato.
 - La scheda e' disponibile anche nella versione web.
 
+### ✨ Supportive Revivify
+- La tab **Revivify** ora calcola anche la **Supportive Revivify**, con le sue
+  due ricette alternative:
+  - **Oro**: 1 Healing catalyst + 1 Core + 2 Carbonella + 1 Revivify → 1
+  - **Smeraldo**: 1 Demonic slab + 1 End shard + 1 Core + 3 Carbonella +
+    1 Revivify → 2
+- In entrambe la Revivify base fa da contenitore al posto delle boccette, e il
+  suo costo viene calcolato invece che chiesto: e' un prodotto, non un
+  acquisto.
+- L'healing catalyst e' quello ricavato dai reagenti, quindi il suo costo
+  dipende dal tier scelto: un T3 lo rende tre volte piu' economico di un T1.
+- Il menu permette di confrontare i due percorsi a colpo d'occhio.
+
 ---
 
 ## [v4.1] — 2026-07-28
