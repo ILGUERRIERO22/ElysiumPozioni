@@ -11,6 +11,7 @@ from ricette import (
     get_calderone_pozioni, get_catalyst_per_reagente,
     get_ricetta_antidoto, get_ricetta_elisir,
     get_ricetta_velocita, get_ricetta_danno, get_ricetta_riduzione,
+    get_ricetta_forza, get_ricetta_supportive, get_catalyst_per_reagente,
 )
 
 
@@ -184,6 +185,51 @@ def ingredienti_riduzione(qty: float, tipo: str) -> dict:
     return dict(raw)
 
 
+def ingredienti_forza(qty: float, tipo: str = "Forza II") -> dict:
+    """Ingredienti grezzi per qty pozioni di Forza."""
+    p = get_ricetta_forza(tipo)["per_pozione"]
+    return {
+        "Anthracite":    qty * p["anthracite"],
+        "Quarzo":        qty * p["quarzo"],
+        "Core fragment": qty * p["core"],
+        "Carbonella":    qty * p["carbonella"],
+        "Boccette":      qty * p["boccette"],
+    }
+
+
+def ingredienti_supportive(qty: float, calderone: str, tier: str = "T1") -> dict:
+    """Ingredienti grezzi per qty Supportive Revivify.
+
+    La Revivify base non si compra: si scompone nei suoi ingredienti, cosi
+    la lista contiene solo cose realmente acquistabili. Stesso trattamento
+    per l'healing catalyst, che si prepara da reagente, core e resina.
+    """
+    rec = get_ricetta_supportive(calderone)
+    batch = qty / rec["supportive_per_batch"]
+    raw = defaultdict(float)
+
+    for ing, n in rec["per_batch"].items():
+        tot = batch * n
+        if ing == "revivify_base":
+            for k, v in ingredienti_revivify(tot).items():
+                raw[k] += v
+        elif ing == "healing_catalyst":
+            n_prep = tot / get_catalyst_per_reagente(tier)
+            raw[f"Reagente {tier}"] += n_prep
+            raw["Core fragment"]    += n_prep * POZIONI_CURA["core_per_reagente"]
+            for k, v in _resina_to_raw(n_prep * POZIONI_CURA["resine_per_reagente"]).items():
+                raw[k] += v
+        elif ing == "core":
+            raw["Core fragment"] += tot
+        elif ing == "carbonella":
+            raw["Carbonella"] += tot
+        elif ing == "demonic_slab":
+            raw["Demonic slab"] += tot
+        elif ing == "end_shard":
+            raw["End shard"] += tot
+    return dict(raw)
+
+
 def ingredienti_elisir(qty: float, tipo: str) -> dict:
     rec          = get_ricetta_elisir(tipo)
     metallo      = rec["metallo_pepita"]
@@ -243,6 +289,10 @@ def genera_lista_spesa(selezioni: list, tipo_combustibile: str = "Carbone") -> t
             ing = ingredienti_riduzione(qty, **p)
         elif t == "elisir":
             ing = ingredienti_elisir(qty, **p)
+        elif t == "forza":
+            ing = ingredienti_forza(qty, **p)
+        elif t == "supportive":
+            ing = ingredienti_supportive(qty, **p)
         else:
             continue
 

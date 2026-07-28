@@ -26,6 +26,14 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
   dipende dal tier scelto: un T3 lo rende tre volte piu' economico di un T1.
 - Il menu permette di confrontare i due percorsi a colpo d'occhio.
 
+### 🧮 Forza e Supportive negli aggregatori
+- **Multi-Prodotto** e **Lista della spesa** ora includono anche Pozione Forza
+  II e le due Supportive Revivify.
+- Nella lista della spesa i prodotti intermedi vengono scomposti: la Revivify
+  base diventa Revival star, core e boccette; l'healing catalyst diventa
+  reagente, core e resina. Cosi la lista contiene solo cose che si comprano
+  davvero.
+
 ---
 
 ## [v4.1] — 2026-07-28

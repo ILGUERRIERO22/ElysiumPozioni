@@ -119,11 +119,11 @@ Le etichette dei materiali vengono dai nomi in `recipes.json`: aggiungendo un
 ingrediente vanno estese `INGREDIENTI` o `ETICHETTA_EXTRA_PREZZO`, che mappano
 la chiave di ricetta sull'etichetta mostrata e sulla chiave prezzo.
 
-**Forza e Supportive Revivify non sono negli aggregatori.** Il Multi-Prodotto
-(`get_tipi_prodotti_disponibili` in `calcolo_multi_prodotto.py`), la Lista della
-spesa e la funzione `catalogo()` della versione web elencano ancora i soli
-prodotti precedenti. Aggiungendo un prodotto vanno estese anche quelle liste,
-altrimenti resta calcolabile solo dalla sua tab.
+**Negli aggregatori i prodotti intermedi si scompongono.** La Supportive
+Revivify consuma una Revivify base e un healing catalyst, che non si comprano
+ma si producono: nel Multi-Prodotto e nella Lista della spesa entrano
+scomposti nei loro ingredienti (Revival star, reagente, core, resina), cosi la
+lista contiene solo voci realmente acquistabili.
 
 **La Supportive Revivify ha due ricette alternative** (`revivify.supportive` in
 `recipes.json`): una in Oro che rende 1 pozione e una in Smeraldo che ne rende

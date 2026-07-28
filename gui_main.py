@@ -1967,6 +1967,28 @@ class ElysiumPozioniApp:
                     "params": {"tipo": tipo},
                 })
 
+            # --- Forza ---
+            qty = get_qty(self.entry_spesa_forza_qty)
+            if qty > 0:
+                tipo = self.combo_spesa_forza_tipo.get()
+                selezioni.append({
+                    "tipo": "forza", "qty": qty,
+                    "label": f"Forza  [{tipo}]",
+                    "params": {"tipo": tipo},
+                })
+
+            # --- Supportive Revivify ---
+            qty = get_qty(self.entry_spesa_supp_qty)
+            if qty > 0:
+                cal = self.combo_spesa_supp_tipo.get()
+                tier = (self.combo_rev_tier.get()
+                        if hasattr(self, "combo_rev_tier") else "T1")
+                selezioni.append({
+                    "tipo": "supportive", "qty": qty,
+                    "label": f"Supportive Revivify  [{cal}]",
+                    "params": {"calderone": cal, "tier": tier},
+                })
+
             if not selezioni:
                 messagebox.showwarning("⚠️ Lista vuota",
                     "Inserisci almeno un prodotto con quantità > 0.")
@@ -2039,6 +2061,7 @@ class ElysiumPozioniApp:
             "entry_spesa_rev_qty", "entry_spesa_ext_qty",
             "entry_spesa_elisir_qty", "entry_spesa_vel_qty",
             "entry_spesa_danno_qty", "entry_spesa_rid_qty",
+            "entry_spesa_forza_qty", "entry_spesa_supp_qty",
         ):
             if hasattr(self, attr):
                 e = getattr(self, attr)

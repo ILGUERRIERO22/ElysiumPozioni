@@ -12,6 +12,8 @@ from ricette import (
     DANNO,
     RIDUZIONE,
     VELOCITA,
+    FORZA,
+    SUPPORTIVE,
     RESA_PEPITA_NET,
     METALLI_ORDINE,
     get_calderone_pozioni,
@@ -214,6 +216,10 @@ INGREDIENTI = {
     'lapis':          ('Lapis',           'lapis'),
     'zucchero':       ('Zucchero',        'zucchero'),
     'blaze':          ('Blaze',           'blaze'),
+    'reagente':       ('Reagente',        'reagente'),
+    'anthracite':     ('Anthracite',      'anthracite'),
+    'demonic_slab':   ('Demonic slab',    'demonic_slab'),
+    'end_shard':      ('End shard',       'end_shard'),
 }
 
 # Prodotti a step singolo: (sezione di recipes.json, chiave ricetta, campo)
@@ -225,6 +231,7 @@ RICETTE_SEMPLICI = {
     'extinguish':          (EXTINGUISH, None,           'per_extinguish'),
     'antidoto_terracotta': (ANTIDOTI,   'Terracotta',   'per_antidoto'),
     'antidoto_ferro':      (ANTIDOTI,   'Ferro',        'per_batch'),
+    'forza_ii':            (FORZA,      'Forza II',     'per_pozione'),
 }
 
 # Prodotti a due step: il livello II include un'unita' del livello I.
@@ -287,6 +294,44 @@ def _materiali_due_step(tipo, qty, prezzi, costo_carb, costo_bocc):
     return _applica_ricetta(
         sezione[chiave_up]['step_aggiuntivo_per_pozione'], qty, materiali, costi,
         prezzi, costo_carb, costo_bocc, 0.0)
+
+
+SUPPORTIVE_PER_TIPO = {
+    'supportive_oro':      'Oro',
+    'supportive_smeraldo': 'Smeraldo',
+}
+
+
+def _materiali_supportive(calderone, qty, prezzi, costo_carb, costo_bocc,
+                          costo_resina, tier):
+    """Supportive Revivify: consuma una Revivify base come contenitore.
+
+    La Revivify base non si compra ma si produce, quindi i suoi ingredienti
+    entrano nella lista aggregata al posto della pozione. L'healing catalyst
+    si prepara con 1 reagente + 1 core + 1 resina e ne escono tanti quanti
+    il tier ne rende.
+    """
+    rec = SUPPORTIVE[calderone]
+    batch = qty / rec['supportive_per_batch']
+
+    materiali, costi = {}, {}
+    for ing, n in rec['per_batch'].items():
+        tot = batch * n
+        if ing == 'revivify_base':
+            # scomposta nei suoi ingredienti: e' un prodotto, non un acquisto
+            _applica_ricetta(REVIVIFY['per_revivify'], tot, materiali, costi,
+                             prezzi, costo_carb, costo_bocc, costo_resina)
+        elif ing == 'healing_catalyst':
+            cat_per_rea = get_catalyst_per_reagente(tier)
+            _applica_ricetta(
+                {'reagente': 1, 'core': POZIONI_CURA['core_per_reagente'],
+                 'resina': POZIONI_CURA['resine_per_reagente']},
+                tot / cat_per_rea, materiali, costi,
+                prezzi, costo_carb, costo_bocc, costo_resina)
+        else:
+            _applica_ricetta({ing: n}, batch, materiali, costi,
+                             prezzi, costo_carb, costo_bocc, costo_resina)
+    return materiali, costi
 
 
 def _materiali_elisir(nome, qty, prezzi, costo_carb, costo_bocc, costo_resina):
@@ -423,6 +468,11 @@ def calcola_materiali_prodotto(tipo, qty, prezzi, costo_carb, costo_bocc,
     if tipo in RICETTE_DUE_STEP:
         return _materiali_due_step(tipo, qty, prezzi, costo_carb, costo_bocc)
 
+    if tipo in SUPPORTIVE_PER_TIPO:
+        return _materiali_supportive(
+            SUPPORTIVE_PER_TIPO[tipo], qty, prezzi, costo_carb, costo_bocc,
+            costo_resina, tier)
+
     if tipo in ELISIR_PER_TIPO:
         return _materiali_elisir(ELISIR_PER_TIPO[tipo], qty, prezzi, costo_carb,
                                  costo_bocc, costo_resina)
@@ -460,6 +510,9 @@ def get_nome_prodotto(tipo):
         'elisir_lesser': 'Elisir Lesser Mending (Ferro)',
         'elisir_medium': 'Elisir Medium Mending (Oro)',
         'elisir_greater': 'Elisir Greater Mending (Diamante)',
+        'forza_ii': 'Pozione Forza II',
+        'supportive_oro': 'Supportive Revivify (Oro)',
+        'supportive_smeraldo': 'Supportive Revivify (Smeraldo)',
         'rune_maghi': 'Rune Maghi',
         'rune_bardi': 'Rune Bardi',
     }
@@ -494,6 +547,9 @@ def get_tipi_prodotti_disponibili():
         ('elisir_medium', 'Elisir Medium Mending (Oro)'),
         ('elisir_greater', 'Elisir Greater Mending (Diamante)'),
         # Rune
+        ('forza_ii', 'Pozione Forza II'),
+        ('supportive_oro', 'Supportive Revivify (Oro)'),
+        ('supportive_smeraldo', 'Supportive Revivify (Smeraldo)'),
         ('rune_maghi', 'Rune Maghi'),
         ('rune_bardi', 'Rune Bardi'),
     ]

@@ -96,7 +96,17 @@ def build(app):
     # Riduzione
     lbl(prod_inner, "Riduzione:", r)
     self.combo_spesa_rid_tipo = make_combo(prod_inner, ["Riduzione I", "Riduzione II"], r, 1, 10)
-    self.entry_spesa_rid_qty  = make_qty(prod_inner, r)
+    self.entry_spesa_rid_qty  = make_qty(prod_inner, r); r += 1
+
+    # Forza
+    lbl(prod_inner, "Forza:", r)
+    self.combo_spesa_forza_tipo = make_combo(prod_inner, ["Forza II"], r, 1, 10)
+    self.entry_spesa_forza_qty  = make_qty(prod_inner, r); r += 1
+
+    # Supportive Revivify: il calderone sceglie fra le due ricette alternative
+    lbl(prod_inner, "Supportive:", r)
+    self.combo_spesa_supp_tipo = make_combo(prod_inner, ["Oro", "Smeraldo"], r, 1, 10)
+    self.entry_spesa_supp_qty  = make_qty(prod_inner, r)
 
     panel_prod.pack(padx=0, pady=(0, 8), fill="x")
 

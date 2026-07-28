@@ -113,6 +113,7 @@ const PREZZI = {
 };
 // ingrediente di ricetta -> chiave prezzo (quelli con nome diverso)
 const ALIAS = {boccette:'boccette', carbonella:'carbone', resina:null};
+// 'reagente' e' sia un prezzo diretto sia un ingrediente (healing catalyst)
 // ingrediente extra dell'elisir -> chiave prezzo
 const EXTRA = {'Brim powder':'brim','Occhio di ragno':'occhio_ragno',
   'Membrana di Phantom':'membrana','Slimeball':'slimeball','Lost soul':'lost_soul'};
@@ -168,6 +169,9 @@ function catalogo(){
   for (const s of ['danno','velocita','riduzione'])
     for (const k of Object.keys(R[s])) v.push({id:s+':'+k, nome:k});
   for (const e of Object.keys(R.elisir)) v.push({id:'elisir:'+e, nome:'Elisir — '+e});
+  for (const f of Object.keys(R.forza)) v.push({id:'forza:'+f, nome:f});
+  for (const c of Object.keys(R.revivify.supportive))
+    v.push({id:'supportive:'+c, nome:`Supportive Revivify — ${c}`, cura:true});
   return v;
 }
 
@@ -198,6 +202,24 @@ function materialiDi(id, n, tier){
     applica(R[tipo][base].per_pozione, n, mat, cos);
     const up = R[tipo][variante].step_aggiuntivo_per_pozione;
     if (up) applica(up, n, mat, cos);
+  } else if (tipo === 'forza'){
+    applica(R.forza[variante].per_pozione, n, mat, cos);
+  } else if (tipo === 'supportive'){
+    const rec = R.revivify.supportive[variante];
+    const batch = n / rec.supportive_per_batch;
+    for (const ing in rec.per_batch){
+      const tot = batch * rec.per_batch[ing];
+      if (ing === 'revivify_base'){
+        // si produce, non si compra: entra scomposta nei suoi ingredienti
+        applica(R.revivify.per_revivify, tot, mat, cos);
+      } else if (ing === 'healing_catalyst'){
+        const prep = tot / R.pozioni_cura.catalyst_per_reagente[tier || 'T1'];
+        applica({reagente:1, core:R.pozioni_cura.core_per_reagente,
+                 resina:R.pozioni_cura.resine_per_reagente}, prep, mat, cos);
+      } else {
+        applica({[ing]: rec.per_batch[ing]}, batch, mat, cos);
+      }
+    }
   } else if (tipo === 'elisir'){
     const ric = R.elisir[variante], p = ric.per_elisir;
     applica({resina:p.resina, core:p.core, boccette:p.boccette}, n, mat, cos);
