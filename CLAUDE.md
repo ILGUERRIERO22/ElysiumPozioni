@@ -159,9 +159,16 @@ verrebbero tagliati.
 
 ## Versione web
 
-`docs/index.html` e' un calcolatore delle sole pozioni di cura, pagina singola
-senza dipendenze, pubblicata via GitHub Pages dalla cartella `/docs`. Riusa la
-palette della GUI e legge le ricette da `docs/recipes.json`.
+`docs/index.html` e' una pagina singola senza dipendenze, pubblicata via GitHub
+Pages dalla cartella `/docs`. Riusa la palette della GUI e legge le ricette da
+`docs/recipes.json`. Copre nove schede: mancano solo i due aggregatori
+(Multi-Prodotto e Lista della spesa).
+
+Le schede sono descritte dalla tabella `TABS()` e calcolate da un motore
+generico, non da un blocco per prodotto: `singolo` (una fase), `batch` (resa
+diversa da 1, es. antidoto Ferro), `livelli` (il II consuma un'unita' del I),
+`elisir`, `rune` e `cura`. Un nuovo prodotto si aggiunge con una voce in
+`TABS()`, come lato Python con `RICETTE_SEMPLICI`.
 
 Quella copia **non va modificata a mano**: si cambia `recipes.json` nella
 radice e si rilancia `python tools/aggiorna_web.py`, che riallinea le due

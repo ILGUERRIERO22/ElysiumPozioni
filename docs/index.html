@@ -6,248 +6,400 @@
 <title>Elysium Pozioni — calcolatore</title>
 <style>
   :root{
-    --bg:#12131a; --panel:#191b24; --card:#1e212c; --result:#0c0d12; --input:#252936;
+    --bg:#12131a; --card:#1e212c; --result:#0c0d12; --input:#252936;
     --text:#e6e8f0; --subtle:#8d93a6; --bright:#fff;
     --accent:#2ea86a; --accent-hi:#3dc47f; --accent-lt:#6ee7a8;
-    --gold:#e0a63c; --magic:#8b5cf6; --danger:#c0392b;
-    --border:#2b303d;
+    --gold:#e0a63c; --magic:#8b5cf6; --danger:#c0392b; --border:#2b303d;
   }
   *{box-sizing:border-box}
-  body{
-    margin:0; background:var(--bg); color:var(--text);
-    font:15px/1.5 "Segoe UI",system-ui,sans-serif;
-  }
-  header{padding:22px 20px 0; max-width:1100px; margin:0 auto}
-  h1{margin:0; font-size:28px; color:var(--accent-lt); letter-spacing:.5px}
-  h1 small{color:var(--subtle); font-size:13px; font-weight:400; margin-left:8px}
-  .strip{display:flex; height:3px; margin:10px 0 18px; max-width:1100px}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:15px/1.5 "Segoe UI",system-ui,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+  header{padding-top:22px}
+  h1{margin:0;font-size:27px;color:var(--accent-lt);letter-spacing:.5px}
+  h1 small{color:var(--subtle);font-size:13px;font-weight:400;margin-left:8px}
+  .strip{display:flex;height:3px;margin:10px 0 14px}
   .strip i{flex:1}
-  main{max-width:1100px; margin:0 auto; padding:0 20px 40px;
-       display:grid; grid-template-columns:3fr 2fr; gap:16px; align-items:start}
-  @media(max-width:820px){ main{grid-template-columns:1fr} }
 
-  .card{background:var(--card); border:1px solid var(--border); border-radius:8px;
-        padding:14px 16px; margin-bottom:14px}
-  .card h2{margin:0 0 12px; font-size:15px; display:flex; align-items:center; gap:8px}
-  .card h2::before{content:""; width:4px; height:16px; background:var(--accent); border-radius:2px}
+  nav{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px}
+  nav button{background:#191b24;color:var(--subtle);border:1px solid var(--border);
+    border-radius:5px 5px 0 0;padding:8px 13px;font:inherit;font-size:13px;
+    font-weight:700;cursor:pointer;width:auto;margin:0}
+  nav button:hover{background:#39404f;color:var(--text)}
+  nav button.on{background:var(--accent);color:var(--bright);border-color:var(--accent)}
 
-  .row{display:flex; align-items:center; gap:10px; margin:8px 0}
-  .row label{flex:0 0 165px; text-align:right; color:var(--text); font-size:14px}
-  .row .hint{color:var(--subtle); font-size:12px}
-  input,select{
-    background:var(--input); color:var(--text); border:2px solid var(--border);
-    border-radius:5px; padding:7px 9px; font:inherit; font-size:14px; width:110px;
-  }
-  input:focus,select:focus{outline:none; border-color:var(--accent)}
-  input.bad{border-color:#a33a2f}
-  select{width:auto; min-width:120px}
+  main{display:grid;grid-template-columns:3fr 2fr;gap:16px;align-items:start;
+       padding-bottom:40px}
+  @media(max-width:820px){main{grid-template-columns:1fr}}
 
-  button{
-    background:var(--accent); color:var(--bright); border:1px solid var(--border);
-    border-radius:6px; padding:11px 22px; font:inherit; font-weight:700;
-    cursor:pointer; width:100%; font-size:15px; margin-top:4px;
-  }
-  button:hover{background:var(--accent-hi)}
-
-  .preview{background:var(--result); border:1px solid var(--border); border-radius:8px;
-           padding:16px; text-align:center; color:var(--accent-lt); font-size:15px;
-           margin-bottom:14px}
-  .preview.loss{background:#2a0f0d; color:#ff8a7a}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;
+        padding:14px 16px;margin-bottom:14px}
+  .card h2{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px}
+  .card h2::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px}
+  .row{display:flex;align-items:center;gap:10px;margin:8px 0;flex-wrap:wrap}
+  .row label{flex:0 0 170px;text-align:right;font-size:14px}
+  @media(max-width:520px){.row label{flex:1 0 100%;text-align:left}}
+  .hint{color:var(--subtle);font-size:12px}
+  input,select{background:var(--input);color:var(--text);border:2px solid var(--border);
+    border-radius:5px;padding:7px 9px;font:inherit;font-size:14px;width:110px}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  select{width:auto;min-width:130px}
+  button.go{background:var(--accent);color:var(--bright);border:1px solid var(--border);
+    border-radius:6px;padding:11px 22px;font:inherit;font-weight:700;cursor:pointer;
+    width:100%;font-size:15px;margin-top:6px}
+  button.go:hover{background:var(--accent-hi)}
+  .preview{background:var(--result);border:1px solid var(--border);border-radius:8px;
+    padding:16px;text-align:center;color:var(--accent-lt);font-size:15px;margin-bottom:14px}
+  .preview.loss{background:#2a0f0d;color:#ff8a7a}
   .preview b{color:var(--gold)}
-  pre{background:var(--result); border:1px solid var(--border); border-radius:8px;
-      padding:14px; margin:0; overflow-x:auto; font:13px/1.55 Consolas,monospace;
-      color:var(--text); min-height:220px; white-space:pre-wrap}
-  footer{max-width:1100px; margin:0 auto; padding:0 20px 30px; color:var(--subtle); font-size:13px}
+  pre{background:var(--result);border:1px solid var(--border);border-radius:8px;
+    padding:14px;margin:0;overflow-x:auto;font:13px/1.55 Consolas,monospace;
+    min-height:240px;white-space:pre-wrap}
+  footer{color:var(--subtle);font-size:13px;padding-bottom:30px}
   a{color:var(--accent-lt)}
 </style>
 </head>
 <body>
 
-<header>
-  <h1>⚗️ Elysium Pozioni <small>calcolatore pozioni di cura</small></h1>
-</header>
-<div class="strip" style="max-width:1100px;margin:10px auto 18px;padding:0 20px">
-  <i style="background:#c0392b"></i><i style="background:#2ea86a"></i>
-  <i style="background:#e0a63c"></i><i style="background:#60a5fa"></i>
-  <i style="background:#8b5cf6"></i>
+<div class="wrap">
+  <header><h1>⚗️ Elysium Pozioni <small id="sub">calcolatore</small></h1></header>
+  <div class="strip">
+    <i style="background:#c0392b"></i><i style="background:#2ea86a"></i>
+    <i style="background:#e0a63c"></i><i style="background:#60a5fa"></i>
+    <i style="background:#8b5cf6"></i>
+  </div>
+  <nav id="nav"></nav>
+  <main>
+    <div id="form"></div>
+    <div>
+      <div class="preview" id="preview">Totale: —&nbsp; • &nbsp;Per unità: —</div>
+      <pre id="out">Compila i campi e premi CALCOLA.</pre>
+    </div>
+  </main>
+  <footer>
+    I valori restano su questo dispositivo. Ricette da <code>recipes.json</code>, la
+    stessa fonte dell'app desktop —
+    <a href="https://github.com/ILGUERRIERO22/ElysiumPozioni">repository</a>.
+  </footer>
 </div>
 
-<main>
-  <div>
-    <div class="card">
-      <h2>Produzione</h2>
-      <div class="row"><label>Numero pozioni:</label><input id="num" type="number" value="10" min="1" step="1"></div>
-      <div class="row"><label>Tipo reagente:</label><select id="tier"></select>
-        <span class="hint" id="tierHint"></span></div>
-      <div class="row"><label>Calderone:</label><select id="cal"></select>
-        <span class="hint" id="calHint"></span></div>
-    </div>
-
-    <div class="card">
-      <h2>Prezzi diretti (b)</h2>
-      <div class="row"><label>Reagente (1x):</label><input id="pRea" type="number" value="1.5" step="0.1"></div>
-      <div class="row"><label>Core fragment (1x):</label><input id="pCore" type="number" value="1.0" step="0.1"></div>
-      <div class="row"><label>Combustibile (1 blocco):</label><input id="pCarb" type="number" value="1.5" step="0.1">
-        <select id="comb"></select><span class="hint" id="combHint"></span></div>
-    </div>
-
-    <div class="card">
-      <h2>Unità per 1 b</h2>
-      <div class="row"><label>Verdure per 1 b:</label><input id="uVerd" type="number" value="3" step="1"></div>
-      <div class="row"><label>Vasetti per 1 b:</label><input id="uVas" type="number" value="15" step="1"></div>
-      <div class="row"><label>Boccette per 1 b:</label><input id="uBoc" type="number" value="14" step="1"></div>
-    </div>
-
-    <div class="card">
-      <h2>Vendita &amp; Profitto</h2>
-      <div class="row"><label>Prezzo vendita/poz:</label><input id="pVend" type="number" step="0.1" placeholder="—">
-        <span class="hint">lascia vuoto per solo costo</span></div>
-      <button id="go">🧮 CALCOLA</button>
-    </div>
-  </div>
-
-  <div>
-    <div class="preview" id="preview">Totale: —&nbsp; • &nbsp;Per pozione: —</div>
-    <pre id="out">Compila i campi e premi CALCOLA.</pre>
-  </div>
-</main>
-
-<footer>
-  I valori restano su questo dispositivo e vengono ricaricati alla prossima visita.
-  Ricette da <code>recipes.json</code>, la stessa fonte usata dall'app desktop —
-  <a href="https://github.com/ILGUERRIERO22/ElysiumPozioni">repository</a>.
-</footer>
-
 <script>
-// Le ricette arrivano da recipes.json, la stessa fonte usata dall'app desktop.
-// Questa copia e' generata da tools/aggiorna_web.py: non modificarla a mano,
-// si cambia recipes.json nella radice e si rilancia lo script.
-let R = null;
+"use strict";
+// Le ricette arrivano da recipes.json, la stessa fonte dell'app desktop.
+// La copia in docs/ e' generata da tools/aggiorna_web.py: non modificarla a mano.
+let R = null, TAB = 'cura';
 const $ = id => document.getElementById(id);
-const num = el => { const v = parseFloat(el.value.replace(',', '.')); return isNaN(v) ? null : v; };
+const f2 = x => x.toFixed(2);
 
-fetch('recipes.json')
-  .then(r => r.ok ? r.json() : Promise.reject(r.status))
-  .then(d => { R = d; init(); })
+// prezzo -> etichetta e valore predefinito. I "per 1b" sono divisori: mai 0.
+const PREZZI = {
+  reagente:{et:'Reagente (1x)',v:'1.5'},        core:{et:'Core fragment (1x)',v:'1.0'},
+  carbone:{et:'Combustibile (1 blocco)',v:'1.5'},
+  verdure:{et:'Verdure per 1 b',v:'3',div:1},   vasetti:{et:'Vasetti per 1 b',v:'15',div:1},
+  boccette:{et:'Boccette per 1 b',v:'14',div:1},
+  occhio_ragno:{et:'Occhio di ragno (1x)',v:'1.5'},
+  withering_dust:{et:'Withering dust (1x)',v:'2.0'},
+  fungo_marrone:{et:'Fungo marrone (1x)',v:'1.0'},
+  slimeball:{et:'Slimeball (1x)',v:'1.0'},      lapis:{et:'Lapis (1x)',v:'1.0'},
+  zucchero:{et:'Zucchero (1x)',v:'1.0'},        blaze:{et:'Blaze (1x)',v:'1.5'},
+  revival_star:{et:'Revival star (1x)',v:'2.0'},quarzo:{et:'Quarzo (1x)',v:'1.0'},
+  brim:{et:'Brim powder (1x)',v:'1.0'},         carne_marcia:{et:'Carne marcia (1x)',v:'1.0'},
+  membrana:{et:'Membrana Phantom (1x)',v:'1.0'},lost_soul:{et:'Lost soul (1x)',v:'1.0'},
+  tin:{et:'Lingotto Tin',v:'9'},   copper:{et:'Lingotto Rame',v:'9'},
+  iron:{et:'Lingotto Ferro',v:'9'},gold:{et:'Lingotto Oro',v:'9'},
+  diamond:{et:'Lingotto Diamante',v:'9'}, silver:{et:'Lingotto Argento',v:'9'},
+};
+// ingrediente di ricetta -> chiave prezzo (quelli con nome diverso)
+const ALIAS = {boccette:'boccette', carbonella:'carbone', resina:null};
+// ingrediente extra dell'elisir -> chiave prezzo
+const EXTRA = {'Brim powder':'brim','Occhio di ragno':'occhio_ragno',
+  'Membrana di Phantom':'membrana','Slimeball':'slimeball','Lost soul':'lost_soul'};
+const METALLO = {Tin:'tin',Rame:'copper',Ferro:'iron',Oro:'gold',
+  Diamante:'diamond',Argento:'silver'};
+
+// --- definizione delle schede ---
+const TABS = () => ({
+  cura:      {nome:'Cura',       tipo:'cura',    prezzi:['reagente','core','carbone','verdure','vasetti','boccette']},
+  antidoti:  {nome:'Antidoti',   tipo:'batch',   sez:'antidoti',
+              prezzi:['brim','carne_marcia','revival_star','carbone','verdure','vasetti','boccette']},
+  revivify:  {nome:'Revivify',   tipo:'singolo', sez:'revivify', campo:'per_revivify',
+              prezzi:['revival_star','core','carbone','boccette']},
+  extinguish:{nome:'Extinguish', tipo:'singolo', sez:'extinguish', campo:'per_extinguish',
+              prezzi:['quarzo','core','carbone','boccette']},
+  danno:     {nome:'Danno',      tipo:'livelli', sez:'danno',
+              prezzi:['occhio_ragno','withering_dust','core','carbone','boccette']},
+  velocita:  {nome:'Velocità',   tipo:'livelli', sez:'velocita',
+              prezzi:['lapis','zucchero','blaze','core','carbone','boccette']},
+  riduzione: {nome:'Riduzione',  tipo:'livelli', sez:'riduzione',
+              prezzi:['fungo_marrone','slimeball','core','carbone','boccette']},
+  elisir:    {nome:'Elisir',     tipo:'elisir',  sez:'elisir',
+              prezzi:['core','carbone','verdure','vasetti','boccette','brim','occhio_ragno',
+                      'membrana','slimeball','lost_soul','tin','copper','iron','gold','diamond']},
+  rune:      {nome:'Rune',       tipo:'rune',    prezzi:['tin','copper','iron','gold','silver']},
+});
+
+fetch('recipes.json').then(r => r.ok ? r.json() : Promise.reject(r.status))
+  .then(d => { R = d; avvia(); })
   .catch(e => { $('out').textContent = 'Impossibile caricare recipes.json (' + e + ').'; });
 
-function init(){
-  const cal = $('cal'), tier = $('tier'), comb = $('comb');
-  for (const k of Object.keys(R.pozioni_cura.calderoni)) {
-    cal.add(new Option(k + ' — ' + R.pozioni_cura.calderoni[k].tier_prodotto, k));
+function avvia(){
+  const t = TABS();
+  for (const k of Object.keys(t)) {
+    const b = document.createElement('button');
+    b.textContent = t[k].nome; b.dataset.k = k;
+    b.onclick = () => { TAB = k; disegna(); salva(); };
+    $('nav').appendChild(b);
   }
-  for (const k of Object.keys(R.pozioni_cura.catalyst_per_reagente)) {
-    const n = R.pozioni_cura.catalyst_per_reagente[k];
-    tier.add(new Option(k, k));
+  disegna();
+}
+
+// --- costruzione del modulo di input ---
+function riga(id, etichetta, valore, extra='') {
+  return `<div class="row"><label for="${id}">${etichetta}:</label>
+    <input id="${id}" type="number" step="0.1" value="${valore}">${extra}</div>`;
+}
+
+function disegna(){
+  const cfg = TABS()[TAB];
+  [...$('nav').children].forEach(b => b.classList.toggle('on', b.dataset.k === TAB));
+  $('sub').textContent = 'calcolatore — ' + cfg.nome;
+
+  let sel = '';
+  if (cfg.tipo === 'cura') {
+    const cald = Object.keys(R.pozioni_cura.calderoni)
+      .map(k => `<option value="${k}">${k} — ${R.pozioni_cura.calderoni[k].tier_prodotto}</option>`).join('');
+    const tier = Object.keys(R.pozioni_cura.catalyst_per_reagente)
+      .map(k => `<option value="${k}">${k}</option>`).join('');
+    sel = `<div class="row"><label for="v_tier">Tipo reagente:</label>
+             <select id="v_tier">${tier}</select><span class="hint" id="h_tier"></span></div>
+           <div class="row"><label for="v_cal">Calderone:</label>
+             <select id="v_cal">${cald}</select></div>`;
+  } else if (cfg.tipo !== 'cura' && cfg.tipo !== 'singolo') {
+    const voci = cfg.tipo === 'rune' ? Object.keys(R.rune.resa_per_pepita)
+               : Object.keys(R[cfg.sez]);
+    sel = `<div class="row"><label for="v_var">Tipo:</label><select id="v_var">` +
+          voci.map(k => `<option value="${k}">${k}</option>`).join('') + `</select></div>`;
   }
-  for (const k of Object.keys(R.combustibili)) comb.add(new Option(k, k));
 
-  const aggiornaHint = () => {
-    const n = R.pozioni_cura.catalyst_per_reagente[tier.value];
-    $('tierHint').textContent = '1 reagente = ' + n + (n === 1 ? ' catalyst' : ' catalyst');
-    $('combHint').textContent = '= ' + R.combustibili[comb.value].carbonella + ' carbonella';
-    $('calHint').textContent  = 'produce ' + R.pozioni_cura.calderoni[cal.value].tier_prodotto;
-  };
-  [tier, comb, cal].forEach(el => el.addEventListener('change', () => { aggiornaHint(); salva(); }));
-  aggiornaHint();
+  const comb = Object.keys(R.combustibili)
+    .map(k => `<option value="${k}">${k}</option>`).join('');
 
+  let prezzi = cfg.prezzi.map(k => {
+    const p = PREZZI[k];
+    if (k === 'carbone')
+      return riga('p_carbone', p.et, p.v,
+        `<select id="v_comb">${comb}</select><span class="hint" id="h_comb"></span>`);
+    return riga('p_' + k, p.et, p.v);
+  }).join('');
+
+  const etichettaQty = cfg.tipo === 'rune' ? 'Rune desiderate' : 'Quantità';
+  $('form').innerHTML = `
+    <div class="card"><h2>Produzione</h2>
+      <div class="row"><label for="v_num">${etichettaQty}:</label>
+        <input id="v_num" type="number" value="10" min="1" step="1"></div>
+      ${sel}
+    </div>
+    <div class="card"><h2>Prezzi (b)</h2>${prezzi}</div>
+    ${cfg.tipo === 'rune' ? '' : `<div class="card"><h2>Vendita &amp; Profitto</h2>
+      ${riga('v_vend','Prezzo vendita/unità','')}
+      <span class="hint">lascia vuoto per il solo costo</span></div>`}
+    <button class="go" id="go">🧮 CALCOLA</button>`;
+
+  if (cfg.tipo !== 'rune') $('v_vend').value = '';
   carica();
-  document.querySelectorAll('input,select').forEach(el => el.addEventListener('change', salva));
-  $('go').addEventListener('click', calcola);
+  $('form').querySelectorAll('input,select').forEach(el => {
+    el.addEventListener('change', () => { hint(); salva(); calcola(); });
+  });
+  $('go').onclick = calcola;
+  hint();
   calcola();
 }
 
-// --- persistenza locale: sostituisce config.json dell'app desktop ---
-const CAMPI = ['num','tier','cal','pRea','pCore','pCarb','comb','uVerd','uVas','uBoc','pVend'];
+function hint(){
+  if ($('h_comb') && $('v_comb'))
+    $('h_comb').textContent = '= ' + R.combustibili[$('v_comb').value].carbonella + ' carbonella';
+  if ($('h_tier') && $('v_tier')) {
+    const n = R.pozioni_cura.catalyst_per_reagente[$('v_tier').value];
+    $('h_tier').textContent = '1 reagente = ' + n + ' catalyst';
+  }
+}
+
+// --- persistenza per scheda ---
 function salva(){
-  const d = {}; CAMPI.forEach(k => d[k] = $(k).value);
-  try { localStorage.setItem('elysium', JSON.stringify(d)); } catch(e){}
+  const d = {};
+  $('form').querySelectorAll('input,select').forEach(el => d[el.id] = el.value);
+  try{ localStorage.setItem('elysium_' + TAB, JSON.stringify(d));
+       localStorage.setItem('elysium_tab', TAB); }catch(e){}
 }
 function carica(){
-  try {
-    const d = JSON.parse(localStorage.getItem('elysium') || '{}');
-    CAMPI.forEach(k => { if (d[k] !== undefined && d[k] !== '') $(k).value = d[k]; });
-  } catch(e){}
+  try{
+    const d = JSON.parse(localStorage.getItem('elysium_' + TAB) || '{}');
+    for (const k in d) if ($(k) && d[k] !== '') $(k).value = d[k];
+  }catch(e){}
 }
 
-// --- stessa formula di calcolo_pozioni.py ---
+// --- helper di calcolo ---
+const pz = k => { const el = $('p_' + k); if (!el) return 0;
+                  const v = parseFloat(el.value.replace(',', '.')); return isNaN(v) ? 0 : v; };
+function costoCarbonella(){
+  const cbn = R.combustibili[$('v_comb') ? $('v_comb').value : 'Carbone'].carbonella;
+  return pz('carbone') / cbn;   // prezzo del blocco diviso la carbonella che produce
+}
+function costoResina(){
+  const r = R.globali.resina, verd = pz('verdure') || 3, vas = pz('vasetti') || 15;
+  return (r.verdure_per_batch / verd + r.vasetti_per_batch / vas) / r.output_per_batch;
+}
+const costoBoccetta = () => 1 / (pz('boccette') || 14);
+
+/** Somma gli ingredienti di una ricetta in mat/cos, per n unita'. */
+function applica(ric, n, mat, cos){
+  for (const ing in ric){
+    const q = n * ric[ing];
+    let et, cu;
+    if (ing === 'carbonella')      { et = 'Carbonella'; cu = costoCarbonella(); }
+    else if (ing === 'boccette')   { et = 'Boccette';   cu = costoBoccetta(); }
+    else if (ing === 'resina')     { et = 'Resina';     cu = costoResina(); }
+    else { et = PREZZI[ing] ? PREZZI[ing].et.replace(/ \(1x\)$/,'') : ing; cu = pz(ing); }
+    mat[et] = (mat[et] || 0) + q;
+    cos[et] = (cos[et] || 0) + q * cu;
+  }
+}
+
 function calcola(){
   if (!R) return;
-  const n = num($('num'));
-  if (!n || n <= 0) { $('out').textContent = 'Inserisci un numero di pozioni maggiore di 0.'; return; }
+  const cfg = TABS()[TAB];
+  const n = parseFloat(($('v_num').value || '').replace(',', '.'));
+  if (!n || n <= 0){ $('out').textContent = 'Inserisci una quantità maggiore di 0.'; return; }
 
-  const verd = num($('uVerd')) || 3, vas = num($('uVas')) || 15, boc = num($('uBoc')) || 14;
-  const res = R.globali.resina;
-  const costoResina = (res.verdure_per_batch / verd + res.vasetti_per_batch / vas) / res.output_per_batch;
+  const mat = {}, cos = {};
+  let titolo = cfg.nome, extra = [];
 
-  // il prezzo del combustibile va normalizzato: i calcoli usano sempre 12 carbonella/blocco
-  const cbn = R.combustibili[$('comb').value].carbonella;
-  const prezzoCarbNorm = (num($('pCarb')) || 0) / cbn * R.globali.carbonella_per_blocco;
-  const costoCarbonella = prezzoCarbNorm / R.globali.carbonella_per_blocco;
+  if (cfg.tipo === 'cura') {
+    const c = R.pozioni_cura.calderoni[$('v_cal').value];
+    const catalyst = n / c.pozioni_per_catalyst;
+    const reagenti = catalyst / R.pozioni_cura.catalyst_per_reagente[$('v_tier').value];
+    const core = reagenti * R.pozioni_cura.core_per_reagente;
+    const resine = reagenti * R.pozioni_cura.resine_per_reagente;
+    mat['Reagente'] = reagenti;      cos['Reagente'] = reagenti * pz('reagente');
+    mat['Core fragment'] = core;     cos['Core fragment'] = core * pz('core');
+    mat['Resina'] = resine;          cos['Resina'] = resine * costoResina();
+    mat['Carbonella'] = n / c.pozioni_per_carbonella;
+    cos['Carbonella'] = mat['Carbonella'] * costoCarbonella();
+    mat['Boccette'] = n * R.pozioni_cura.boccette_per_pozione;
+    cos['Boccette'] = mat['Boccette'] * costoBoccetta();
+    titolo = `Pozione di cura ${c.tier_prodotto} — calderone ${$('v_cal').value}`;
+    extra = [`Catalyst totali:          ${f2(catalyst)}`];
 
-  const c = R.pozioni_cura.calderoni[$('cal').value];
-  const catalyst   = n / c.pozioni_per_catalyst;
-  const carbonella = n / c.pozioni_per_carbonella;
-  const reagenti   = catalyst / R.pozioni_cura.catalyst_per_reagente[$('tier').value];
-  const core       = reagenti * R.pozioni_cura.core_per_reagente;
-  const resine     = reagenti * R.pozioni_cura.resine_per_reagente;
-  const boccette   = n * R.pozioni_cura.boccette_per_pozione;
+  } else if (cfg.tipo === 'singolo') {
+    applica(R[cfg.sez][cfg.campo], n, mat, cos);
+    titolo = `${cfg.nome} — calderone ${R[cfg.sez].calderone}`;
 
-  const cRea = reagenti * (num($('pRea')) || 0);
-  const cCor = core * (num($('pCore')) || 0);
-  const cRes = resine * costoResina;
-  const cCar = carbonella * costoCarbonella;
-  const cBoc = boccette / boc;
-  const tot  = cRea + cCor + cRes + cCar + cBoc;
-  const perPoz = tot / n;
+  } else if (cfg.tipo === 'batch') {
+    const v = $('v_var').value, ric = R[cfg.sez][v];
+    const campo = ric.per_antidoto ? 'per_antidoto' : 'per_batch';
+    applica(ric[campo], n / ric.antidoti_per_batch, mat, cos);
+    titolo = `Antidoto — calderone ${v}`;
+    if (ric.antidoti_per_batch > 1)
+      extra = [`1 preparazione produce ${ric.antidoti_per_batch} antidoti`];
 
-  const pv = num($('pVend'));
-  const f = x => x.toFixed(2);
-  let righe = [
-    `Calderone:                ${$('cal').value}`,
-    `Pozione prodotta:         ${c.tier_prodotto}`,
-    `Pozioni totali richieste: ${f(n)}`,
-    `Tipo reagente usato:      ${$('tier').value}`,
-    ``,
-    `COSTO TOTALE:             ${f(tot)} b`,
-    `Costo per pozione:        ${f(perPoz)} b`,
-  ];
+  } else if (cfg.tipo === 'livelli') {
+    const v = $('v_var').value, ric = R[cfg.sez][v];
+    const base = Object.keys(R[cfg.sez])[0];
+    applica(R[cfg.sez][base].per_pozione, n, mat, cos);   // il livello I e' sempre incluso
+    if (ric.step_aggiuntivo_per_pozione) {
+      applica(ric.step_aggiuntivo_per_pozione, n, mat, cos);
+      extra = [`Include ${n} pozioni di ${base}, consumate dall'upgrade`];
+    }
+    titolo = `${v} — calderone ${ric.calderone}`;
 
-  let perdita = false;
-  if (pv !== null) {
-    const ricavo = pv * n, guadagno = ricavo - tot;
-    perdita = guadagno < 0;
-    righe.push(``, `Vendita & Profitto:`,
-      ` • Prezzo per pozione:     ${f(pv)} b`,
-      ` • Ricavo totale lotto:    ${f(ricavo)} b`,
-      ` • Guadagno netto lotto:   ${f(guadagno)} b`,
-      ` • Margine per pozione:    ${f(guadagno / n)} b`,
-      ` • Ricarico percentuale:   ${perPoz > 0 ? (guadagno / n / perPoz * 100).toFixed(1) : '0.0'} %`,
-      ` • Prezzo di pareggio:     ${f(perPoz)} b/poz`);
+  } else if (cfg.tipo === 'elisir') {
+    const v = $('v_var').value, ric = R.elisir[v], p = ric.per_elisir;
+    applica({resina:p.resina, core:p.core, boccette:p.boccette}, n, mat, cos);
+    applica({carbonella:ric.carbonella_per_elisir}, n, mat, cos);
+    const pep = n * p.pepite, prezzoPep = pz(METALLO[ric.metallo_pepita]) / R.globali.pepite_per_lingotto;
+    mat[`Pepite ${ric.metallo_pepita}`] = pep;
+    cos[`Pepite ${ric.metallo_pepita}`] = pep * prezzoPep;
+    const ex = n * p.extra;
+    mat[ric.ingrediente_extra] = ex;
+    cos[ric.ingrediente_extra] = ex * pz(EXTRA[ric.ingrediente_extra]);
+    titolo = `${v} — calderone ${ric.calderone}`;
+    extra = [`1 lingotto = ${R.globali.pepite_per_lingotto} pepite`];
+
+  } else if (cfg.tipo === 'rune') {
+    return calcolaRune(n);
   }
 
-  righe.push(``, `Materiali richiesti:`,
-    ` • Catalyst totali:        ${f(catalyst)}`,
-    ` • Reagenti usati:         ${f(reagenti)}`,
-    ` • Core frammenti:         ${f(core)}`,
-    ` • Resine:                 ${f(resine)}`,
-    ` • Carbonella totale:      ${f(carbonella)}`,
-    ` • Boccette:               ${f(boccette)}`,
-    ``, `Costi parziali:`,
-    ` • Reagenti:               ${f(cRea)} b`,
-    ` • Core:                   ${f(cCor)} b`,
-    ` • Resine:                 ${f(cRes)} b`,
-    ` • Carbonella:             ${f(cCar)} b`,
-    ` • Boccette:               ${f(cBoc)} b`);
+  mostra(titolo, n, mat, cos, extra, cfg.tipo === 'rune' ? null : $('v_vend'));
+}
 
-  if (perdita) righe.unshift(`⚠️  VENDITA IN PERDITA`, ``);
+/** Le rune non sono una ricetta ma una scelta: si confrontano i metalli. */
+function calcolaRune(n){
+  const tipo = $('v_var').value, rese = R.rune.resa_per_pepita[tipo];
+  const opzioni = [];
+  for (const met of R.rune.ordine_metalli){
+    const resa = rese[met];
+    if (!resa) continue;                         // resa 0 (Tin per i Maghi): non utilizzabile
+    const pepite = Math.ceil(n / resa);
+    const prezzo = pz(METALLO[met]) / R.globali.pepite_per_lingotto;
+    opzioni.push({met, pepite, rune: pepite * resa, costo: pepite * prezzo, resa});
+  }
+  if (!opzioni.length){ $('out').textContent = 'Nessun metallo utilizzabile per queste rune.'; return; }
+  const best = opzioni.reduce((a,b) => b.costo < a.costo ? b : a);
+
+  const righe = [`Rune ${tipo} — ${n} desiderate`, '',
+    `MIGLIORE: ${best.met} — ${best.pepite} pepite → ${best.rune} rune (${f2(best.costo)} b)`,
+    '', 'Tutte le opzioni:'];
+  for (const o of opzioni.sort((a,b) => a.costo - b.costo)){
+    const avanzo = o.rune - n;
+    righe.push(`  ${o === best ? '►' : ' '} ${o.met.padEnd(9)} ${String(o.pepite).padStart(4)} pep` +
+      ` → ${String(o.rune).padStart(5)} rune   ${f2(o.costo).padStart(8)} b` +
+      (avanzo > 0 ? `   (avanzo ${avanzo})` : ''));
+  }
+  righe.push('', `Resa per pepita: ` +
+    R.rune.ordine_metalli.filter(m => rese[m]).map(m => `${m} ${rese[m]}`).join(', '));
+
+  $('out').textContent = righe.join('\n');
+  const p = $('preview'); p.classList.remove('loss');
+  p.innerHTML = `Migliore: <b>${best.met}</b> &nbsp;•&nbsp; ${best.pepite} pepite &nbsp;•&nbsp; <b>${f2(best.costo)} b</b>`;
+  salva();
+}
+
+function mostra(titolo, n, mat, cos, extra, campoVendita){
+  const tot = Object.values(cos).reduce((a,b) => a+b, 0);
+  const unit = tot / n;
+  const pv = campoVendita && campoVendita.value !== ''
+    ? parseFloat(campoVendita.value.replace(',', '.')) : null;
+  const perdita = pv !== null && (pv * n - tot) < 0;
+
+  const righe = [];
+  if (perdita) righe.push('⚠️  VENDITA IN PERDITA', '');
+  righe.push(titolo, '', `Quantità richiesta:       ${f2(n)}`, ...extra, '',
+    `COSTO TOTALE:             ${f2(tot)} b`,
+    `Costo unitario:           ${f2(unit)} b`);
+
+  if (pv !== null && !isNaN(pv)) {
+    const ricavo = pv * n, guad = ricavo - tot;
+    righe.push('', 'Vendita & Profitto:',
+      ` • Prezzo unitario:       ${f2(pv)} b`,
+      ` • Ricavo totale:         ${f2(ricavo)} b`,
+      ` • Guadagno netto:        ${f2(guad)} b`,
+      ` • Ricarico:              ${unit > 0 ? (guad/n/unit*100).toFixed(1) : '0.0'} %`,
+      ` • Prezzo di pareggio:    ${f2(unit)} b`);
+  }
+
+  righe.push('', 'Materiali richiesti:');
+  for (const k of Object.keys(mat).sort())
+    righe.push(` • ${k.padEnd(24)} ${f2(mat[k]).padStart(9)}`);
+  righe.push('', 'Costi parziali:');
+  for (const k of Object.keys(cos).sort())
+    righe.push(` • ${k.padEnd(24)} ${f2(cos[k]).padStart(9)} b`);
 
   $('out').textContent = righe.join('\n');
   const p = $('preview');
   p.classList.toggle('loss', perdita);
-  p.innerHTML = pv !== null
-    ? `Totale: <b>${f(tot)} b</b> &nbsp;•&nbsp; Costo/poz: <b>${f(perPoz)} b</b> &nbsp;•&nbsp; Guadagno: <b>${f(pv * n - tot)} b</b>`
-    : `Totale: <b>${f(tot)} b</b> &nbsp;•&nbsp; Per pozione: <b>${f(perPoz)} b</b>`;
+  p.innerHTML = (pv !== null && !isNaN(pv))
+    ? `Totale: <b>${f2(tot)} b</b> &nbsp;•&nbsp; Unitario: <b>${f2(unit)} b</b> &nbsp;•&nbsp; Guadagno: <b>${f2(pv*n-tot)} b</b>`
+    : `Totale: <b>${f2(tot)} b</b> &nbsp;•&nbsp; Unitario: <b>${f2(unit)} b</b>`;
   salva();
 }
 </script>
