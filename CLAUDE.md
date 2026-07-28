@@ -157,6 +157,17 @@ informativi e pannelli con molti pulsanti in riga (la gestione profili) vanno
 invece agganciati a `outer`, a tutta larghezza: nella colonna stretta
 verrebbero tagliati.
 
+## Versione web
+
+`docs/index.html` e' un calcolatore delle sole pozioni di cura, pagina singola
+senza dipendenze, pubblicata via GitHub Pages dalla cartella `/docs`. Riusa la
+palette della GUI e legge le ricette da `docs/recipes.json`.
+
+Quella copia **non va modificata a mano**: si cambia `recipes.json` nella
+radice e si rilancia `python tools/aggiorna_web.py`, che riallinea le due
+copie. La formula in JavaScript replica `calcolo_pozioni.py`: se cambia la
+logica di calcolo vanno aggiornate entrambe.
+
 ## Dati utente
 
 `config.json` e `profiles.json` stanno in `%APPDATA%\ElysiumPozioni`, non nel
