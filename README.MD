@@ -264,6 +264,13 @@ vengono spostati automaticamente al primo avvio.
 
 ## 🚀 Installazione
 
+### 🌐 Versione web — nessuna installazione
+
+**[Apri il calcolatore nel browser](https://ilguerriero22.github.io/ElysiumPozioni/)**
+
+Funziona anche da telefono e ricorda i prezzi che inserisci. Per ora copre le
+**pozioni di cura**; per tutti gli altri prodotti serve l'app desktop.
+
 ### Eseguibile (consigliato)
 
 Scarica `ElysiumPozioni.exe` dalla sezione
