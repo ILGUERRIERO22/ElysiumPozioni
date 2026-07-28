@@ -5,7 +5,7 @@ import shutil
 
 APP_NAME = "Elysium Pozioni"
 APP_DIRNAME = "ElysiumPozioni"
-APP_VERSION = "4.1.0"
+APP_VERSION = "4.2.0"
 APP_AUTHOR = "Ahristogatti"
 
 def get_data_dir():

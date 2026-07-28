@@ -5,7 +5,7 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
 
 ---
 
-## [Non rilasciato]
+## [v4.2] — 2026-07-29
 ### 💪 Pozioni di Forza
 - Nuova tab **Forza** con la **Forza II** (calderone in Ferro):
   1 Anthracite + 1 Quarzo + 1 Core fragment + 2 Carbonella + 1 Boccetta.
