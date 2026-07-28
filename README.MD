@@ -10,8 +10,8 @@
   <img src="https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white" alt="Python Version">
   <img src="https://img.shields.io/badge/Tkinter-GUI-green?logo=windowsterminal&logoColor=white" alt="Tkinter GUI">
   <img src="https://img.shields.io/badge/Status-Attivo-brightgreen?style=flat" alt="Status">
-  <img src="https://img.shields.io/github/v/release/ILGUERRIERO22/ElysiumPozioni?color=orange&label=versione&style=flat-square" alt="Versione GitHub">
-  <img src="https://img.shields.io/github/downloads/ILGUERRIERO22/ElysiumPozioni/total?color=brightgreen&label=download%20totali&style=flat-square" alt="Download Totali">
+  <img src="https://img.shields.io/github/v/release/Ahristogatti/ElysiumPozioni?color=orange&label=versione&style=flat-square" alt="Versione GitHub">
+  <img src="https://img.shields.io/github/downloads/Ahristogatti/ElysiumPozioni/total?color=brightgreen&label=download%20totali&style=flat-square" alt="Download Totali">
   <img src="https://img.shields.io/badge/Licenza-MIT-yellow?style=flat" alt="Licenza">
   <img src="https://img.shields.io/badge/Made%20by-ILGUERRIERO22-purple?style=flat-square" alt="Autore">
 </p>
@@ -266,7 +266,7 @@ vengono spostati automaticamente al primo avvio.
 
 ### 🌐 Versione web — nessuna installazione
 
-**[Apri il calcolatore nel browser](https://ilguerriero22.github.io/ElysiumPozioni/)**
+**[Apri il calcolatore nel browser](https://ahristogatti.github.io/ElysiumPozioni/)**
 
 Funziona anche da telefono e ricorda i prezzi che inserisci. Copre **tutti gli
 undici calcolatori** dell'app desktop, inclusi Multi-Prodotto e Lista della spesa.
@@ -274,7 +274,7 @@ undici calcolatori** dell'app desktop, inclusi Multi-Prodotto e Lista della spes
 ### Eseguibile (consigliato)
 
 Scarica `ElysiumPozioni.exe` dalla sezione
-[Releases](https://github.com/ILGUERRIERO22/ElysiumPozioni/releases) e avvialo:
+[Releases](https://github.com/Ahristogatti/ElysiumPozioni/releases) e avvialo:
 non serve installare Python.
 
 ### Da sorgente
@@ -282,7 +282,7 @@ non serve installare Python.
 Richiede **Python 3.10+**.
 
 ```bash
-git clone https://github.com/ILGUERRIERO22/ElysiumPozioni.git
+git clone https://github.com/Ahristogatti/ElysiumPozioni.git
 cd ElysiumPozioni
 pip install -r Requirements.txt
 python main.py

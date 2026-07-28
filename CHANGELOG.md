@@ -352,5 +352,5 @@ Questa versione è pensata per la qualità della vita degli alchimisti che gesti
 
 ---
 
-👤 **Autore:** [ILGUERRIERO22](https://github.com/ILGUERRIERO22)  
+👤 **Autore:** [ILGUERRIERO22](https://github.com/Ahristogatti)  
 🧪 *“Non serve la magia, se conosci la formula.”*
