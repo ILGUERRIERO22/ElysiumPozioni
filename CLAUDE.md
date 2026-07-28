@@ -161,14 +161,19 @@ verrebbero tagliati.
 
 `docs/index.html` e' una pagina singola senza dipendenze, pubblicata via GitHub
 Pages dalla cartella `/docs`. Riusa la palette della GUI e legge le ricette da
-`docs/recipes.json`. Copre nove schede: mancano solo i due aggregatori
-(Multi-Prodotto e Lista della spesa).
+`docs/recipes.json`. Copre tutte e undici le schede dell'app desktop.
 
 Le schede sono descritte dalla tabella `TABS()` e calcolate da un motore
 generico, non da un blocco per prodotto: `singolo` (una fase), `batch` (resa
 diversa da 1, es. antidoto Ferro), `livelli` (il II consuma un'unita' del I),
 `elisir`, `rune` e `cura`. Un nuovo prodotto si aggiunge con una voce in
 `TABS()`, come lato Python con `RICETTE_SEMPLICI`.
+
+I due aggregatori (`multi` e `spesa`) condividono `materialiDi()`, che riusa lo
+stesso motore, e tengono la lista dei prodotti in `LISTA[TAB]`, salvata nel
+localStorage sotto la chiave `__lista`. La Lista della spesa arrotonda per
+eccesso — gli ingredienti si comprano interi — e scompone la resina in verdure
+e vasetti, che sono le voci realmente acquistabili.
 
 Quella copia **non va modificata a mano**: si cambia `recipes.json` nella
 radice e si rilancia `python tools/aggiorna_web.py`, che riallinea le due

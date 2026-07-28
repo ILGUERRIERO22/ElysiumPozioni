@@ -268,9 +268,8 @@ vengono spostati automaticamente al primo avvio.
 
 **[Apri il calcolatore nel browser](https://ilguerriero22.github.io/ElysiumPozioni/)**
 
-Funziona anche da telefono e ricorda i prezzi che inserisci. Copre pozioni di
-cura, antidoti, Revivify, Extinguish, danno, velocità, riduzione, elisir e rune.
-Per i due aggregatori — Multi-Prodotto e Lista della spesa — serve l'app desktop.
+Funziona anche da telefono e ricorda i prezzi che inserisci. Copre **tutti gli
+undici calcolatori** dell'app desktop, inclusi Multi-Prodotto e Lista della spesa.
 
 ### Eseguibile (consigliato)
 

@@ -117,6 +117,12 @@ const EXTRA = {'Brim powder':'brim','Occhio di ragno':'occhio_ragno',
 const METALLO = {Tin:'tin',Rame:'copper',Ferro:'iron',Oro:'gold',
   Diamante:'diamond',Argento:'silver'};
 
+// Gli aggregatori usano i prezzi di tutti i prodotti insieme.
+const TUTTI_I_PREZZI = ['reagente','core','carbone','verdure','vasetti','boccette',
+  'occhio_ragno','withering_dust','fungo_marrone','slimeball','lapis','zucchero',
+  'blaze','revival_star','quarzo','brim','carne_marcia','membrana','lost_soul',
+  'tin','copper','iron','gold','diamond','silver'];
+
 // --- definizione delle schede ---
 const TABS = () => ({
   cura:      {nome:'Cura',       tipo:'cura',    prezzi:['reagente','core','carbone','verdure','vasetti','boccette']},
@@ -136,7 +142,63 @@ const TABS = () => ({
               prezzi:['core','carbone','verdure','vasetti','boccette','brim','occhio_ragno',
                       'membrana','slimeball','lost_soul','tin','copper','iron','gold','diamond']},
   rune:      {nome:'Rune',       tipo:'rune',    prezzi:['tin','copper','iron','gold','silver']},
+  multi:     {nome:'Multi-Prodotto', tipo:'multi', prezzi:TUTTI_I_PREZZI},
+  spesa:     {nome:'Lista spesa',    tipo:'spesa', prezzi:['carbone']},
 });
+
+/** Elenco dei prodotti selezionabili negli aggregatori, letto da recipes.json. */
+function catalogo(){
+  const v = [];
+  for (const c of Object.keys(R.pozioni_cura.calderoni))
+    v.push({id:'cura:'+c, nome:`Pozione di cura — ${c} (${R.pozioni_cura.calderoni[c].tier_prodotto})`, cura:true});
+  for (const a of Object.keys(R.antidoti)) v.push({id:'antidoti:'+a, nome:`Antidoto — ${a}`});
+  v.push({id:'revivify:', nome:'Revivify'}, {id:'extinguish:', nome:'Extinguish'});
+  for (const s of ['danno','velocita','riduzione'])
+    for (const k of Object.keys(R[s])) v.push({id:s+':'+k, nome:k});
+  for (const e of Object.keys(R.elisir)) v.push({id:'elisir:'+e, nome:'Elisir — '+e});
+  return v;
+}
+
+/** Materiali e costi di una voce del catalogo: riusa lo stesso motore delle schede. */
+function materialiDi(id, n, tier){
+  const [tipo, variante] = id.split(':');
+  const mat = {}, cos = {};
+  if (tipo === 'cura'){
+    const c = R.pozioni_cura.calderoni[variante];
+    const catalyst = n / c.pozioni_per_catalyst;
+    const reagenti = catalyst / R.pozioni_cura.catalyst_per_reagente[tier || 'T1'];
+    const core = reagenti * R.pozioni_cura.core_per_reagente;
+    const resine = reagenti * R.pozioni_cura.resine_per_reagente;
+    mat['Reagente'] = reagenti;    cos['Reagente'] = reagenti * pz('reagente');
+    mat['Core fragment'] = core;   cos['Core fragment'] = core * pz('core');
+    mat['Resina'] = resine;        cos['Resina'] = resine * costoResina();
+    mat['Carbonella'] = n / c.pozioni_per_carbonella;
+    cos['Carbonella'] = mat['Carbonella'] * costoCarbonella();
+    mat['Boccette'] = n * R.pozioni_cura.boccette_per_pozione;
+    cos['Boccette'] = mat['Boccette'] * costoBoccetta();
+  } else if (tipo === 'revivify' || tipo === 'extinguish'){
+    applica(R[tipo][tipo === 'revivify' ? 'per_revivify' : 'per_extinguish'], n, mat, cos);
+  } else if (tipo === 'antidoti'){
+    const ric = R.antidoti[variante];
+    applica(ric.per_antidoto || ric.per_batch, n / ric.antidoti_per_batch, mat, cos);
+  } else if (tipo === 'danno' || tipo === 'velocita' || tipo === 'riduzione'){
+    const base = Object.keys(R[tipo])[0];
+    applica(R[tipo][base].per_pozione, n, mat, cos);
+    const up = R[tipo][variante].step_aggiuntivo_per_pozione;
+    if (up) applica(up, n, mat, cos);
+  } else if (tipo === 'elisir'){
+    const ric = R.elisir[variante], p = ric.per_elisir;
+    applica({resina:p.resina, core:p.core, boccette:p.boccette}, n, mat, cos);
+    applica({carbonella:ric.carbonella_per_elisir}, n, mat, cos);
+    const pep = n * p.pepite;
+    mat[`Pepite ${ric.metallo_pepita}`] = pep;
+    cos[`Pepite ${ric.metallo_pepita}`] = pep * pz(METALLO[ric.metallo_pepita]) / R.globali.pepite_per_lingotto;
+    const ex = n * p.extra;
+    mat[ric.ingrediente_extra] = ex;
+    cos[ric.ingrediente_extra] = ex * pz(EXTRA[ric.ingrediente_extra]);
+  }
+  return {mat, cos};
+}
 
 fetch('recipes.json').then(r => r.ok ? r.json() : Promise.reject(r.status))
   .then(d => { R = d; avvia(); })
@@ -163,6 +225,19 @@ function disegna(){
   const cfg = TABS()[TAB];
   [...$('nav').children].forEach(b => b.classList.toggle('on', b.dataset.k === TAB));
   $('sub').textContent = 'calcolatore — ' + cfg.nome;
+
+  const comb0 = Object.keys(R.combustibili)
+    .map(k => `<option value="${k}">${k}</option>`).join('');
+  if (cfg.tipo === 'multi' || cfg.tipo === 'spesa') {
+    const prezziAgg = cfg.prezzi.map(k => {
+      const p = PREZZI[k];
+      if (k === 'carbone')
+        return riga('p_carbone', p.et, p.v,
+          `<select id="v_comb">${comb0}</select><span class="hint" id="h_comb"></span>`);
+      return riga('p_' + k, p.et, p.v);
+    }).join('');
+    return disegnaAggregatore(cfg, prezziAgg);
+  }
 
   let sel = '';
   if (cfg.tipo === 'cura') {
@@ -215,6 +290,165 @@ function disegna(){
   calcola();
 }
 
+// ===== AGGREGATORI: Multi-Prodotto e Lista della spesa =====
+// La lista dei prodotti scelti vive qui e viene salvata come le altre voci.
+let LISTA = {multi: [], spesa: []};
+
+function disegnaAggregatore(cfg, prezzi){
+  const cat = catalogo();
+  const opzioni = cat.map((v,i) => `<option value="${i}">${v.nome}</option>`).join('');
+  const tier = Object.keys(R.pozioni_cura.catalyst_per_reagente)
+    .map(k => `<option value="${k}">${k}</option>`).join('');
+  const vendita = cfg.tipo === 'multi'
+    ? `<div class="row"><label for="a_pv">Prezzo vendita (opz.):</label>
+         <input id="a_pv" type="number" step="0.1" placeholder="—"></div>` : '';
+
+  $('form').innerHTML = `
+    <div class="card"><h2>Aggiungi prodotto</h2>
+      <div class="row"><label for="a_prod">Prodotto:</label>
+        <select id="a_prod" style="max-width:100%">${opzioni}</select></div>
+      <div class="row" id="a_riga_tier"><label for="a_tier">Tipo reagente:</label>
+        <select id="a_tier">${tier}</select>
+        <span class="hint">solo per le pozioni di cura</span></div>
+      <div class="row"><label for="a_qty">Quantità:</label>
+        <input id="a_qty" type="number" value="10" min="1" step="1"></div>
+      ${vendita}
+      <button class="go" id="a_add">➕ Aggiungi alla lista</button>
+    </div>
+    <div class="card"><h2>Lista produzione</h2>
+      <div id="a_lista" class="hint">Lista vuota. Aggiungi prodotti qui sopra.</div>
+      <button class="go" id="a_calc" style="margin-top:12px">🧮 CALCOLA TOTALE</button>
+      <button class="go" id="a_clear" style="background:#c0392b;margin-top:6px">🗑️ Svuota lista</button>
+    </div>
+    <div class="card"><h2>Prezzi (b)</h2>${prezzi}</div>`;
+
+  const soloCura = () => cat[+$('a_prod').value].cura === true;
+  const aggiornaTier = () => { $('a_riga_tier').style.display = soloCura() ? '' : 'none'; };
+  $('a_prod').addEventListener('change', aggiornaTier);
+  aggiornaTier();
+
+  $('a_add').onclick = () => {
+    const v = cat[+$('a_prod').value];
+    const q = parseFloat(($('a_qty').value || '').replace(',', '.'));
+    if (!q || q <= 0) return;
+    const voce = {id: v.id, nome: v.nome, qty: q};
+    if (v.cura) voce.tier = $('a_tier').value;
+    if ($('a_pv') && $('a_pv').value !== '')
+      voce.pv = parseFloat($('a_pv').value.replace(',', '.'));
+    LISTA[TAB].push(voce);
+    if ($('a_pv')) $('a_pv').value = '';
+    mostraLista(); salva(); calcola();
+  };
+  $('a_clear').onclick = () => { LISTA[TAB] = []; mostraLista(); salva(); calcola(); };
+  $('a_calc').onclick = calcola;
+
+  carica();
+  mostraLista();
+  $('form').querySelectorAll('input,select').forEach(el =>
+    el.addEventListener('change', () => { hint(); salva(); calcola(); }));
+  hint();
+  calcola();
+}
+
+function mostraLista(){
+  const el = $('a_lista'); if (!el) return;
+  const L = LISTA[TAB];
+  if (!L.length){ el.className = 'hint'; el.textContent = 'Lista vuota. Aggiungi prodotti qui sopra.'; return; }
+  el.className = '';
+  el.innerHTML = L.map((v,i) =>
+    `<div class="row" style="margin:4px 0">
+       <span style="flex:1">${i+1}. <b>${v.qty}×</b> ${v.nome}` +
+       `${v.tier ? ` <span class="hint">[reagente ${v.tier}]</span>` : ''}` +
+       `${v.pv !== undefined ? ` <span class="hint">(vendita ${v.pv} b)</span>` : ''}</span>
+       <button class="rm" data-i="${i}" style="width:auto;padding:3px 10px;background:#39404f;
+         color:var(--text);border:1px solid var(--border);border-radius:4px;cursor:pointer">✕</button>
+     </div>`).join('');
+  el.querySelectorAll('.rm').forEach(b => b.onclick = () => {
+    LISTA[TAB].splice(+b.dataset.i, 1); mostraLista(); salva(); calcola();
+  });
+}
+
+function calcolaMulti(){
+  const L = LISTA.multi;
+  if (!L.length){ $('out').textContent = 'Aggiungi almeno un prodotto alla lista.';
+    $('preview').innerHTML = 'Totale: —'; return; }
+  const matTot = {}, cosTot = {};
+  let costo = 0, ricavo = 0;
+  const dettagli = [];
+  for (const v of L){
+    const {mat, cos} = materialiDi(v.id, v.qty, v.tier);
+    for (const k in mat) matTot[k] = (matTot[k] || 0) + mat[k];
+    for (const k in cos) cosTot[k] = (cosTot[k] || 0) + cos[k];
+    const c = Object.values(cos).reduce((a,b) => a+b, 0);
+    costo += c;
+    const r = v.pv !== undefined ? v.pv * v.qty : 0;
+    ricavo += r;
+    dettagli.push({v, c, r});
+  }
+  const righe = ['MATERIALI NECESSARI (AGGREGATI)', ''];
+  for (const k of Object.keys(matTot).sort())
+    righe.push(` • ${k.padEnd(24)} ${f2(matTot[k]).padStart(9)}   ${f2(cosTot[k]||0).padStart(8)} b`);
+  righe.push('', 'RIEPILOGO', '', `Costo totale materiali:  ${f2(costo)} b`);
+  if (ricavo > 0){
+    righe.push(`Ricavo totale vendita:   ${f2(ricavo)} b`,
+               `Profitto netto:          ${f2(ricavo - costo)} b`,
+               `Margine:                 ${costo > 0 ? ((ricavo-costo)/costo*100).toFixed(1) : '0.0'} %`);
+  }
+  righe.push('', 'DETTAGLIO PER PRODOTTO', '');
+  for (const d of dettagli){
+    righe.push(`${d.v.qty}× ${d.v.nome}${d.v.tier ? ' [' + d.v.tier + ']' : ''}`,
+               `   costo ${f2(d.c)} b  (unitario ${f2(d.c/d.v.qty)} b)` +
+               (d.r ? `   ricavo ${f2(d.r)} b   profitto ${f2(d.r-d.c)} b` : ''));
+  }
+  const perdita = ricavo > 0 && ricavo - costo < 0;
+  if (perdita) righe.unshift('⚠️  VENDITA IN PERDITA', '');
+  $('out').textContent = righe.join('\n');
+  const p = $('preview'); p.classList.toggle('loss', perdita);
+  p.innerHTML = ricavo > 0
+    ? `Totale: <b>${f2(costo)} b</b> &nbsp;•&nbsp; Profitto: <b>${f2(ricavo-costo)} b</b>`
+    : `Totale: <b>${f2(costo)} b</b>`;
+  salva();
+}
+
+function calcolaSpesa(){
+  const L = LISTA.spesa;
+  if (!L.length){ $('out').textContent = 'Aggiungi almeno un prodotto alla lista.';
+    $('preview').innerHTML = 'Nessun ingrediente'; return; }
+  // Gli ingredienti si comprano interi: si arrotonda per eccesso.
+  // La resina non si compra: si scompone in verdure e vasetti grezzi.
+  const tot = {};
+  for (const v of L){
+    const {mat} = materialiDi(v.id, v.qty, v.tier);
+    for (const k in mat){
+      if (k === 'Resina'){
+        const r = R.globali.resina, batch = mat[k] / r.output_per_batch;
+        tot['Verdure'] = (tot['Verdure'] || 0) + batch * r.verdure_per_batch;
+        tot['Vasetti'] = (tot['Vasetti'] || 0) + batch * r.vasetti_per_batch;
+      } else tot[k] = (tot[k] || 0) + mat[k];
+    }
+  }
+  const comb = $('v_comb') ? $('v_comb').value : 'Carbone';
+  const cbn = R.combustibili[comb].carbonella;
+  const carbonella = tot['Carbonella'] || 0;
+  const blocchi = Math.ceil(carbonella / cbn);
+
+  const righe = ['DA COMPRARE', '', 'Prodotti richiesti:'];
+  for (const v of L) righe.push(` • ${v.qty}× ${v.nome}${v.tier ? ' [' + v.tier + ']' : ''}`);
+  righe.push('', '🔥  COMBUSTIBILE',
+    ` • Carbonella              ${Math.ceil(carbonella)}`,
+    ` → ${comb}: ${blocchi} blocchi`, '', '📦  INGREDIENTI');
+  for (const k of Object.keys(tot).sort()){
+    if (k === 'Carbonella') continue;
+    const intero = Math.ceil(tot[k]), avanzo = intero - tot[k];
+    righe.push(` • ${k.padEnd(24)} ${String(intero).padStart(6)}` +
+               (avanzo > 0.001 ? `   (avanzo ${avanzo.toFixed(2)})` : ''));
+  }
+  $('out').textContent = righe.join('\n');
+  const p = $('preview'); p.classList.remove('loss');
+  p.innerHTML = `${comb}: <b>${blocchi} blocchi</b> &nbsp;•&nbsp; Boccette: <b>${Math.ceil(tot['Boccette']||0)}</b>`;
+  salva();
+}
+
 function hint(){
   if ($('h_comb') && $('v_comb'))
     $('h_comb').textContent = '= ' + R.combustibili[$('v_comb').value].carbonella + ' carbonella';
@@ -228,13 +462,15 @@ function hint(){
 function salva(){
   const d = {};
   $('form').querySelectorAll('input,select').forEach(el => d[el.id] = el.value);
+  if (LISTA[TAB]) d.__lista = LISTA[TAB];   // negli aggregatori va salvata anche la lista
   try{ localStorage.setItem('elysium_' + TAB, JSON.stringify(d));
        localStorage.setItem('elysium_tab', TAB); }catch(e){}
 }
 function carica(){
   try{
     const d = JSON.parse(localStorage.getItem('elysium_' + TAB) || '{}');
-    for (const k in d) if ($(k) && d[k] !== '') $(k).value = d[k];
+    if (d.__lista && LISTA[TAB]) LISTA[TAB] = d.__lista;
+    for (const k in d) if (k !== '__lista' && $(k) && d[k] !== '') $(k).value = d[k];
   }catch(e){}
 }
 
@@ -268,6 +504,8 @@ function applica(ric, n, mat, cos){
 function calcola(){
   if (!R) return;
   const cfg = TABS()[TAB];
+  if (cfg.tipo === 'multi') return calcolaMulti();
+  if (cfg.tipo === 'spesa') return calcolaSpesa();
   const n = parseFloat(($('v_num').value || '').replace(',', '.'));
   if (!n || n <= 0){ $('out').textContent = 'Inserisci una quantità maggiore di 0.'; return; }
 
