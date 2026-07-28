@@ -5,6 +5,16 @@ Il formato segue le linee guida di [Keep a Changelog](https://keepachangelog.com
 
 ---
 
+## [Non rilasciato]
+### 💪 Pozioni di Forza
+- Nuova tab **Forza** con la **Forza II** (calderone in Ferro):
+  1 Anthracite + 1 Quarzo + 1 Core fragment + 2 Carbonella + 1 Boccetta.
+  Qui l'Anthracite e' un ingrediente della ricetta, non il combustibile del
+  calderone, e ha un campo prezzo dedicato.
+- La scheda e' disponibile anche nella versione web.
+
+---
+
 ## [v4.1] — 2026-07-28
 ### ⚗️ Tier del reagente nel Multi-Prodotto
 - La tab **Multi-Prodotto** ora lascia scegliere il **tier del reagente**

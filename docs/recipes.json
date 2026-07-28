@@ -233,6 +233,19 @@
     }
   },
 
+  "forza": {
+    "Forza II": {
+      "calderone": "Ferro",
+      "per_pozione": {
+        "anthracite": 1,
+        "quarzo": 1,
+        "core": 1,
+        "carbonella": 2,
+        "boccette": 1
+      }
+    }
+  },
+
   "riduzione": {
     "Riduzione I": {
       "calderone": "Rame",

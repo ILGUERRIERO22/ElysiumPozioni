@@ -39,6 +39,7 @@ from calcolo_rune import calcola_rune_diretto
 from calcolo_velocita import calcola_pozione_velocita as core_calcola_velocita
 from calcolo_riduzione import calcola_pozione_riduzione as core_calcola_riduzione
 from calcolo_danno import calcola_pozione_danno as core_calcola_danno
+from calcolo_forza import calcola_pozione_forza as core_calcola_forza
 from calcolo_multi_prodotto import calcola_multi_prodotto as core_multi_prod, get_tipi_prodotti_disponibili
 
 
@@ -560,6 +561,7 @@ class ElysiumPozioniApp:
         self.tab_elisir = tk.Frame(self.notebook, bg=BG_MAIN)
         self.tab_velocita = tk.Frame(self.notebook, bg=BG_MAIN)
         self.tab_riduzione = tk.Frame(self.notebook, bg=BG_MAIN)
+        self.tab_forza = tk.Frame(self.notebook, bg=BG_MAIN)
         self.tab_multi = tk.Frame(self.notebook, bg=BG_MAIN)
         self.tab_spesa  = tk.Frame(self.notebook, bg=BG_MAIN)
 
@@ -574,6 +576,7 @@ class ElysiumPozioniApp:
         self.notebook.add(self.tab_elisir,     text="Elisir")
         self.notebook.add(self.tab_velocita,   text="Velocità")
         self.notebook.add(self.tab_riduzione,  text="Riduzione")
+        self.notebook.add(self.tab_forza,      text="Forza")
         self.notebook.add(self.tab_multi,      text="Multi")
         self.notebook.add(self.tab_spesa,      text="Spesa")
 
@@ -598,8 +601,9 @@ class ElysiumPozioniApp:
             6: "Elisir",
             7: "Velocità",
             8: "Riduzione",
-            9: "Multi-Prodotto",
-            10: "Lista della Spesa"
+            9: "Forza",
+            10: "Multi-Prodotto",
+            11: "Lista della Spesa"
         }
         
         self.tooltip_window = None
@@ -1038,7 +1042,8 @@ class ElysiumPozioniApp:
         """Costruisce tutte le tab (ogni tab è definita nel proprio modulo tabs/)"""
         from tabs import (
             tab_pozioni, tab_antidoti, tab_revivify, tab_extinguish,
-            tab_danno, tab_elisir, tab_rune, tab_velocita, tab_riduzione, tab_multi,
+            tab_danno, tab_elisir, tab_rune, tab_velocita, tab_riduzione, tab_forza,
+            tab_multi,
             tab_spesa,
         )
         tab_pozioni.build(self)
@@ -1050,6 +1055,7 @@ class ElysiumPozioniApp:
         tab_rune.build(self)
         tab_velocita.build(self)
         tab_riduzione.build(self)
+        tab_forza.build(self)
         tab_multi.build(self)
         tab_spesa.build(self)
 
@@ -1310,6 +1316,21 @@ class ElysiumPozioniApp:
             except Exception:
                 val = ""
             self.label_rid_boccette.config(text=val or "-")
+
+    def _aggiorna_prezzi_forza(self):
+        """Mostra nella tab Forza i prezzi presi dalle altre tab"""
+        for attr, sorgente in (
+            ("label_forza_quarzo",   "entry_ext_quartz"),
+            ("label_forza_core",     "entry_core"),
+            ("label_forza_carbone",  "entry_carbone"),
+            ("label_forza_boccette", "entry_boccette_per_b"),
+        ):
+            if hasattr(self, attr):
+                try:
+                    val = getattr(self, sorgente).get()
+                except Exception:
+                    val = ""
+                getattr(self, attr).config(text=val or "-")
 
     def _aggiorna_prezzi_velocita(self):
         """Mostra nella tab Velocità i prezzi dalle altre tab"""
@@ -1773,6 +1794,36 @@ class ElysiumPozioniApp:
         except ValueError:
             messagebox.showerror("❌ Errore", "Controlla i campi Riduzione: inserisci numeri validi.")
 
+    def do_calcola_forza(self):
+        try:
+            self._aggiorna_prezzi_forza()
+
+            num = float(self.entry_forza_num.get())
+            tipo = self.combo_forza_tipo.get()
+
+            prezzo_anthracite = float(self.entry_forza_anthracite.get())
+            prezzo_quarzo = float(self.entry_ext_quartz.get())
+            prezzo_core = float(self.entry_core.get())
+            prezzo_carbone = self._get_prezzo_carbone_norm()
+            boccette_per_1b = float(self.entry_boccette_per_b.get())
+
+            try:
+                prezzo_vendita = float(self.entry_forza_prezzo.get())
+            except ValueError:
+                prezzo_vendita = None
+
+            result = core_calcola_forza(
+                num=num, tipo=tipo,
+                prezzo_anthracite=prezzo_anthracite, prezzo_quarzo=prezzo_quarzo,
+                prezzo_core=prezzo_core, prezzo_carbone=prezzo_carbone,
+                boccette_per_1b=boccette_per_1b, prezzo_vendita=prezzo_vendita,
+            )
+
+            self._mostra_risultato(self.label_forza_preview, self.text_forza_result, result)
+
+        except ValueError:
+            messagebox.showerror("❌ Errore", "Controlla i campi Forza: inserisci numeri validi.")
+
     def do_genera_lista_spesa(self):
         """Calcola la lista degli ingredienti grezzi per il mix di prodotti."""
         import math
@@ -2208,6 +2259,12 @@ class ElysiumPozioniApp:
             "vel_blaze": self.entry_vel_blaze.get() if hasattr(self, 'entry_vel_blaze') else "",
             "vel_prezzo_vendita": self.entry_vel_prezzo.get() if hasattr(self, 'entry_vel_prezzo') else "",
             
+            # Forza
+            "forza_num": self.entry_forza_num.get() if hasattr(self, 'entry_forza_num') else "",
+            "forza_tipo": self.combo_forza_tipo.get() if hasattr(self, 'combo_forza_tipo') else "",
+            "forza_anthracite": self.entry_forza_anthracite.get() if hasattr(self, 'entry_forza_anthracite') else "",
+            "forza_prezzo_vendita": self.entry_forza_prezzo.get() if hasattr(self, 'entry_forza_prezzo') else "",
+
             # Rune
             "rune_tipo": self.combo_rune_tipo.get() if hasattr(self, 'combo_rune_tipo') else "",
             "rune_pepite": {
@@ -2309,6 +2366,13 @@ class ElysiumPozioniApp:
         load_entry("vel_blaze", "entry_vel_blaze")
         load_entry("vel_prezzo_vendita", "entry_vel_prezzo")
         
+        # Forza
+        load_entry("forza_num", "entry_forza_num")
+        if "forza_tipo" in data and hasattr(self, 'combo_forza_tipo'):
+            self.combo_forza_tipo.set(data["forza_tipo"])
+        load_entry("forza_anthracite", "entry_forza_anthracite")
+        load_entry("forza_prezzo_vendita", "entry_forza_prezzo")
+
         # Rune
         if "rune_tipo" in data and hasattr(self, 'combo_rune_tipo'):
             self.combo_rune_tipo.set(data["rune_tipo"])
@@ -2346,6 +2410,10 @@ class ElysiumPozioniApp:
             pass
         try:
             self._aggiorna_prezzi_elisir()
+        except Exception:
+            pass
+        try:
+            self._aggiorna_prezzi_forza()
         except Exception:
             pass
 

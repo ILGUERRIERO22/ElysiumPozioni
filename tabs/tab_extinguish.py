@@ -34,6 +34,16 @@ def build(app):
     # === PREZZO QUARZO ===
     panel_price, price_inner = self.make_panel(container, "Prezzo ingrediente", "💰")
     self.entry_ext_quartz = self.make_labeled_entry(price_inner, "Quarzo (1x):", "1.0", row=0, icon_key="quarzo")
+
+    # Il quarzo serve anche alla tab Forza: la tiene allineata
+    def _aggiorna_forza(e=None):
+        try:
+            self._aggiorna_prezzi_forza()
+        except AttributeError:
+            pass
+
+    self.entry_ext_quartz.bind("<KeyRelease>", _aggiorna_forza, add="+")
+    self.entry_ext_quartz.bind("<FocusOut>",   _aggiorna_forza, add="+")
     panel_price.pack(padx=0, pady=(0, 8), fill="x")
 
     # === VENDITA ===

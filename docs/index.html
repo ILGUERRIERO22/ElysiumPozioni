@@ -103,6 +103,7 @@ const PREZZI = {
   slimeball:{et:'Slimeball (1x)',v:'1.0'},      lapis:{et:'Lapis (1x)',v:'1.0'},
   zucchero:{et:'Zucchero (1x)',v:'1.0'},        blaze:{et:'Blaze (1x)',v:'1.5'},
   revival_star:{et:'Revival star (1x)',v:'2.0'},quarzo:{et:'Quarzo (1x)',v:'1.0'},
+  anthracite:{et:'Anthracite (1x)',v:'3.0'},
   brim:{et:'Brim powder (1x)',v:'1.0'},         carne_marcia:{et:'Carne marcia (1x)',v:'1.0'},
   membrana:{et:'Membrana Phantom (1x)',v:'1.0'},lost_soul:{et:'Lost soul (1x)',v:'1.0'},
   tin:{et:'Lingotto Tin',v:'9'},   copper:{et:'Lingotto Rame',v:'9'},
@@ -120,7 +121,7 @@ const METALLO = {Tin:'tin',Rame:'copper',Ferro:'iron',Oro:'gold',
 // Gli aggregatori usano i prezzi di tutti i prodotti insieme.
 const TUTTI_I_PREZZI = ['reagente','core','carbone','verdure','vasetti','boccette',
   'occhio_ragno','withering_dust','fungo_marrone','slimeball','lapis','zucchero',
-  'blaze','revival_star','quarzo','brim','carne_marcia','membrana','lost_soul',
+  'blaze','revival_star','quarzo','anthracite','brim','carne_marcia','membrana','lost_soul',
   'tin','copper','iron','gold','diamond','silver'];
 
 // --- definizione delle schede ---
@@ -141,6 +142,9 @@ const TABS = () => ({
               prezzi:['lapis','zucchero','blaze','core','carbone','boccette']},
   riduzione: {nome:'Riduzione',  tipo:'livelli', sez:'riduzione', unita:'pozione',
               prezzi:['fungo_marrone','slimeball','core','carbone','boccette']},
+  forza:     {nome:'Forza',      tipo:'singolo', sez:'forza', campo:'per_pozione',
+              variante:'Forza II', unita:'pozione',
+              prezzi:['anthracite','quarzo','core','carbone','boccette']},
   elisir:    {nome:'Elisir',     tipo:'elisir',  sez:'elisir', unita:'elisir',
               prezzi:['core','carbone','verdure','vasetti','boccette','brim','occhio_ragno',
                       'membrana','slimeball','lost_soul','tin','copper','iron','gold','diamond']},
@@ -533,8 +537,10 @@ function calcola(){
     extra = [`Catalyst totali:          ${f2(catalyst)}`];
 
   } else if (cfg.tipo === 'singolo') {
-    applica(R[cfg.sez][cfg.campo], n, mat, cos);
-    titolo = `${cfg.nome} — calderone ${R[cfg.sez].calderone}`;
+    // "variante" quando la sezione contiene piu' ricette annidate (es. forza)
+    const ric = cfg.variante ? R[cfg.sez][cfg.variante] : R[cfg.sez];
+    applica(ric[cfg.campo], n, mat, cos);
+    titolo = `${cfg.variante || cfg.nome} — calderone ${ric.calderone}`;
 
   } else if (cfg.tipo === 'batch') {
     const v = $('v_var').value, ric = R[cfg.sez][v];

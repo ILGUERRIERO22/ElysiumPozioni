@@ -93,6 +93,14 @@ def get_ricetta_danno(tipo: str) -> dict:
         raise ValueError(f"Tipo danno non valido: {tipo!r}")
     return DANNO[tipo]
 
+# === FORZA ===
+FORZA: dict = _data["forza"]
+
+def get_ricetta_forza(tipo: str) -> dict:
+    if tipo not in FORZA:
+        raise ValueError(f"Tipo forza non valido: {tipo!r}")
+    return FORZA[tipo]
+
 # === RIDUZIONE ===
 RIDUZIONE: dict = _data["riduzione"]
 

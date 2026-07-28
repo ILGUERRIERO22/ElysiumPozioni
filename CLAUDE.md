@@ -11,16 +11,16 @@ Interfaccia, commenti e messaggi di commit sono **in italiano**.
 ```
 main.py                 avvio, chiama run_app()
 gui_main.py             classe ElysiumPozioniApp: stato, handler, persistenza
-  tabs/tab_*.py         costruzione UI delle 11 tab: build(app)
-  calcolo_*.py          logica pura di calcolo (11 moduli), nessun Tkinter
+  tabs/tab_*.py         costruzione UI delle 12 tab: build(app)
+  calcolo_*.py          logica pura di calcolo (12 moduli), nessun Tkinter
   ricette.py            loader di recipes.json
   recipes.json          ricette del gioco (fonte unica di verita)
   config_app.py         tema, font, palette, percorsi dati
   animations.py         effetti fade/slide
 ```
 
-Le 11 tab: Pozioni di cura, Antidoti, Revivify, Extinguish, Danno, Rune,
-Elisir, Velocita, Riduzione, Multi-Prodotto, Lista della spesa. Le ultime due
+Le 12 tab: Pozioni di cura, Antidoti, Revivify, Extinguish, Danno, Rune,
+Elisir, Velocita, Riduzione, Forza, Multi-Prodotto, Lista della spesa. Le ultime due
 sono aggregatori: combinano piu' prodotti in un unico calcolo.
 
 Tre regole che reggono l'impianto — romperle e' il modo piu' rapido di fare
@@ -144,7 +144,7 @@ per i valori monetari.
 
 Le tab del notebook usano **etichette testuali**, non emoji: Tk su Windows le
 rende in monocromia e diventano indistinguibili. Per lo stesso motivo il
-padding orizzontale delle tab e' contenuto (11 px) — undici etichette devono
+padding orizzontale delle tab e' contenuto (11 px) — dodici etichette devono
 stare su una riga sola.
 
 La finestra parte a 980x760 con minimo 950x620: sotto i ~950 px la riga di
@@ -161,7 +161,7 @@ verrebbero tagliati.
 
 `docs/index.html` e' una pagina singola senza dipendenze, pubblicata via GitHub
 Pages dalla cartella `/docs`. Riusa la palette della GUI e legge le ricette da
-`docs/recipes.json`. Copre tutte e undici le schede dell'app desktop.
+`docs/recipes.json`. Copre tutte le schede dell'app desktop.
 
 Le schede sono descritte dalla tabella `TABS()` e calcolate da un motore
 generico, non da un blocco per prodotto: `singolo` (una fase), `batch` (resa

@@ -75,6 +75,7 @@ def build(app):
 
     def update_core_prices(e=None):
         self._aggiorna_prezzi_riduzione()
+        self._aggiorna_prezzi_forza()
         self._aggiorna_prezzi_velocita()
         self._aggiorna_prezzi_antidoti()
         self._aggiorna_prezzi_revivify()
@@ -112,6 +113,7 @@ def build(app):
 
     def update_carbone_prices(e=None):
         self._aggiorna_prezzi_riduzione()
+        self._aggiorna_prezzi_forza()
         self._aggiorna_prezzi_velocita()
         self._aggiorna_prezzi_antidoti()
         self._aggiorna_prezzi_revivify()
@@ -139,6 +141,7 @@ def build(app):
 
     def update_boccette_prices(e=None):
         self._aggiorna_prezzi_riduzione()
+        self._aggiorna_prezzi_forza()
         self._aggiorna_prezzi_velocita()
         self._aggiorna_prezzi_antidoti()
         self._aggiorna_prezzi_revivify()
