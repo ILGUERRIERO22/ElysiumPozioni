@@ -72,7 +72,7 @@
   <main>
     <div id="form"></div>
     <div>
-      <div class="preview" id="preview">Totale: —&nbsp; • &nbsp;Per unità: —</div>
+      <div class="preview" id="preview">Totale: —&nbsp; • &nbsp;Per pozione: —</div>
       <pre id="out">Compila i campi e premi CALCOLA.</pre>
     </div>
   </main>
@@ -124,26 +124,30 @@ const TUTTI_I_PREZZI = ['reagente','core','carbone','verdure','vasetti','boccett
   'tin','copper','iron','gold','diamond','silver'];
 
 // --- definizione delle schede ---
+// "unita" e' il nome di cio' che si produce: compare nelle etichette al posto
+// di un generico "unitario", come fa l'app desktop ("Per pozione", "Per antidoto").
 const TABS = () => ({
-  cura:      {nome:'Cura',       tipo:'cura',    prezzi:['reagente','core','carbone','verdure','vasetti','boccette']},
-  antidoti:  {nome:'Antidoti',   tipo:'batch',   sez:'antidoti',
+  cura:      {nome:'Cura',       tipo:'cura',    unita:'pozione',
+              prezzi:['reagente','core','carbone','verdure','vasetti','boccette']},
+  antidoti:  {nome:'Antidoti',   tipo:'batch',   sez:'antidoti', unita:'antidoto',
               prezzi:['brim','carne_marcia','revival_star','carbone','verdure','vasetti','boccette']},
   revivify:  {nome:'Revivify',   tipo:'singolo', sez:'revivify', campo:'per_revivify',
-              prezzi:['revival_star','core','carbone','boccette']},
+              unita:'pozione', prezzi:['revival_star','core','carbone','boccette']},
   extinguish:{nome:'Extinguish', tipo:'singolo', sez:'extinguish', campo:'per_extinguish',
-              prezzi:['quarzo','core','carbone','boccette']},
-  danno:     {nome:'Danno',      tipo:'livelli', sez:'danno',
+              unita:'pozione', prezzi:['quarzo','core','carbone','boccette']},
+  danno:     {nome:'Danno',      tipo:'livelli', sez:'danno', unita:'pozione',
               prezzi:['occhio_ragno','withering_dust','core','carbone','boccette']},
-  velocita:  {nome:'Velocità',   tipo:'livelli', sez:'velocita',
+  velocita:  {nome:'Velocità',   tipo:'livelli', sez:'velocita', unita:'pozione',
               prezzi:['lapis','zucchero','blaze','core','carbone','boccette']},
-  riduzione: {nome:'Riduzione',  tipo:'livelli', sez:'riduzione',
+  riduzione: {nome:'Riduzione',  tipo:'livelli', sez:'riduzione', unita:'pozione',
               prezzi:['fungo_marrone','slimeball','core','carbone','boccette']},
-  elisir:    {nome:'Elisir',     tipo:'elisir',  sez:'elisir',
+  elisir:    {nome:'Elisir',     tipo:'elisir',  sez:'elisir', unita:'elisir',
               prezzi:['core','carbone','verdure','vasetti','boccette','brim','occhio_ragno',
                       'membrana','slimeball','lost_soul','tin','copper','iron','gold','diamond']},
-  rune:      {nome:'Rune',       tipo:'rune',    prezzi:['tin','copper','iron','gold','silver']},
-  multi:     {nome:'Multi-Prodotto', tipo:'multi', prezzi:TUTTI_I_PREZZI},
-  spesa:     {nome:'Lista spesa',    tipo:'spesa', prezzi:['carbone']},
+  rune:      {nome:'Rune',       tipo:'rune',    unita:'runa',
+              prezzi:['tin','copper','iron','gold','silver']},
+  multi:     {nome:'Multi-Prodotto', tipo:'multi', unita:'unità', prezzi:TUTTI_I_PREZZI},
+  spesa:     {nome:'Lista spesa',    tipo:'spesa', unita:'unità', prezzi:['carbone']},
 });
 
 /** Elenco dei prodotti selezionabili negli aggregatori, letto da recipes.json. */
@@ -605,24 +609,27 @@ function calcolaRune(n){
 function mostra(titolo, n, mat, cos, extra, campoVendita){
   const tot = Object.values(cos).reduce((a,b) => a+b, 0);
   const unit = tot / n;
+  const u = TABS()[TAB].unita || 'unità';        // "pozione", "antidoto", "elisir"...
   const pv = campoVendita && campoVendita.value !== ''
     ? parseFloat(campoVendita.value.replace(',', '.')) : null;
   const perdita = pv !== null && (pv * n - tot) < 0;
 
+  const et = t => (t + ':').padEnd(26);
   const righe = [];
   if (perdita) righe.push('⚠️  VENDITA IN PERDITA', '');
-  righe.push(titolo, '', `Quantità richiesta:       ${f2(n)}`, ...extra, '',
-    `COSTO TOTALE:             ${f2(tot)} b`,
-    `Costo unitario:           ${f2(unit)} b`);
+  righe.push(titolo, '', `${et('Quantità richiesta')}${f2(n)}`, ...extra, '',
+    `${et('COSTO TOTALE')}${f2(tot)} b`,
+    `${et('Costo per ' + u)}${f2(unit)} b`);
 
   if (pv !== null && !isNaN(pv)) {
     const ricavo = pv * n, guad = ricavo - tot;
     righe.push('', 'Vendita & Profitto:',
-      ` • Prezzo unitario:       ${f2(pv)} b`,
-      ` • Ricavo totale:         ${f2(ricavo)} b`,
-      ` • Guadagno netto:        ${f2(guad)} b`,
-      ` • Ricarico:              ${unit > 0 ? (guad/n/unit*100).toFixed(1) : '0.0'} %`,
-      ` • Prezzo di pareggio:    ${f2(unit)} b`);
+      ` • ${et('Prezzo per ' + u)}${f2(pv)} b`,
+      ` • ${et('Ricavo totale')}${f2(ricavo)} b`,
+      ` • ${et('Guadagno netto')}${f2(guad)} b`,
+      ` • ${et('Margine per ' + u)}${f2(guad / n)} b`,
+      ` • ${et('Ricarico')}${unit > 0 ? (guad/n/unit*100).toFixed(1) : '0.0'} %`,
+      ` • ${et('Prezzo di pareggio')}${f2(unit)} b`);
   }
 
   righe.push('', 'Materiali richiesti:');
@@ -636,8 +643,8 @@ function mostra(titolo, n, mat, cos, extra, campoVendita){
   const p = $('preview');
   p.classList.toggle('loss', perdita);
   p.innerHTML = (pv !== null && !isNaN(pv))
-    ? `Totale: <b>${f2(tot)} b</b> &nbsp;•&nbsp; Unitario: <b>${f2(unit)} b</b> &nbsp;•&nbsp; Guadagno: <b>${f2(pv*n-tot)} b</b>`
-    : `Totale: <b>${f2(tot)} b</b> &nbsp;•&nbsp; Unitario: <b>${f2(unit)} b</b>`;
+    ? `Totale: <b>${f2(tot)} b</b> &nbsp;•&nbsp; Costo/${u}: <b>${f2(unit)} b</b> &nbsp;•&nbsp; Guadagno: <b>${f2(pv*n-tot)} b</b>`
+    : `Totale: <b>${f2(tot)} b</b> &nbsp;•&nbsp; Per ${u}: <b>${f2(unit)} b</b>`;
   salva();
 }
 </script>
