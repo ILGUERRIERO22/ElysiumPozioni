@@ -987,8 +987,18 @@ class ElysiumPozioniApp:
             bg=BG_RESULT,
             fg=ACCENT_LIGHT,
             pady=12,
+            padx=10,
+            justify="center",
+            wraplength=340,   # valore iniziale, riadattato sotto alla larghezza reale
         )
-        preview_label.pack()
+        preview_label.pack(fill="x")
+
+        # Senza wraplength la riga verrebbe tagliata dai bordi della colonna:
+        # la si tiene agganciata alla larghezza effettiva del contenitore.
+        def _adatta_wrap(event):
+            preview_label.config(wraplength=max(event.width - 24, 120))
+
+        preview_inner.bind("<Configure>", _adatta_wrap)
         setattr(self, preview_var_name, preview_label)
         
         # Dettaglio panel
