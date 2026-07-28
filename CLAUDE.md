@@ -20,8 +20,12 @@ gui_main.py             classe ElysiumPozioniApp: stato, handler, persistenza
 ```
 
 Le 12 tab: Pozioni di cura, Antidoti, Revivify, Extinguish, Danno, Rune,
-Elisir, Velocita, Riduzione, Forza, Multi-Prodotto, Lista della spesa. Le ultime due
-sono aggregatori: combinano piu' prodotti in un unico calcolo.
+Elisir, Velocita, Riduzione, Forza, Multi-Prodotto, Lista della spesa. Le ultime
+due sono aggregatori: combinano piu' prodotti in un unico calcolo.
+
+Una tab non corrisponde sempre a un prodotto: la tab **Revivify** ne calcola
+tre (Revivify, Supportive in Oro, Supportive in Smeraldo) scegliendoli da un
+menu, perche' condividono ingredienti e la Supportive consuma la base.
 
 Tre regole che reggono l'impianto — romperle e' il modo piu' rapido di fare
 danni:
@@ -47,6 +51,14 @@ danni:
 4. In `gui_main.py`: frame + `notebook.add()` in `_build_main_layout`, voce in
    `_setup_tab_tooltips`, `build` in `_build_tabs`, handler `do_calcola_*`,
    campi in `save_config`/`load_config`.
+5. Se il prodotto usa prezzi di altre tab, propagarli con un
+   `_aggiorna_prezzi_<nome>` e agganciarlo ai campi sorgente in `tabs/`.
+6. Per renderlo disponibile anche negli aggregatori: tabella di dispatch in
+   `calcolo_multi_prodotto.py`, `get_tipi_prodotti_disponibili`, e
+   `calcolo_spesa.py`.
+7. Versione web: voce in `TABS()` di `docs/index.html`, eventuali prezzi nuovi
+   in `PREZZI`, e `catalogo()` se deve comparire negli aggregatori. Poi
+   `python tools/aggiorna_web.py` per riallineare `docs/recipes.json`.
 
 ## Comandi
 
@@ -106,6 +118,12 @@ Tin per i Maghi — sono esclusi, altrimenti si dividerebbe per zero.
 Le etichette dei materiali vengono dai nomi in `recipes.json`: aggiungendo un
 ingrediente vanno estese `INGREDIENTI` o `ETICHETTA_EXTRA_PREZZO`, che mappano
 la chiave di ricetta sull'etichetta mostrata e sulla chiave prezzo.
+
+**Forza e Supportive Revivify non sono negli aggregatori.** Il Multi-Prodotto
+(`get_tipi_prodotti_disponibili` in `calcolo_multi_prodotto.py`), la Lista della
+spesa e la funzione `catalogo()` della versione web elencano ancora i soli
+prodotti precedenti. Aggiungendo un prodotto vanno estese anche quelle liste,
+altrimenti resta calcolabile solo dalla sua tab.
 
 **La Supportive Revivify ha due ricette alternative** (`revivify.supportive` in
 `recipes.json`): una in Oro che rende 1 pozione e una in Smeraldo che ne rende
