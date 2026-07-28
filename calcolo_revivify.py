@@ -3,6 +3,8 @@ from typing import Optional, Dict, Any, List
 from ricette import (
     CARBONELLA_PER_BLOCCO,
     REVIVIFY,
+    RESINA,
+    POZIONI_CURA,
     get_ricetta_supportive,
     get_catalyst_per_reagente,
 )
@@ -107,6 +109,8 @@ def calcola_supportive_revivify(
     prezzo_revival: float,
     prezzo_reagente: float = 0.0,
     tier_reagente: str = "T1",
+    verdure_per_1b: float = 3.0,
+    vasetti_per_1b: float = 15.0,
     prezzo_demonic_slab: float = 0.0,
     prezzo_end_shard: float = 0.0,
     prezzo_vendita: Optional[float] = None,
@@ -120,9 +124,11 @@ def calcola_supportive_revivify(
               + 1 Revivify base = 2 Supportive
 
     In entrambe la Revivify base fa da contenitore, al posto delle boccette.
-    L'healing catalyst e' quello che si ricava dai reagenti: il suo costo
-    dipende dal prezzo del reagente e dal tier scelto (un T2 ne da' 2, un T3
-    ne da' 3), non da un prezzo a se'.
+
+    L'healing catalyst non si compra: si prepara con 1 reagente + 1 core +
+    1 resina, e ne escono tanti quanti il tier del reagente ne rende (T1 = 1,
+    T2 = 2, T3 = 3). Il suo costo e' quindi l'intera preparazione divisa per
+    quei catalyst, non il solo prezzo del reagente.
     """
 
     if num <= 0:
@@ -142,9 +148,22 @@ def calcola_supportive_revivify(
     )
     costo_revivify_unit = base["costo_unit"]
 
-    # Healing catalyst: quanti se ne ricavano da un reagente del tier scelto
+    # Healing catalyst: 1 reagente + 1 core + 1 resina producono
+    # catalyst_per_reagente catalyst, quindi il costo unitario e' l'intera
+    # preparazione divisa per quanti ne escono.
     cat_per_reagente = get_catalyst_per_reagente(tier_reagente)
-    costo_catalyst_unit = prezzo_reagente / cat_per_reagente if cat_per_reagente else 0.0
+    costo_resina_unit = (
+        RESINA["verdure_per_batch"] / verdure_per_1b
+        + RESINA["vasetti_per_batch"] / vasetti_per_1b
+    ) / RESINA["output_per_batch"]
+    costo_preparazione_catalyst = (
+        prezzo_reagente
+        + POZIONI_CURA["core_per_reagente"] * prezzo_core
+        + POZIONI_CURA["resine_per_reagente"] * costo_resina_unit
+    )
+    costo_catalyst_unit = (
+        costo_preparazione_catalyst / cat_per_reagente if cat_per_reagente else 0.0
+    )
 
     q = {k: batch * v for k, v in p.items()}
     costi = {
@@ -210,9 +229,12 @@ def calcola_supportive_revivify(
         f" • Revivify base:        {costo_revivify_unit:.4f} b  (prodotta, non comprata)",
     ]
     if "healing_catalyst" in q:
-        lines.append(
-            f" • Healing catalyst:     {costo_catalyst_unit:.4f} b  "
-            f"(reagente {tier_reagente} diviso {cat_per_reagente})")
+        lines += [
+            f" • Healing catalyst:     {costo_catalyst_unit:.4f} b",
+            f"   preparazione: 1 reagente {tier_reagente} + 1 core + 1 resina"
+            f" = {costo_preparazione_catalyst:.4f} b",
+            f"   resa: {cat_per_reagente} catalyst per preparazione",
+        ]
 
     if prezzo_vendita is not None:
         lines += [

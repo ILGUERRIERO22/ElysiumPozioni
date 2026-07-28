@@ -111,9 +111,10 @@ la chiave di ricetta sull'etichetta mostrata e sulla chiave prezzo.
 `recipes.json`): una in Oro che rende 1 pozione e una in Smeraldo che ne rende
 2. Entrambe consumano una **Revivify base**, che fa da contenitore al posto
 delle boccette: il suo costo non si chiede all'utente ma si ricava chiamando
-`calcola_revivify`. L'**healing catalyst** della ricetta in Oro e' quello dei
-reagenti, quindi costa `prezzo_reagente / catalyst_per_reagente[tier]`, non ha
-un prezzo proprio.
+`calcola_revivify`. L'**healing catalyst** della ricetta in Oro non si compra: si prepara con
+1 reagente + 1 core + 1 resina e ne escono `catalyst_per_reagente` unita', quindi
+costa l'intera preparazione divisa per quelle. Contare il solo reagente lo
+sottostima di circa il doppio.
 
 **Il tier del reagente e' indipendente dal calderone.** Un reagente T2 produce
 2 catalyst e un T3 ne produce 3 (`catalyst_per_reagente`), quindi salendo di

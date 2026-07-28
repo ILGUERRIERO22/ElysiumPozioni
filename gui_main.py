@@ -1628,6 +1628,8 @@ class ElysiumPozioniApp:
                     prezzo_revival=prezzo_revival,
                     prezzo_reagente=float(self.entry_reagente.get() or 0),
                     tier_reagente=self.combo_rev_tier.get(),
+                    verdure_per_1b=float(self.entry_verdure_per_b.get() or 3),
+                    vasetti_per_1b=float(self.entry_vasetti_per_b.get() or 15),
                     prezzo_demonic_slab=float(self.entry_rev_slab.get() or 0),
                     prezzo_end_shard=float(self.entry_rev_shard.get() or 0),
                     prezzo_vendita=prezzo_vendita,

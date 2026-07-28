@@ -137,7 +137,7 @@ const TABS = () => ({
               unita:'pozione', prezzi:['revival_star','core','carbone','boccette']},
   supportive:{nome:'Supportive', tipo:'supportive', unita:'pozione',
               prezzi:['reagente','demonic_slab','end_shard','revival_star','core',
-                      'carbone','boccette']},
+                      'carbone','verdure','vasetti','boccette']},
   extinguish:{nome:'Extinguish', tipo:'singolo', sez:'extinguish', campo:'per_extinguish',
               unita:'pozione', prezzi:['quarzo','core','carbone','boccette']},
   danno:     {nome:'Danno',      tipo:'livelli', sez:'danno', unita:'pozione',
@@ -588,7 +588,12 @@ function calcola(){
       if (ing === 'carbonella')          { et='Carbonella';       cu=costoCarbonella(); }
       else if (ing === 'revivify_base')  { et='Revivify base';    cu=costoBase; }
       else if (ing === 'healing_catalyst'){ et='Healing catalyst';
-        cu = pz('reagente') / R.pozioni_cura.catalyst_per_reagente[$('v_tier').value]; }
+        // si prepara con 1 reagente + 1 core + 1 resina, e ne escono
+        // catalyst_per_reagente: il costo e' la preparazione divisa per quelli
+        const prep = pz('reagente')
+          + R.pozioni_cura.core_per_reagente * pz('core')
+          + R.pozioni_cura.resine_per_reagente * costoResina();
+        cu = prep / R.pozioni_cura.catalyst_per_reagente[$('v_tier').value]; }
       else { et = PREZZI[ing] ? PREZZI[ing].et.replace(/ \(1x\)$/,'') : ing; cu = pz(ing); }
       mat[et] = (mat[et]||0) + q;  cos[et] = (cos[et]||0) + q*cu;
     }
