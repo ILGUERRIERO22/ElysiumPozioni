@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/github/v/release/Ahristogatti/ElysiumPozioni?color=orange&label=versione&style=flat-square" alt="Versione GitHub">
   <img src="https://img.shields.io/github/downloads/Ahristogatti/ElysiumPozioni/total?color=brightgreen&label=download%20totali&style=flat-square" alt="Download Totali">
   <img src="https://img.shields.io/badge/Licenza-MIT-yellow?style=flat" alt="Licenza">
-  <img src="https://img.shields.io/badge/Made%20by-ILGUERRIERO22-purple?style=flat-square" alt="Autore">
+  <img src="https://img.shields.io/badge/Made%20by-Ahristogatti-purple?style=flat-square" alt="Autore">
 </p>
 
 ---
