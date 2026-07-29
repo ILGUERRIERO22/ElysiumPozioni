@@ -193,8 +193,12 @@ Pages dalla cartella `/docs`. Riusa la palette della GUI e legge le ricette da
 Le schede sono descritte dalla tabella `TABS()` e calcolate da un motore
 generico, non da un blocco per prodotto: `singolo` (una fase), `batch` (resa
 diversa da 1, es. antidoto Ferro), `livelli` (il II consuma un'unita' del I),
-`elisir`, `rune` e `cura`. Un nuovo prodotto si aggiunge con una voce in
-`TABS()`, come lato Python con `RICETTE_SEMPLICI`.
+`elisir`, `rune`, `cura` e `revivify` (che raccoglie Revivify e le due
+Supportive in un menu, come la tab omonima dell'app). Un nuovo prodotto si
+aggiunge con una voce in `TABS()`, come lato Python con `RICETTE_SEMPLICI`.
+
+Le schede web rispecchiano le tab del desktop una a una: se un prodotto sta in
+un menu di lato Python, deve stare in un menu anche qui.
 
 I due aggregatori (`multi` e `spesa`) condividono `materialiDi()`, che riusa lo
 stesso motore, e tengono la lista dei prodotti in `LISTA[TAB]`, salvata nel

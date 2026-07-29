@@ -134,11 +134,11 @@ const TABS = () => ({
               prezzi:['reagente','core','carbone','verdure','vasetti','boccette']},
   antidoti:  {nome:'Antidoti',   tipo:'batch',   sez:'antidoti', unita:'antidoto',
               prezzi:['brim','carne_marcia','revival_star','carbone','verdure','vasetti','boccette']},
-  revivify:  {nome:'Revivify',   tipo:'singolo', sez:'revivify', campo:'per_revivify',
-              unita:'pozione', prezzi:['revival_star','core','carbone','boccette']},
-  supportive:{nome:'Supportive', tipo:'supportive', unita:'pozione',
-              prezzi:['reagente','demonic_slab','end_shard','revival_star','core',
-                      'carbone','verdure','vasetti','boccette']},
+  // Revivify e le due Supportive stanno in una scheda sola con un menu,
+  // come nella tab Revivify dell'app desktop.
+  revivify:  {nome:'Revivify',   tipo:'revivify', unita:'pozione',
+              prezzi:['revival_star','core','carbone','boccette',
+                      'reagente','verdure','vasetti','demonic_slab','end_shard']},
   extinguish:{nome:'Extinguish', tipo:'singolo', sez:'extinguish', campo:'per_extinguish',
               unita:'pozione', prezzi:['quarzo','core','carbone','boccette']},
   danno:     {nome:'Danno',      tipo:'livelli', sez:'danno', unita:'pozione',
@@ -283,16 +283,18 @@ function disegna(){
              <select id="v_tier">${tier}</select><span class="hint" id="h_tier"></span></div>
            <div class="row"><label for="v_cal">Calderone:</label>
              <select id="v_cal">${cald}</select></div>`;
-  } else if (cfg.tipo === 'supportive') {
-    const cald = Object.keys(R.revivify.supportive)
-      .map(k => `<option value="${k}">${k}</option>`).join('');
+  } else if (cfg.tipo === 'revivify') {
+    const voci = ['Revivify',
+      ...Object.keys(R.revivify.supportive).map(k => 'Supportive (' + k + ')')];
     const tier = Object.keys(R.pozioni_cura.catalyst_per_reagente)
       .map(k => `<option value="${k}">${k}</option>`).join('');
-    sel = `<div class="row"><label for="v_var">Calderone:</label>
-             <select id="v_var">${cald}</select></div>
+    sel = `<div class="row"><label for="v_var">Tipo:</label>
+             <select id="v_var">` +
+             voci.map(k => `<option value="${k}">${k}</option>`).join('') +
+           `</select></div>
            <div class="row"><label for="v_tier">Tipo reagente:</label>
              <select id="v_tier">${tier}</select>
-             <span class="hint">per l'healing catalyst</span></div>`;
+             <span class="hint">solo per la Supportive in Oro</span></div>`;
 
   } else if (cfg.tipo !== 'cura' && cfg.tipo !== 'singolo') {
     const voci = cfg.tipo === 'rune' ? Object.keys(R.rune.resa_per_pepita)
@@ -597,8 +599,14 @@ function calcola(){
     }
     titolo = `${v} — calderone ${ric.calderone}`;
 
-  } else if (cfg.tipo === 'supportive') {
-    const v = $('v_var').value, ric = R.revivify.supportive[v];
+  } else if (cfg.tipo === 'revivify') {
+    const scelta = $('v_var').value;
+    if (scelta === 'Revivify') {
+      applica(R.revivify.per_revivify, n, mat, cos);
+      titolo = `Revivify — calderone ${R.revivify.calderone}`;
+      return mostra(titolo, n, mat, cos, extra, $('v_vend'));
+    }
+    const v = scelta.split('(')[1].replace(')',''), ric = R.revivify.supportive[v];
     const batch = n / ric.supportive_per_batch;
     // la Revivify base viene prodotta, non comprata: ne riusiamo il costo
     const b = {}, bc = {};
